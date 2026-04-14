@@ -1,0 +1,14 @@
+# Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0
+baseURL = "https://gitcalver.org/"
+title = "gitcalver"
+languageCode = "en-us"
+
+disableKinds = ["taxonomy", "term"]
+
+[markup.highlight]
+noClasses = false
+lineNos = false
+guessSyntax = false
+
+[markup.goldmark.renderer]
+unsafe = true

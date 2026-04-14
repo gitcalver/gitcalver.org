@@ -1,0 +1,82 @@
+<!-- Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0 -->
+{{ define "main" }}
+{{- $n := now.UTC -}}
+{{- $today := $n.Format "20060102" -}}
+{{- $yesterday := ($n.AddDate 0 0 -1).Format "20060102" -}}
+{{- $todayISO := $n.Format "2006-01-02" -}}
+{{- $yesterdayISO := ($n.AddDate 0 0 -1).Format "2006-01-02" -}}
+
+<section class="hero">
+  <h1>Deterministic version numbers from git history</h1>
+  <p class="tagline">gitcalver derives unique, strictly increasing version numbers from your commit timestamps. No manual bumps. No config files. Just git.</p>
+</section>
+
+<section class="example">
+  <h2>How it works</h2>
+  <p>Every first-parent commit on your default branch gets a version based on its UTC commit date and position within that day:</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Commit</th><th>Date (UTC)</th><th>Version</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>a1b2c3d</code></td><td>{{ $yesterdayISO }} 09:00</td><td><code>{{ $yesterday }}.1</code></td></tr>
+        <tr><td><code>e4f5a6b</code></td><td>{{ $yesterdayISO }} 14:30</td><td><code>{{ $yesterday }}.2</code></td></tr>
+        <tr><td><code>c7d8e9f</code></td><td>{{ $yesterdayISO }} 17:00</td><td><code>{{ $yesterday }}.3</code></td></tr>
+        <tr><td><code>0a1b2c3</code></td><td>{{ $todayISO }} 10:00</td><td><code>{{ $today }}.1</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Three commits on the same day &rarr; <code>{{ $yesterday }}.1</code>, <code>.2</code>, <code>.3</code>. New day resets the count.</p>
+</section>
+
+<section class="try-it">
+  <h2>Try it</h2>
+  {{- highlight (printf "curl -sL https://gitcalver.org/sh | sh\n# → %s.1" $today) "sh" "" }}
+</section>
+
+<section class="formats">
+  <h2>Works with your ecosystem</h2>
+  <p>The same commit produces the right version string for each package format:</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th><code>--prefix</code></th><th>Version</th><th>Use for</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><em>(none)</em></td><td><code>{{ $today }}.1</code></td><td>Scripts, Docker, Python, Debian, RPM</td></tr>
+        <tr><td><code>0.</code></td><td><code>0.{{ $today }}.1</code></td><td>npm, Cargo, NuGet, Swift, CocoaPods</td></tr>
+        <tr><td><code>v0.</code></td><td><code>v0.{{ $today }}.1</code></td><td>Go modules</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><a href="/spec/#ecosystem-mapping">Full ecosystem mapping &rarr;</a></p>
+</section>
+
+<section class="cta">
+  <p><a href="/getting-started/" class="button">Add to your build &rarr;</a></p>
+  <p><a href="/spec/">Read the full specification &rarr;</a></p>
+</section>
+
+<script>
+(function() {
+  var m = document.querySelector('meta[name="gcv-build"]');
+  if (!m) return;
+  var bt = m.content, by = m.dataset.yesterday;
+  var n = new Date();
+  var pad = function(v) { return v < 10 ? '0' + v : '' + v; };
+  var at = '' + n.getUTCFullYear() + pad(n.getUTCMonth() + 1) + pad(n.getUTCDate());
+  if (bt === at) return;
+  var y = new Date(n); y.setUTCDate(y.getUTCDate() - 1);
+  var ay = '' + y.getUTCFullYear() + pad(y.getUTCMonth() + 1) + pad(y.getUTCDate());
+  var iso = function(d) { return d.slice(0,4) + '-' + d.slice(4,6) + '-' + d.slice(6); };
+  var replacements = {};
+  replacements[bt] = at; replacements[by] = ay;
+  replacements[iso(bt)] = iso(at); replacements[iso(by)] = iso(ay);
+  var pattern = new RegExp(Object.keys(replacements).join('|'), 'g');
+  document.querySelectorAll('.example, .try-it, .formats').forEach(function(el) {
+    el.innerHTML = el.innerHTML.replace(pattern, function(m) { return replacements[m]; });
+  });
+})();
+</script>
+{{ end }}

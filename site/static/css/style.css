@@ -1,0 +1,377 @@
+/* Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0 */
+
+:root {
+  --text: #1a1a1a;
+  --text-secondary: #555;
+  --bg: #fff;
+  --bg-secondary: #f5f5f5;
+  --border: #ddd;
+  --link: #0066cc;
+  --link-hover: #004499;
+  --code-bg: #f5f5f5;
+  --code-text: #333;
+  --button-bg: #0066cc;
+  --button-text: #fff;
+  --button-hover: #004499;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #e0e0e0;
+    --text-secondary: #aaa;
+    --bg: #1a1a1a;
+    --bg-secondary: #252525;
+    --border: #444;
+    --link: #5cacee;
+    --link-hover: #8cc8ff;
+    --code-bg: #252525;
+    --code-text: #e0e0e0;
+    --button-bg: #5cacee;
+    --button-text: #1a1a1a;
+    --button-hover: #8cc8ff;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
+}
+
+/* Layout */
+
+.site-header {
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 1.5rem;
+}
+
+.site-header nav {
+  max-width: 52rem;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.site-title {
+  font-weight: 700;
+  font-size: 1.2rem;
+  font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+  color: var(--text);
+}
+
+.site-title:hover {
+  color: var(--link);
+  text-decoration: none;
+}
+
+.site-header ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 1.25rem;
+}
+
+.site-header li a {
+  padding: 0.5rem 0;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+main {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+article {
+  max-width: 52rem;
+}
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* Typography */
+
+h1 {
+  font-size: 2rem;
+  line-height: 1.2;
+  margin: 0 0 1rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+  line-height: 1.3;
+  margin: 2rem 0 0.75rem;
+}
+
+h3 {
+  font-size: 1.2rem;
+  line-height: 1.4;
+  margin: 1.5rem 0 0.5rem;
+}
+
+h4 {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 1.25rem 0 0.5rem;
+}
+
+p {
+  margin: 0 0 1rem;
+}
+
+/* Inline code */
+
+code {
+  font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  background: var(--code-bg);
+  padding: 0.15em 0.35em;
+  border-radius: 3px;
+}
+
+/* Code blocks */
+
+pre {
+  overflow-x: auto;
+  padding: 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0 0 1rem;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* Tables */
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 0 0 1rem;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Spec page tables (rendered from Markdown, no .table-wrap) */
+
+article table {
+  display: block;
+  overflow-x: auto;
+  margin: 0 0 1rem;
+}
+
+/* Hero */
+
+.hero {
+  margin: 1rem 0 2rem;
+}
+
+.hero h1 {
+  font-size: 2.25rem;
+}
+
+.tagline {
+  font-size: 1.15rem;
+  color: var(--text-secondary);
+  max-width: 38rem;
+}
+
+/* Sections */
+
+section {
+  margin: 0 0 2.5rem;
+}
+
+/* Button */
+
+.button {
+  display: inline-block;
+  background: var(--button-bg);
+  color: var(--button-text);
+  padding: 0.6rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  min-height: 44px;
+  line-height: 44px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.button:hover {
+  background: var(--button-hover);
+  text-decoration: none;
+  color: var(--button-text);
+}
+
+.cta {
+  text-align: center;
+}
+
+/* Syntax highlighting — modus-operandi (light) */
+
+.bg { color: #000; background-color: #fff; }
+.chroma { color: #000; background-color: var(--code-bg); }
+.chroma .lnlinks { outline: none; text-decoration: none; color: inherit; }
+.chroma .lntd { vertical-align: top; padding: 0; margin: 0; border: 0; }
+.chroma .lntable { border-spacing: 0; padding: 0; margin: 0; border: 0; }
+.chroma .hl { background-color: #e5e5e5; }
+.chroma .lnt { white-space: pre; user-select: none; margin-right: 0.4em; padding: 0 0.4em; color: #7f7f7f; }
+.chroma .ln { white-space: pre; user-select: none; margin-right: 0.4em; padding: 0 0.4em; color: #7f7f7f; }
+.chroma .line { display: flex; }
+.chroma .k { color: #5317ac; }
+.chroma .kc { color: #0000c0; }
+.chroma .kd { color: #5317ac; }
+.chroma .kn { color: #5317ac; }
+.chroma .kp { color: #5317ac; }
+.chroma .kr { color: #5317ac; }
+.chroma .kt { color: #005a5f; }
+.chroma .nb { color: #8f0075; }
+.chroma .bp { color: #8f0075; }
+.chroma .nv { color: #00538b; }
+.chroma .vc { color: #00538b; }
+.chroma .vg { color: #00538b; }
+.chroma .vi { color: #00538b; }
+.chroma .vm { color: #00538b; }
+.chroma .nf { color: #721045; }
+.chroma .fm { color: #721045; }
+.chroma .l { color: #0000c0; }
+.chroma .ld { color: #0000c0; }
+.chroma .s { color: #2544bb; }
+.chroma .sa { color: #2544bb; }
+.chroma .sb { color: #2544bb; }
+.chroma .sc { color: #2544bb; }
+.chroma .dl { color: #2544bb; }
+.chroma .sd { color: #2544bb; }
+.chroma .s2 { color: #2544bb; }
+.chroma .se { color: #2544bb; }
+.chroma .sh { color: #2544bb; }
+.chroma .si { color: #2544bb; }
+.chroma .sx { color: #2544bb; }
+.chroma .sr { color: #2544bb; }
+.chroma .s1 { color: #2544bb; }
+.chroma .ss { color: #2544bb; }
+.chroma .m { color: #0000c0; }
+.chroma .mb { color: #0000c0; }
+.chroma .mf { color: #0000c0; }
+.chroma .mh { color: #0000c0; }
+.chroma .mi { color: #0000c0; }
+.chroma .il { color: #0000c0; }
+.chroma .mo { color: #0000c0; }
+.chroma .o { color: #00538b; }
+.chroma .ow { color: #00538b; }
+.chroma .c { color: #505050; }
+.chroma .ch { color: #505050; }
+.chroma .cm { color: #505050; }
+.chroma .c1 { color: #505050; }
+.chroma .cs { color: #505050; }
+.chroma .cp { color: #505050; }
+.chroma .cpf { color: #505050; }
+.chroma .ge { font-style: italic; }
+.chroma .gs { font-weight: bold; }
+
+/* Syntax highlighting — modus-vivendi (dark) */
+
+@media (prefers-color-scheme: dark) {
+  .bg { color: #fff; background-color: #000; }
+  .chroma { color: #fff; background-color: var(--code-bg); }
+  .chroma .hl { background-color: #191919; }
+  .chroma .k { color: #b6a0ff; }
+  .chroma .kc { color: #00bcff; }
+  .chroma .kd { color: #b6a0ff; }
+  .chroma .kn { color: #b6a0ff; }
+  .chroma .kp { color: #b6a0ff; }
+  .chroma .kr { color: #b6a0ff; }
+  .chroma .kt { color: #6ae4b9; }
+  .chroma .nb { color: #f78fe7; }
+  .chroma .bp { color: #f78fe7; }
+  .chroma .nv { color: #00d3d0; }
+  .chroma .vc { color: #00d3d0; }
+  .chroma .vg { color: #00d3d0; }
+  .chroma .vi { color: #00d3d0; }
+  .chroma .vm { color: #00d3d0; }
+  .chroma .nf { color: #feacd0; }
+  .chroma .fm { color: #feacd0; }
+  .chroma .l { color: #00bcff; }
+  .chroma .ld { color: #00bcff; }
+  .chroma .s { color: #79a8ff; }
+  .chroma .sa { color: #79a8ff; }
+  .chroma .sb { color: #79a8ff; }
+  .chroma .sc { color: #79a8ff; }
+  .chroma .dl { color: #79a8ff; }
+  .chroma .sd { color: #79a8ff; }
+  .chroma .s2 { color: #79a8ff; }
+  .chroma .se { color: #79a8ff; }
+  .chroma .sh { color: #79a8ff; }
+  .chroma .si { color: #79a8ff; }
+  .chroma .sx { color: #79a8ff; }
+  .chroma .sr { color: #79a8ff; }
+  .chroma .s1 { color: #79a8ff; }
+  .chroma .ss { color: #79a8ff; }
+  .chroma .m { color: #00bcff; }
+  .chroma .mb { color: #00bcff; }
+  .chroma .mf { color: #00bcff; }
+  .chroma .mh { color: #00bcff; }
+  .chroma .mi { color: #00bcff; }
+  .chroma .il { color: #00bcff; }
+  .chroma .mo { color: #00bcff; }
+  .chroma .o { color: #00d3d0; }
+  .chroma .ow { color: #00d3d0; }
+  .chroma .c { color: #a8a8a8; }
+  .chroma .ch { color: #a8a8a8; }
+  .chroma .cm { color: #a8a8a8; }
+  .chroma .c1 { color: #a8a8a8; }
+  .chroma .cs { color: #a8a8a8; }
+  .chroma .cp { color: #a8a8a8; }
+  .chroma .cpf { color: #a8a8a8; }
+}

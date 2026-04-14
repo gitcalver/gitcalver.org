@@ -1,0 +1,13 @@
+# Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0
+name: Daily site rebuild
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsX POST "$CF_DEPLOY_HOOK"
+        env:
+          CF_DEPLOY_HOOK: ${{ secrets.CF_DEPLOY_HOOK }}
