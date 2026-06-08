@@ -1,2 +1,2 @@
-/sh https://raw.githubusercontent.com/gitcalver/sh/main/gitcalver.sh 200
+/sh /gitcalver.sh 302
 /go/* /go/ 200

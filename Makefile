@@ -32,7 +32,7 @@ check-fonts:
 	$(PY) check $(PUBLIC)
 
 ## check-html: build and assert the go-import vanity tags, the /go -> pkg.go.dev
-## redirect, and the robots.txt content signal survive in the rendered output.
+## redirect, robots.txt, and the hosted install script survive in the output.
 check-html:
 	$(HUGO) -s $(SITE) --cacheDir "$(CACHE)" --cleanDestinationDir
 	@grep -qF 'name="go-import" content="gitcalver.org/go git https://github.com/gitcalver/go"' $(PUBLIC)/go/index.html || { echo "FAIL: go-import meta missing from /go/index.html"; exit 1; }
@@ -41,6 +41,7 @@ check-html:
 	@! grep -qF 'name="go-import"' $(PUBLIC)/index.html || { echo "FAIL: go-import should be /go-only but appears on the home page"; exit 1; }
 	@grep -qF 'Content-Signal:' $(PUBLIC)/robots.txt || { echo "FAIL: Content-Signal missing from robots.txt"; exit 1; }
 	@grep -q '^Allow: /' $(PUBLIC)/robots.txt || { echo "FAIL: Allow missing from robots.txt"; exit 1; }
+	@grep -q '^#!/bin/sh' $(PUBLIC)/gitcalver.sh || { echo "FAIL: /gitcalver.sh install script missing"; exit 1; }
 	@echo "html check OK"
 
 ## clean: remove build output

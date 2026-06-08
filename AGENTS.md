@@ -75,8 +75,10 @@ deployed by **Workers Builds** from `main` on push — build command `make build
 (output `site/public`), deploy command `npx wrangler deploy`. `wrangler.jsonc`
 (repo root) is the assets-only Worker config pointing at `site/public`.
 `site/static/_headers` sets immutable long-cache on fingerprinted
-`/css/*` and `/fonts/*`; `site/static/_redirects` maps `/sh` to the raw script
-and `/go/*` to the `/go` page. The `/go` page (`layouts/go.html`) carries the
+`/css/*` and `/fonts/*`. `site/static/_redirects` redirects `/sh` to
+`/gitcalver.sh` — the install script, vendored at `site/static/gitcalver.sh`
+from `gitcalver/sh` (Workers Static Assets reject a 200-proxy to an external
+URL, so it's hosted here) — and rewrites `/go/*` to the `/go` page. The `/go` page (`layouts/go.html`) carries the
 `go-import`/`go-source` meta tags that make `gitcalver.org/go` a vanity import
 path, plus a `<meta refresh>` so browsers land on pkg.go.dev while `go get`
 reads the tags. (They live only on `/go`, injected via a `head` block in
