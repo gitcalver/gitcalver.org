@@ -69,11 +69,16 @@ woff2 bytes. See `fonts/README.md`.
 
 ## Deployment
 
-Cloudflare Pages, from `site/public`. `site/static/_headers` sets immutable
-long-cache on fingerprinted `/css/*` and `/fonts/*`; `site/static/_redirects`
-maps `/sh` to the raw script and `/go*` to the home page (the `go-import` meta tag
-in `baseof.html` makes `gitcalver.org/go` a vanity import path). Pin
-`HUGO_VERSION` in the Cloudflare build settings to match `go.mod`.
+Cloudflare Pages builds from the `main` branch with `make build`, output
+`site/public`. `site/static/_headers` sets immutable long-cache on fingerprinted
+`/css/*` and `/fonts/*`; `site/static/_redirects` maps `/sh` to the raw script
+and `/go*` to the home page (the `go-import` meta tag in `baseof.html` makes
+`gitcalver.org/go` a vanity import path).
+
+The build needs only Go — Hugo is pinned via the `go tool` directive in `go.mod`,
+so there is no separate `HUGO_VERSION` to pin; `go tool hugo` resolves the version
+from `go.mod`. Set `GO_VERSION` in the Cloudflare build settings to match the `go`
+directive in `go.mod` (currently `1.26.4`).
 
 ## Conventions
 
