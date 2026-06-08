@@ -1,6 +1,6 @@
 ---
 title: "Getting Started"
-description: "Add gitcalver to your build — shell, Python, Go, GitHub Actions, npm, Docker"
+description: "Add GitCalVer to your build — shell, Python, Go, GitHub Actions, npm, Docker"
 # Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0
 ---
 
@@ -19,22 +19,21 @@ Or install locally:
 
 ```sh
 curl -sLO https://gitcalver.org/sh && chmod +x sh && mv sh gitcalver.sh
-./gitcalver.sh              # → 20260411.3
-./gitcalver.sh --prefix 0.  # → 0.20260411.3
-./gitcalver.sh --prefix v0. # → v0.20260411.3
+./gitcalver.sh                # → 20260411.3
+./gitcalver.sh --prefix "0."  # → 0.20260411.3
+./gitcalver.sh --prefix "v0." # → v0.20260411.3
 ```
 
 Options:
 
 ```sh
-./gitcalver.sh --prefix 0. --dirty -dirty  # SemVer ecosystems
-./gitcalver.sh --allow-dirty      # Allow dirty workspace
-./gitcalver.sh --branch release   # Use a specific branch
+./gitcalver.sh --prefix "0." --dirty "-dirty"  # SemVer ecosystems, allow dirty
+./gitcalver.sh --branch "release"              # mint versions on a specific branch
 ```
 
 ## Python (Hatch)
 
-Add gitcalver as a [Hatch](https://hatch.pypa.io/) version source plugin in
+Add GitCalVer as a [Hatch](https://hatch.pypa.io/) version source plugin in
 your `pyproject.toml`:
 
 ```toml
@@ -143,7 +142,7 @@ Or in `package.json` scripts:
 
 ## Docker
 
-Tag images with the gitcalver version:
+Tag images with the GitCalVer version:
 
 ```sh
 VERSION=$(./gitcalver.sh)

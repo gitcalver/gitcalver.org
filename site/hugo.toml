@@ -1,7 +1,7 @@
 # Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0
 baseURL = "https://gitcalver.org/"
 title = "gitcalver"
-languageCode = "en-us"
+locale = "en-us"
 
 disableKinds = ["taxonomy", "term"]
 
@@ -12,3 +12,8 @@ guessSyntax = false
 
 [markup.goldmark.renderer]
 unsafe = true
+
+# Allow the Cloudflare analytics token to be read at build time; the default
+# getenv allowlist only covers HUGO_* and CI.
+[security.funcs]
+getenv = ['^HUGO_', '^CI$', '^CF_ANALYTICS_TOKEN$']

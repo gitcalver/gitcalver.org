@@ -1,0 +1,246 @@
+{{- /* Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0 */ -}}
+{{ define "main" }}
+{{- $n := now.UTC -}}
+{{- $today := $n.Format "20060102" -}}
+{{- $Y := $n.Format "2006" -}}
+{{- $M := $n.Format "01" -}}
+{{- $D := $n.Format "02" -}}
+
+  <!-- HERO -->
+  <div class="hero wrap">
+    <h1>Version numbers <em>your git history already knows.</em></h1>
+    <p class="lede">GitCalVer reads a commit's UTC committer date and its position in that day to produce a unique, strictly increasing version. Nothing to bump, nothing to remember — the format is <span class="mono">YYYYMMDD.N</span>.</p>
+  </div>
+
+  <!-- ANNOTATED EXAMPLE -->
+  <div class="wrap">
+    <div class="example-stage">
+
+      <div class="tag"><span class="ln"></span>A version, taken apart<span class="ln"></span></div>
+
+      <div class="version" id="gcv-version" aria-label="Example version {{ $today }}.1">
+        <div class="seg seg-date">
+          <span class="digits" id="gcv-date">{{ $today }}</span>
+          <span class="brace" aria-hidden="true"></span>
+        </div>
+
+        <span class="dot">.</span>
+
+        <div class="seg seg-count">
+          <span class="digits">1</span>
+          <span class="brace" aria-hidden="true"></span>
+        </div>
+      </div>
+
+      <div class="legend">
+        <div class="col col-date">
+          <span class="k"><span class="mk"></span> UTC date <span class="val">{{ $today }}</span></span>
+          <span class="v">The day the commit landed, as a UTC committer date — never local time.</span>
+        </div>
+        <div class="col col-count">
+          <span class="k"><span class="mk"></span> Commit count <span class="val">.1</span></span>
+          <span class="v">Consecutive first-parent commits up to this one that share its UTC date.</span>
+        </div>
+      </div>
+
+      <div class="subdate" aria-hidden="true">
+        <div class="cell"><div class="big" id="gcv-year">{{ $Y }}</div><div class="lbl">Year</div></div>
+        <div class="cell"><div class="big" id="gcv-month">{{ $M }}</div><div class="lbl">Month</div></div>
+        <div class="cell"><div class="big" id="gcv-day">{{ $D }}</div><div class="lbl">Day</div></div>
+      </div>
+
+      <p class="today" id="gcv-today"><span class="pulse"></span>The first commit pushed on <span class="mono">{{ $today }}</span> (UTC) is <span class="mono">{{ $today }}.1</span>.</p>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <section id="how" class="wrap">
+    <div class="two-col">
+      <div>
+        <div class="sec-head" style="margin-bottom:18px">
+          <h2>Four rules, no configuration</h2>
+          <p>GitCalVer is a deterministic function of history. Give it a commit, get its version. Give it a clean version, get the commit back.</p>
+        </div>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="num">1</div>
+          <div>
+            <h3>Take the commit's UTC date</h3>
+            <p>Committer date, normalized to UTC, formatted as <code>YYYYMMDD</code>. Time zones never leak in.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">2</div>
+          <div>
+            <h3>Count commits on that date</h3>
+            <p>Walk the default branch's first-parent history and count the consecutive commits that share this UTC date, up to and including this one.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <div>
+            <h3>Join them with a dot</h3>
+            <p>The result is <code>YYYYMMDD.N</code> — e.g. the third commit on April 11 is <code>20260411.3</code>.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">4</div>
+          <div>
+            <h3>It's reversible</h3>
+            <p>Every clean version maps back to exactly one commit, so <code>20260411.3</code> resolves to a single hash.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- PROPERTIES -->
+  <section id="properties" class="wrap">
+    <div class="sec-head">
+      <h2>Boring on purpose</h2>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3>Strictly increasing</h3>
+        <p>Later commits always sort after earlier ones. <code>20260607.1</code> &lt; <code>20260607.2</code> &lt; <code>20260608.1</code> — by plain numeric order, as long as committer dates never go backwards.</p>
+      </div>
+      <div class="card">
+        <h3>Unique per commit</h3>
+        <p>Each first-parent commit on the default branch maps to one date-plus-count pair. No two ever resolve to the same clean string.</p>
+      </div>
+      <div class="card">
+        <h3>Reversible</h3>
+        <p>Pass a clean version back to GitCalVer and it returns the exact commit hash. Versions are an index into history.</p>
+      </div>
+      <div class="card">
+        <h3>Zero config</h3>
+        <p>No version file to bump, no tags to maintain by hand. The only dependency is <code>git</code> itself.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- SPEC -->
+  <section id="spec" class="wrap">
+    <div class="sec-head">
+      <h2>Everything that defines a version</h2>
+    </div>
+    <div class="spec">
+      <div class="row"><div class="key">format</div><div class="val"><code>YYYYMMDD.N</code></div></div>
+      <div class="row"><div class="key">YYYYMMDD</div><div class="val">The commit's <strong>committer date</strong> in UTC, zero-padded. Local time is never used.</div></div>
+      <div class="row"><div class="key">N</div><div class="val">1-based count of consecutive first-parent commits sharing that UTC date, up to and including this commit.</div></div>
+      <div class="row"><div class="key">ordering</div><div class="val">Compare as date, then as integer <code>N</code>. Strictly monotonic so long as committer dates never decrease.</div></div>
+      <div class="row"><div class="key">prefix</div><div class="val">An optional literal string, e.g. <code>v0.</code> → <code>v0.20260607.1</code> for SemVer / Go tooling.</div></div>
+      <div class="row"><div class="key">dirty</div><div class="val">With <code>--dirty</code>, an uncommitted tree emits a marked, non-reversible version like <code>20260607.1-dirty.abc1234</code>. Clean by default.</div></div>
+    </div>
+    <a class="more" href="/spec/">Read the full specification →</a>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- USE IT -->
+  <section id="use" class="wrap">
+    <div class="sec-head">
+      <h2>One file, one command</h2>
+      <p>The reference implementation is a portable POSIX shell script. Its only dependency is git 2.15+.</p>
+    </div>
+    <div class="two-col">
+      <div class="code">
+        <div class="bar"><span>install.sh</span><button class="copy" data-copy="curl -fsSLO https://github.com/gitcalver/sh/releases/latest/download/gitcalver.sh&#10;chmod +x gitcalver.sh">copy</button></div>
+        <pre><span class="cm"># grab the script, make it executable</span>
+curl -fsSLO https://github.com/gitcalver/sh/\
+releases/latest/download/gitcalver.sh
+chmod +x gitcalver.sh</pre>
+      </div>
+      <div class="code">
+        <div class="bar"><span>run it</span><button class="copy" data-copy="./gitcalver.sh">copy</button></div>
+<pre><span class="cm"># version for HEAD</span>
+<span class="pr">$</span> ./gitcalver.sh
+<span class="out">20260607.1</span>
+
+<span class="cm"># reverse: clean version → commit</span>
+<span class="pr">$</span> ./gitcalver.sh 20260607.1
+<span class="out">a1b2c3d4e5f6…</span></pre>
+      </div>
+    </div>
+
+    <div style="margin-top:34px">
+      <div class="impl">
+        <a href="https://github.com/gitcalver/sh" rel="noopener">
+          <span class="badge">sh</span>
+          <span class="body">
+            <span class="t">gitcalver/sh <span class="live">reference</span></span>
+            <span class="d">Portable POSIX shell implementation · ships a GitHub Action with <span class="mono">prefix</span>, <span class="mono">dirty</span>, <span class="mono">dirty-hash</span>, <span class="mono">branch</span> &amp; <span class="mono">tag</span> inputs</span>
+          </span>
+          <span class="arr" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg>
+          </span>
+        </a>
+        <span class="static-row">
+          <span class="badge">CI</span>
+          <span class="body">
+            <span class="t">GitHub Action <span class="live soon">included</span></span>
+            <span class="d"><span class="mono">uses: gitcalver/sh</span> — outputs <span class="mono">version, date, count, dirty, hash</span></span>
+          </span>
+        </span>
+      </div>
+    </div>
+
+    <!-- CI snippet -->
+    <div class="code" style="margin-top:24px">
+      <div class="bar"><span>.github/workflows/release.yml</span><button class="copy" data-copy="- uses: gitcalver/sh@v20260530.6&#10;  id: version&#10;  with:&#10;    prefix: 'v'&#10;    tag: 'true'">copy</button></div>
+<pre><span class="cm"># mint a version on every push</span>
+<span class="cm"># pin to a release tag — or a full commit SHA for the strongest supply-chain guarantee</span>
+- uses: gitcalver/sh@v20260530.6
+  id: version
+  with:
+    prefix: <span class="out">'v'</span>
+    tag: <span class="out">'true'</span></pre>
+    </div>
+  </section>
+
+<script>
+(function(){
+  function pad(v){return v<10?'0'+v:''+v;}
+  function parts(){
+    var d=new Date();
+    return {
+      ymd:''+d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate()),
+      y:''+d.getUTCFullYear(), m:pad(d.getUTCMonth()+1), d:pad(d.getUTCDate())
+    };
+  }
+  function set(id,t){var el=document.getElementById(id);if(el)el.textContent=t;}
+  function render(){
+    var p=parts();
+    set('gcv-date',p.ymd);
+    set('gcv-year',p.y); set('gcv-month',p.m); set('gcv-day',p.d);
+    var v=document.getElementById('gcv-version');
+    if(v)v.setAttribute('aria-label','Example version '+p.ymd+'.1');
+    var t=document.getElementById('gcv-today');
+    if(t)t.innerHTML='<span class="pulse"></span>Today is <span class="mono">'+p.ymd+
+      '</span> in UTC — the first commit pushed today would be <span class="mono">'+p.ymd+'.1</span>.';
+  }
+  render();
+  // Re-render just after each UTC midnight (1s cushion so it never fires early)
+  // so a page left open rolls over to the new day, every day.
+  (function tick(){
+    var d=new Date();
+    var next=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()+1,0,0,1);
+    setTimeout(function(){render();tick();}, next-d.getTime());
+  })();
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var txt=btn.getAttribute('data-copy');
+      if(navigator.clipboard)navigator.clipboard.writeText(txt).then(function(){
+        var old=btn.textContent; btn.textContent='copied';
+        setTimeout(function(){btn.textContent=old;},1400);
+      }).catch(function(){});
+    });
+  });
+})();
+</script>
+{{ end }}

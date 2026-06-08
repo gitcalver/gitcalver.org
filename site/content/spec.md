@@ -1,6 +1,6 @@
 ---
 title: "Specification"
-description: "gitcalver specification — version format, algorithm, output formats, and edge cases"
+description: "GitCalVer specification — version format, algorithm, output formats, and edge cases"
 # Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0
 ---
 
@@ -8,7 +8,7 @@ description: "gitcalver specification — version format, algorithm, output form
 
 ## Abstract
 
-gitcalver is a versioning scheme that derives version numbers deterministically
+GitCalVer is a versioning scheme that derives version numbers deterministically
 from git history. Each first-parent commit on the default branch maps to a
 unique, strictly increasing version number based on the commit's UTC date and
 its position within that day's commits.
@@ -82,7 +82,7 @@ To compute the version for HEAD:
 
 ### Committer date
 
-gitcalver uses the **committer date**, not the author date. The committer date
+GitCalVer uses the **committer date**, not the author date. The committer date
 reflects when a commit was applied to the branch (updated by rebase, amend,
 cherry-pick). The author date reflects original authorship and is preserved
 across history rewrites.
@@ -130,7 +130,7 @@ A version is dirty when either condition holds:
 
 ## Default branch
 
-gitcalver versions are derived from the default branch's first-parent history.
+GitCalVer versions are derived from the default branch's first-parent history.
 
 ### Detection precedence
 
@@ -182,7 +182,7 @@ and dirty suffix, controlled by flags rather than named formats.
 ### Base version
 
 The base version is always `YYYYMMDD.N`. This is the invariant core of
-gitcalver and cannot be changed.
+GitCalVer and cannot be changed.
 
 ### Prefix
 
@@ -307,9 +307,9 @@ Dirty versions are not expressible.
 **Chrome extension limitation:** Chrome extension versions (`version`) are
 1–4 dot-separated integers, each between 0 and 65,535 ([Chrome manifest
 version][chrome]). Since `YYYYMMDD` values (e.g., `20260412`) exceed
-65,535, gitcalver versions cannot be used as the `version`. However,
+65,535, GitCalVer versions cannot be used as the `version`. However,
 Chrome's `version_name` is a freeform string displayed to users instead of
-`version` when present. gitcalver can be used as the `version_name`.
+`version` when present. GitCalVer can be used as the `version_name`.
 
 **Firefox add-on limitation:** Firefox add-on versions are 1–4 dot-separated
 integers, each up to 2,147,483,647 ([WebExtensions manifest][firefox]).
@@ -348,7 +348,7 @@ version.
 - `FirmwareRevision` characteristic: format is `x[.y[.z]]` where each
   segment is a uint32. `YYYYMMDD.N` (two segments) is valid and
   `20260412` fits within uint32. The value must change after every
-  firmware update, which gitcalver guarantees.
+  firmware update, which GitCalVer guarantees.
 
 ### Numeric limits
 
@@ -389,12 +389,12 @@ numeric constraints:
 
 ## Shallow clones
 
-gitcalver works with shallow clones as long as the clone includes all
+GitCalVer works with shallow clones as long as the clone includes all
 first-parent commits for the current UTC date. If the clone is too shallow
 (the oldest commit in the walked history shares HEAD's date), the count may
 be incomplete. Implementations SHOULD detect this and warn.
 
-A safe shallow clone depth for gitcalver is any depth that includes at least
+A safe shallow clone depth for GitCalVer is any depth that includes at least
 one commit from the previous UTC date, for example:
 
 ```sh
