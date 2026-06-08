@@ -98,7 +98,7 @@ header.site-header{
 .hero{padding:96px 0 40px;text-align:center}
 .hero h1{
   font-size:clamp(34px,5.4vw,58px);line-height:1.05;font-weight:600;
-  letter-spacing:-0.025em;max-width:16ch;margin:0 auto;
+  letter-spacing:-0.025em;max-width:16ch;margin:0 auto;text-wrap:balance;
 }
 .hero h1 em{font-style:normal;color:var(--text-soft)}
 .hero .lede{
@@ -209,7 +209,7 @@ header.site-header{
 section{padding:108px 0 78px;scroll-margin-top:78px}
 section.wrap{padding-top:108px;padding-bottom:78px}
 .sec-head{margin-bottom:38px;max-width:60ch}
-.sec-head h2{font-size:clamp(24px,3.4vw,32px);font-weight:600;letter-spacing:-0.02em;line-height:1.15}
+.sec-head h2{font-size:clamp(24px,3.4vw,32px);font-weight:600;letter-spacing:-0.02em;line-height:1.15;text-wrap:balance}
 .sec-head p{color:var(--text-soft);font-size:17px;margin-top:14px;text-wrap:pretty}
 .divider{border:none;border-top:1px solid var(--border)}
 
@@ -220,7 +220,7 @@ section.wrap{padding-top:108px;padding-bottom:78px}
   padding:26px 26px 28px;transition:.18s;
 }
 .card:hover{border-color:var(--border-strong);transform:translateY(-2px);box-shadow:var(--shadow)}
-.card h3{font-size:18px;font-weight:600;letter-spacing:-0.01em;margin-bottom:8px}
+.card h3{font-size:18px;font-weight:600;letter-spacing:-0.01em;margin-bottom:8px;text-wrap:balance}
 .card p{color:var(--text-soft);font-size:14.5px;line-height:1.6}
 .card code{
   font-family:"IBM Plex Mono",monospace;font-size:.92em;
@@ -259,13 +259,13 @@ section.wrap{padding-top:108px;padding-bottom:78px}
   font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:500;
   background:var(--bg-sunk);border:1px solid var(--border);color:var(--text);
 }
-.step h3{font-size:16.5px;font-weight:600;margin-bottom:4px;letter-spacing:-0.01em}
+.step h3{font-size:16.5px;font-weight:600;margin-bottom:4px;letter-spacing:-0.01em;text-wrap:balance}
 .step p{color:var(--text-soft);font-size:14.5px}
 .step p code{font-family:"IBM Plex Mono",monospace;background:var(--bg-sunk);padding:1px 6px;border-radius:5px;font-size:.9em}
 
 /* impl list */
 .impl{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--panel)}
-.impl a{
+.impl a,.impl .static-row{
   display:flex;align-items:center;gap:18px;padding:20px 22px;text-decoration:none;
   border-top:1px solid var(--border);transition:.15s;
 }

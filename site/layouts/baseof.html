@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ if .IsHome }}gitcalver — calendar versioning from git history{{ else }}{{ .Title }} — gitcalver{{ end }}</title>
-  <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}GitCalVer derives strictly-increasing, calendar-based version numbers from git history. YYYYMMDD.N — the UTC committer date, plus the commit's ordinal that day.{{ end }}">
+  <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}GitCalVer derives strictly-increasing, calendar-based version numbers from git history.{{ end }}">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <meta name="go-import" content="gitcalver.org/go git https://github.com/gitcalver/go">
   <meta name="go-source" content="gitcalver.org/go https://github.com/gitcalver/go https://github.com/gitcalver/go/tree/main{/dir} https://github.com/gitcalver/go/blob/main{/dir}/{file}#L{line}">
@@ -51,7 +51,7 @@
             <span class="glyph">gcv</span>
             <span><b>git</b><span class="sans-light">calver</span></span>
           </a>
-          <p>Calendar-based version numbers derived from git history. <span class="mono">YYYYMMDD.N</span> — the UTC committer date, and the commit's place in it.</p>
+          <p>Calendar-based version numbers derived from git history. <span class="mono">YYYYMMDD.N</span></p>
         </div>
         <div class="links">
           <div class="col">
@@ -70,7 +70,7 @@
       </div>
       <div class="foot-base">
         <span>gitcalver.org</span>
-        <span>Site text <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a> · gitcalver.sh MIT · git 2.15+</span>
+        <span>Licenses: text <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>, code MIT</span>
       </div>
     </div>
   </footer>

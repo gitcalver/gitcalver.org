@@ -53,7 +53,11 @@ woff2 bytes. See `fonts/README.md`.
   `page.html` live directly in `layouts/`, not under `_default/`.
 - **No comment before `{{ define }}`** in a layout — put the copyright inside the
   template comment (`{{- /* ... */ -}}`), as the existing layouts do, or the
-  define won't register.
+  define won't register (Hugo then skips `baseof.html` and the page renders
+  blank). Keep that comment on a single line: an auto-formatter that reflows it
+  across lines splits `*/` from `-}}` and re-triggers this. `site/layouts/.dir-locals.el`
+  sets `apheleia-inhibit` to keep Prettier (via Emacs apheleia) off these files
+  for exactly this reason — the layouts are hand-formatted on purpose.
 - `site/assets/css/main.css` is run through `resources.ExecuteAsTemplate` — it
   contains Hugo template syntax (`{{ ... }}` for fingerprinted font URLs), then is
   minified and fingerprinted. It is a template, not plain CSS.
