@@ -12,8 +12,3 @@ guessSyntax = false
 
 [markup.goldmark.renderer]
 unsafe = true
-
-# Allow the Cloudflare analytics token to be read at build time; the default
-# getenv allowlist only covers HUGO_* and CI.
-[security.funcs]
-getenv = ['^HUGO_', '^CI$', '^CF_ANALYTICS_TOKEN$']

@@ -24,3 +24,6 @@ jobs:
       # Builds the site (catching template errors) and fails if the committed
       # subsetted fonts don't cover every glyph the rendered HTML uses.
       - run: make check-fonts
+      # Asserts the rendered HTML keeps the go-import vanity tags, the /go
+      # redirect, and the robots.txt content signal (formerly the CF worker).
+      - run: make check-html

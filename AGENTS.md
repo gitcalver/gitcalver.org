@@ -12,8 +12,8 @@ implementations live in sibling repos under `github.com/gitcalver` (`sh`, `go`,
 
 The site itself is a build-time function of the date: `layouts/home.html` renders
 *today's* example version (`now.UTC`) into the hero, and client JS rolls it over
-at UTC midnight. The `daily-build` workflow pokes a Cloudflare deploy hook every
-day so a freshly-built page always shows the current date.
+at UTC midnight, so live visitors always see the current date even between
+deploys (the server-rendered hero shows the date of the last build).
 
 ## Commands
 
@@ -25,10 +25,11 @@ deps are Go and `uv`.
 - `make build` — render to `site/public`
 - `make fonts` — regenerate subsetted woff2 + favicon (see below); commit the result
 - `make check-fonts` — CI guard; build the site and fail if committed fonts miss a glyph
+- `make check-html` — CI guard; build and assert the go-import tags, `/go` redirect, and `robots.txt` survive
 - `make clean` — remove `site/public` and `site/resources`
 
-CI (`.github/workflows/check.yml`) runs `make check-fonts` on every push/PR, which
-also catches Hugo template errors since it builds the site first.
+CI (`.github/workflows/check.yml`) runs `make check-fonts` and `make check-html` on
+every push/PR, which also catches Hugo template errors since they build the site first.
 
 ## Font pipeline (the non-obvious part)
 
@@ -63,21 +64,27 @@ woff2 bytes. See `fonts/README.md`.
   minified and fingerprinted. It is a template, not plain CSS.
 - Markdown allows raw HTML (`markup.goldmark.renderer.unsafe = true`); the spec
   and getting-started pages rely on this.
-- `CF_ANALYTICS_TOKEN` is read at build time and is explicitly allowlisted in
-  `hugo.toml` under `[security.funcs] getenv` (the default allowlist is `HUGO_*`/`CI`
-  only). The analytics `<script>` only renders when that env var is set.
+- **Analytics** is Cloudflare Web Analytics in *automatic* mode — the beacon is
+  injected at the edge, so the site ships no analytics `<script>` and needs no
+  `CF_ANALYTICS_TOKEN`. Don't re-add a manual beacon, or page views double-count.
 
 ## Deployment
 
-Cloudflare Pages builds from the `main` branch with `make build`, output
-`site/public`. `site/static/_headers` sets immutable long-cache on fingerprinted
+gitcalver.org is served by a Cloudflare **Worker (Static Assets)**, built and
+deployed by **Workers Builds** from `main` on push — build command `make build`
+(output `site/public`), deploy command `npx wrangler deploy`. `wrangler.jsonc`
+(repo root) is the assets-only Worker config pointing at `site/public`.
+`site/static/_headers` sets immutable long-cache on fingerprinted
 `/css/*` and `/fonts/*`; `site/static/_redirects` maps `/sh` to the raw script
-and `/go*` to the home page (the `go-import` meta tag in `baseof.html` makes
-`gitcalver.org/go` a vanity import path).
+and `/go/*` to the `/go` page. The `/go` page (`layouts/go.html`) carries the
+`go-import`/`go-source` meta tags that make `gitcalver.org/go` a vanity import
+path, plus a `<meta refresh>` so browsers land on pkg.go.dev while `go get`
+reads the tags. (They live only on `/go`, injected via a `head` block in
+`baseof.html` — not on every page.)
 
 The build needs only Go — Hugo is pinned via the `go tool` directive in `go.mod`,
 so there is no separate `HUGO_VERSION` to pin; `go tool hugo` resolves the version
-from `go.mod`. Set `GO_VERSION` in the Cloudflare build settings to match the `go`
+from `go.mod`. Set `GO_VERSION` in the Workers build settings to match the `go`
 directive in `go.mod` (currently `1.26.4`).
 
 ## Conventions

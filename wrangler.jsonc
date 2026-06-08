@@ -1,0 +1,11 @@
+// Copyright © 2026 Michael Shields. SPDX-License-Identifier: MIT
+// Assets-only Worker: serves the Hugo build output as a static site.
+// Workers Builds runs `make build` (-> site/public), then `npx wrangler deploy`
+// uploads ./site/public. No server code; _headers and _redirects are honored.
+{
+  "name": "gitcalver-org-site",
+  "compatibility_date": "2026-06-08",
+  "assets": {
+    "directory": "./site/public"
+  }
+}

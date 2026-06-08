@@ -7,8 +7,6 @@
   <title>{{ if .IsHome }}gitcalver — calendar versioning from git history{{ else }}{{ .Title }} — gitcalver{{ end }}</title>
   <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}GitCalVer derives strictly-increasing, calendar-based version numbers from git history.{{ end }}">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <meta name="go-import" content="gitcalver.org/go git https://github.com/gitcalver/go">
-  <meta name="go-source" content="gitcalver.org/go https://github.com/gitcalver/go https://github.com/gitcalver/go/tree/main{/dir} https://github.com/gitcalver/go/blob/main{/dir}/{file}#L{line}">
 
   {{- /* Sans 450 is the body font (critical on every page); the Mono 500 weight
          is only above-the-fold on the home hero's big version number. */ -}}
@@ -21,6 +19,7 @@
 
   {{- $css := resources.Get "css/main.css" | resources.ExecuteAsTemplate "css/main.css" . | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
+  {{- block "head" . }}{{ end }}
 </head>
 <body>
   <header class="site-header">
@@ -74,10 +73,5 @@
       </div>
     </div>
   </footer>
-
-  {{ with getenv "CF_ANALYTICS_TOKEN" }}
-  <script defer src="https://static.cloudflareinsights.com/beacon.min.js"
-    data-cf-beacon='{"token": "{{ . }}"}'></script>
-  {{ end }}
 </body>
 </html>

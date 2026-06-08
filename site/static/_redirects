@@ -1,3 +1,2 @@
 /sh https://raw.githubusercontent.com/gitcalver/sh/main/gitcalver.sh 200
-/go/* / 200
-/go / 200
+/go/* /go/ 200
