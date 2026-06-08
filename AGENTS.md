@@ -78,12 +78,13 @@ deployed by **Workers Builds** from `main` on push — build command `make build
 `/css/*` and `/fonts/*`. `site/static/_redirects` redirects `/sh` to
 `/gitcalver.sh` — the install script, vendored at `site/static/gitcalver.sh`
 from `gitcalver/sh` (Workers Static Assets reject a 200-proxy to an external
-URL, so it's hosted here) — and rewrites `/go/*` to `/go.html`. `/go` is a
-standalone static page (`site/static/go.html`) carrying the `go-import`/`go-source`
-meta tags that make `gitcalver.org/go` a vanity import path, plus a `<meta refresh>`
-so browsers land on pkg.go.dev while `go get` reads the tags. Serving it as a
-top-level file (not `/go/index.html`) means `/go` — the path `go get` requests —
-is served directly with no trailing-slash redirect.
+URL, so it's hosted here). `/go` is a standalone static page
+(`site/static/go.html`) carrying the `go-import`/`go-source` meta tags that make
+`gitcalver.org/go` a vanity import path, plus a `<meta refresh>` so browsers land
+on pkg.go.dev while `go get` reads the tags. Served as a top-level file (not
+`/go/index.html`), `/go` — the path `go get` requests — has no trailing-slash
+redirect; Workers redirects `/go/<subpkg>` to `/go`, which `go get` follows for
+subpackage resolution.
 
 The build needs only Go — Hugo is pinned via the `go tool` directive in `go.mod`,
 so there is no separate `HUGO_VERSION` to pin; `go tool hugo` resolves the version
