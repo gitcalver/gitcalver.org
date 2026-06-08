@@ -19,7 +19,6 @@
 
   {{- $css := resources.Get "css/main.css" | resources.ExecuteAsTemplate "css/main.css" . | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
-  {{- block "head" . }}{{ end }}
 </head>
 <body>
   <header class="site-header">
