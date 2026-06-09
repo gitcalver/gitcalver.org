@@ -16,8 +16,11 @@ PY       := uv run --quiet --no-dev python fonts/build.py
 PRETTIER := npx --yes prettier@3.8.3 '**/*.md'
 RUFF     := uv run ruff
 TY       := uv run ty
+# Pinned like Prettier for reproducible audits; the Renovate customManager in
+# .github/renovate.json5 keeps this version current.
+LHCI     := npx --yes @lhci/cli@0.15.1
 
-.PHONY: build serve fonts check-fonts check-html lint fmt clean
+.PHONY: build serve fonts check-fonts check-html lighthouse lint fmt clean
 
 ## build: render the site to site/public
 build:
@@ -50,6 +53,13 @@ check-html:
 	@grep -q '^Allow: /' $(PUBLIC)/robots.txt || { echo "FAIL: Allow missing from robots.txt"; exit 1; }
 	@grep -q '^#!/bin/sh' $(PUBLIC)/gitcalver.sh || { echo "FAIL: /gitcalver.sh install script missing"; exit 1; }
 	@echo "html check OK"
+
+## lighthouse: build the site and audit it with Lighthouse
+## (lighthouse:recommended) via lhci's static server; see lighthouserc.cjs.
+lighthouse:
+	$(HUGO) -s $(SITE) --cacheDir "$(CACHE)" --cleanDestinationDir
+	$(LHCI) collect --config=lighthouserc.cjs
+	$(LHCI) assert --config=lighthouserc.cjs
 
 ## lint: check Markdown formatting and lint/typecheck the Python font script
 lint:

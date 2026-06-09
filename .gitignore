@@ -1,3 +1,6 @@
 # uv-managed virtualenv (created from pyproject.toml + uv.lock) and bytecode.
 /.venv/
 __pycache__/
+
+# Lighthouse CI run artifacts (LHR reports + assertion results).
+/.lighthouseci/

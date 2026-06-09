@@ -21,13 +21,16 @@
   ],
   customManagers: [
     {
-      // The Makefile pins Prettier (`prettier@x.y.z`) so `make lint` is
-      // reproducible; keep that version current like any other dependency.
+      // The Makefile pins Prettier (`prettier@x.y.z`) and lhci
+      // (`@lhci/cli@x.y.z`) so `make lint`/`make lighthouse` are reproducible;
+      // keep those versions current like any other dependency.
       customType: "regex",
       managerFilePatterns: ["/^Makefile$/"],
-      matchStrings: ["prettier@(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
+      matchStrings: [
+        "(?<depName>prettier)@(?<currentValue>\\d+\\.\\d+\\.\\d+)",
+        "(?<depName>@lhci/cli)@(?<currentValue>\\d+\\.\\d+\\.\\d+)",
+      ],
       datasourceTemplate: "npm",
-      depNameTemplate: "prettier",
     },
   ],
 }
