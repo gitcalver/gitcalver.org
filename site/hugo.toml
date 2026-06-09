@@ -5,6 +5,14 @@ locale = "en-us"
 
 disableKinds = ["taxonomy", "term"]
 
+[minify]
+# minifyOutput is the config-file equivalent of `hugo --minify`; it minifies
+# Hugo-rendered pages and feeds (home 15.2 KB -> 11.4 KB), but NOT static
+# passthrough files: site/static/go.html is copied verbatim and keeps its
+# quoted attributes, so check-html's exact-match greps on it still hold. The
+# minifier also preserves <pre>, so code blocks are unaffected.
+minifyOutput = true
+
 [markup.highlight]
 noClasses = false
 lineNos = false
