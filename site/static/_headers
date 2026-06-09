@@ -1,16 +1,14 @@
 # HTML and other non-fingerprinted assets: a short cache so content edits
 # propagate quickly. Cloudflare _headers MERGES same-name headers from every
-# matching rule (it is not most-specific-wins), so the fingerprinted /css/* and
-# /fonts/* rules below first strip this inherited value with `! Cache-Control`;
-# otherwise those assets would get a combined "max-age=600, …, immutable" header
-# and browsers would honor the 600, defeating the long cache.
+# matching rule (it is not most-specific-wins), so the fingerprinted /fonts/*
+# rule below first strips this inherited value with `! Cache-Control`; otherwise
+# those assets would get a combined "max-age=600, …, immutable" header and
+# browsers would honor the 600, defeating the long cache.
 /*
   Cache-Control: public, max-age=600
 # Fingerprinted assets carry a content hash in their filename, so they can be
-# cached forever — a content change yields a new URL.
-/css/*
-  ! Cache-Control
-  Cache-Control: public, max-age=31536000, immutable
+# cached forever — a content change yields a new URL. (The CSS is inlined into
+# the HTML, so the only fingerprinted assets left are the fonts.)
 /fonts/*
   ! Cache-Control
   Cache-Control: public, max-age=31536000, immutable

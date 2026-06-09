@@ -21,8 +21,11 @@
   <link rel="preload" as="font" type="font/woff2" href="{{ $mono.RelPermalink }}" crossorigin>
   {{- end }}
 
-  {{- $css := resources.Get "css/main.css" | resources.ExecuteAsTemplate "css/main.css" . | minify | fingerprint -}}
-  <link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
+  {{- /* Inlined, not linked: the whole sheet is ~5 KB brotli, so a separate
+         render-blocking request costs more than keeping it cacheable saves.
+         Keep ExecuteAsTemplate so the @font-face URLs still fingerprint. */ -}}
+  {{- $css := resources.Get "css/main.css" | resources.ExecuteAsTemplate "css/main.css" . | minify -}}
+  <style>{{ $css.Content | safeCSS }}</style>
 </head>
 <body>
   <header class="site-header">
