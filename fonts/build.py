@@ -11,6 +11,7 @@ rendered HTML so any character used on the site is covered.
 Run via `make fonts` / `make check-fonts`, which build the site first.
 """
 
+import html
 import pathlib
 import sys
 
@@ -48,13 +49,17 @@ BASELINE = set(range(MIN_CODEPOINT, 0x7F)) | {0xA0}
 def collect_codepoints(html_dir: str) -> set[int]:
     """Every codepoint appearing in the rendered HTML (a safe superset of the
     visible text — markup/URLs are ASCII and harmless to include). This also
-    captures JS-injected strings, which are literals in the page source."""
+    captures JS-injected strings, which are literals in the page source.
+
+    Entities are decoded first so typographer output like `&rsquo;` / `&mdash;`
+    counts as the glyph the browser renders, not as the ASCII of `&rsquo;`."""
     cps = set(BASELINE)
     files = list(pathlib.Path(html_dir).rglob("*.html"))
     if not files:
         sys.exit(f"no .html under {html_dir!r} — build the site first")
     for p in files:
-        cps.update(ord(c) for c in p.read_text(encoding="utf-8", errors="replace"))
+        text = html.unescape(p.read_text(encoding="utf-8", errors="replace"))
+        cps.update(ord(c) for c in text)
     return {
         c
         for c in cps
