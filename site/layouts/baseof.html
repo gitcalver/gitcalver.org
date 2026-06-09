@@ -8,11 +8,14 @@
   <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}GitCalVer derives strictly-increasing, calendar-based version numbers from git history.{{ end }}">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 
-  {{- /* Sans 450 is the body font (critical on every page); the Mono 500 weight
-         is only above-the-fold on the home hero's big version number. */ -}}
+  {{- /* Sans 450 is the body font (critical on every page). On the home hero the
+         58px H1 is Sans 600 and the big version number is Mono 500 — both above
+         the fold, so preload those two there as well. */ -}}
   {{- $sans := resources.Get "fonts/ibm-plex-sans-450.woff2" | fingerprint -}}
   <link rel="preload" as="font" type="font/woff2" href="{{ $sans.RelPermalink }}" crossorigin>
   {{- if .IsHome }}
+  {{- $sansBold := resources.Get "fonts/ibm-plex-sans-600.woff2" | fingerprint -}}
+  <link rel="preload" as="font" type="font/woff2" href="{{ $sansBold.RelPermalink }}" crossorigin>
   {{- $mono := resources.Get "fonts/ibm-plex-mono-500.woff2" | fingerprint -}}
   <link rel="preload" as="font" type="font/woff2" href="{{ $mono.RelPermalink }}" crossorigin>
   {{- end }}
