@@ -1,16 +1,23 @@
 # Copyright © 2026 Michael Shields
 # SPDX-License-Identifier: MIT
 
-# Repo tasks. Hugo is pinned via the `go tool` directive in go.mod, so these
-# work with nothing installed but Go and uv.
+# Repo tasks. Hugo is pinned via the `go tool` directive in go.mod and the font
+# script's deps via pyproject.toml + uv.lock, so build/serve/fonts need only Go
+# and uv; lint/fmt also use Node (npx) for Prettier.
 HUGO   := go tool hugo
 SITE   := site
 PUBLIC := $(SITE)/public
 CACHE  := $(or $(TMPDIR),/tmp)/gcv-hugo-cache
-# Pinned for byte-reproducible woff2 (output depends on both versions).
-PY     := uv run --quiet --with "fonttools[woff]==4.63.0" --with "brotli==1.2.0" python fonts/build.py
+# Font deps (incl. the version-pinned woff2 toolchain) come from pyproject.toml;
+# --no-dev skips the lint tools the build itself doesn't need.
+PY       := uv run --quiet --no-dev python fonts/build.py
+# Pinned for reproducible formatting (Ruff/ty are pinned via uv.lock); the
+# Renovate customManager in .github/renovate.json5 keeps this version current.
+PRETTIER := npx --yes prettier@3.8.3 '**/*.md'
+RUFF     := uv run ruff
+TY       := uv run ty
 
-.PHONY: build serve fonts check-fonts check-html clean
+.PHONY: build serve fonts check-fonts check-html lint fmt clean
 
 ## build: render the site to site/public
 build:
@@ -43,6 +50,19 @@ check-html:
 	@grep -q '^Allow: /' $(PUBLIC)/robots.txt || { echo "FAIL: Allow missing from robots.txt"; exit 1; }
 	@grep -q '^#!/bin/sh' $(PUBLIC)/gitcalver.sh || { echo "FAIL: /gitcalver.sh install script missing"; exit 1; }
 	@echo "html check OK"
+
+## lint: check Markdown formatting and lint/typecheck the Python font script
+lint:
+	$(PRETTIER) --check
+	$(RUFF) format --check fonts
+	$(RUFF) check fonts
+	$(TY) check fonts
+
+## fmt: auto-format Markdown and apply safe Python fixes + formatting
+fmt:
+	$(PRETTIER) --write
+	$(RUFF) check --fix fonts
+	$(RUFF) format fonts
 
 ## clean: remove build output
 clean:

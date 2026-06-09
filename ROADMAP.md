@@ -14,48 +14,47 @@ All repositories live under the `gitcalver` GitHub organization
 (`github.com/gitcalver`). Each component has its own repo with independent
 versioning and release cycle.
 
-| Repository | Contents | Package registry |
-|---|---|---|
-| `gitcalver/gitcalver.org` | Specification, website (Cloudflare Pages) | — |
-| `gitcalver/sh` | POSIX shell reference implementation, conformance test suite, GitHub Action | — |
-| `gitcalver/python` | Python package: hatch version source plugin, CLI | PyPI (`gitcalver`) |
-| `gitcalver/go` | Go CLI and library | `go install gitcalver.org/go@latest` |
-| `gitcalver/rust` | Rust library and CLI | crates.io (`gitcalver`) |
-| `gitcalver/azure-devops` | Azure DevOps pipeline task | Visual Studio Marketplace |
+| Repository                | Contents                                                                    | Package registry                     |
+| ------------------------- | --------------------------------------------------------------------------- | ------------------------------------ |
+| `gitcalver/gitcalver.org` | Specification, website (Cloudflare Pages)                                   | —                                    |
+| `gitcalver/sh`            | POSIX shell reference implementation, conformance test suite, GitHub Action | —                                    |
+| `gitcalver/python`        | Python package: hatch version source plugin, CLI                            | PyPI (`gitcalver`)                   |
+| `gitcalver/go`            | Go CLI and library                                                          | `go install gitcalver.org/go@latest` |
+| `gitcalver/rust`          | Rust library and CLI                                                        | crates.io (`gitcalver`)              |
+| `gitcalver/azure-devops`  | Azure DevOps pipeline task                                                  | Visual Studio Marketplace            |
 
 ### Vanity imports
 
 The `gitcalver.org` website (served from `gitcalver/gitcalver.org` via GitHub
-Pages) serves `go-import` and `go-source` meta tags so that the Go module
-is importable as `gitcalver.org/go` while the source lives in
-`gitcalver/go`.
+Pages) serves `go-import` and `go-source` meta tags so that the Go module is
+importable as `gitcalver.org/go` while the source lives in `gitcalver/go`.
 
 ### Why separate repos
 
-- Each implementation has its own release lifecycle and version tags.
-  A bugfix to the Python plugin should not bump the Go CLI version.
+- Each implementation has its own release lifecycle and version tags. A bugfix
+  to the Python plugin should not bump the Go CLI version.
 - Go modules need their own tag namespace for `go install` to work.
 - Contributors working in one ecosystem don't need the full tree.
 
 ### Conformance testing
 
-The conformance test suite in `gitcalver/sh` defines expected behavior for
-all implementations. Other repos run `make acceptance` to execute the shell
-test suite against their compiled binary, verifying spec compliance.
+The conformance test suite in `gitcalver/sh` defines expected behavior for all
+implementations. Other repos run `make acceptance` to execute the shell test
+suite against their compiled binary, verifying spec compliance.
 
 ## Windows support
 
-The POSIX shell reference implementation does not run natively in PowerShell
-or cmd.exe. Windows users have several options:
+The POSIX shell reference implementation does not run natively in PowerShell or
+cmd.exe. Windows users have several options:
 
-- **Git Bash** (ships with Git for Windows): `gitcalver.sh` works as-is.
-  This covers most developer workflows since Windows git users already have
-  Git Bash installed.
+- **Git Bash** (ships with Git for Windows): `gitcalver.sh` works as-is. This
+  covers most developer workflows since Windows git users already have Git Bash
+  installed.
 - **WSL**: works trivially.
 - **Go CLI**: a single `.exe` with no runtime dependencies. Uses go-git
   directly, so it doesn't even require `git.exe` on PATH.
-- **Rust CLI**: a single `.exe` with no runtime dependencies. Uses gix
-  directly, so it doesn't even require `git.exe` on PATH.
+- **Rust CLI**: a single `.exe` with no runtime dependencies. Uses gix directly,
+  so it doesn't even require `git.exe` on PATH.
 - **Python package**: pure Python, calls `git.exe` via subprocess. Works on
   Windows since Git for Windows puts `git.exe` on PATH.
 
@@ -133,11 +132,11 @@ Or downloadable as a prebuilt binary from GitHub releases.
 ### Design
 
 - Pure Go implementation of the gitcalver algorithm
-- Use [go-git](https://github.com/go-git/go-git) for direct repository
-  access — no `git` CLI dependency at runtime. This makes the binary fully
-  self-contained and avoids subprocess overhead. go-git provides first-parent
-  traversal, commit date access, status/dirty detection, and ref resolution —
-  everything the algorithm needs.
+- Use [go-git](https://github.com/go-git/go-git) for direct repository access —
+  no `git` CLI dependency at runtime. This makes the binary fully self-contained
+  and avoids subprocess overhead. go-git provides first-parent traversal, commit
+  date access, status/dirty detection, and ref resolution — everything the
+  algorithm needs.
 - CLI flags mirror the shell script: `--format`, `--semver`, `--allow-dirty`,
   `--branch`
 
@@ -186,8 +185,8 @@ Or downloadable as a prebuilt binary from GitHub releases.
   access — no `git` CLI dependency at runtime. gix provides first-parent
   traversal, commit date access, status/dirty detection, and ref resolution.
 - Cargo workspace with two crates: `gitcalver` (library) and `gitcalver-cli`
-  (binary). The library crate can be used as a dependency for `build.rs`
-  version injection.
+  (binary). The library crate can be used as a dependency for `build.rs` version
+  injection.
 - CLI flags mirror the shell script: `--format`, `--semver`, `--allow-dirty`,
   `--branch`
 - Edition 2024, `unsafe_code = "forbid"`, strict Clippy lints
@@ -227,7 +226,7 @@ A GitHub Action usable in workflows:
 - uses: gitcalver/sh@v20260412.1
   id: version
   with:
-    prefix: '0.'         # optional, for semver ecosystems
+    prefix: "0." # optional, for semver ecosystems
 - run: echo "Version is ${{ steps.version.outputs.version }}"
 ```
 
@@ -238,24 +237,24 @@ A GitHub Action usable in workflows:
 - Inputs mirror the CLI flags directly: `prefix`, `dirty`, `no-dirty-hash`,
   `branch`
 - Outputs: `version`, `date`, `count`, `dirty` (boolean), `hash` (short SHA)
-- Detached HEAD: `actions/checkout` creates `origin/main` (or
-  `origin/master`), so `gitcalver.sh`'s auto-detection works without
-  any special handling. The `branch` input is only needed for repos whose
-  default branch has a non-standard name.
+- Detached HEAD: `actions/checkout` creates `origin/main` (or `origin/master`),
+  so `gitcalver.sh`'s auto-detection works without any special handling. The
+  `branch` input is only needed for repos whose default branch has a
+  non-standard name.
 - Shallow clones: `gitcalver.sh` already warns per the specification.
 
 ### Rejected: tag input
 
-We considered adding a `tag: true` input to create and push a git tag with
-the computed version. This was rejected because it would require
-`contents: write` permissions on the workflow token, and we don't want to
-encourage running the action with write access.
+We considered adding a `tag: true` input to create and push a git tag with the
+computed version. This was rejected because it would require `contents: write`
+permissions on the workflow token, and we don't want to encourage running the
+action with write access.
 
 ### Repository
 
-The action lives in `gitcalver/sh` (not a separate repo). This eliminates
-the need to copy `gitcalver.sh` into a separate repository and keep it in
-sync. The action's version naturally matches the shell script's version.
+The action lives in `gitcalver/sh` (not a separate repo). This eliminates the
+need to copy `gitcalver.sh` into a separate repository and keep it in sync. The
+action's version naturally matches the shell script's version.
 
 ```
 action.yml              # Composite action definition
@@ -264,8 +263,8 @@ gitcalver.sh            # Reference implementation (shared)
 
 ### Testing
 
-- CI workflow in `.github/workflows/test.yml` exercises the action on push
-  and pull request events
+- CI workflow in `.github/workflows/test.yml` exercises the action on push and
+  pull request events
 - Jobs test default output, prefix variants, and dirty workspace handling
 - Outputs are validated against expected format patterns
 
@@ -292,8 +291,8 @@ An Azure DevOps pipeline task that sets the version as a pipeline variable:
 - Sets output variables via `##vso[task.setvariable]` commands
 - Handles Azure DevOps checkout behavior:
   1. Azure DevOps checks out in detached HEAD by default
-  2. The `Build.SourceBranch` variable provides the branch name
-     (e.g., `refs/heads/main`)
+  2. The `Build.SourceBranch` variable provides the branch name (e.g.,
+     `refs/heads/main`)
   3. Pass extracted branch name as `--branch`
 
 ### Repository: `gitcalver/azure-devops`
@@ -333,8 +332,8 @@ gitcalver {
 // project.version is automatically set
 ```
 
-Implementation: Kotlin, calls `git` via `ProcessBuilder`. Published to
-Gradle Plugin Portal.
+Implementation: Kotlin, calls `git` via `ProcessBuilder`. Published to Gradle
+Plugin Portal.
 
 ### npm package
 
@@ -348,41 +347,40 @@ Node.js implementation usable as a `package.json` script:
 }
 ```
 
-Could be a thin wrapper around the shell script, or a pure JS
-reimplementation. Published to npm as `gitcalver`.
+Could be a thin wrapper around the shell script, or a pure JS reimplementation.
+Published to npm as `gitcalver`.
 
 ### pre-commit hook
 
-A `.pre-commit-hooks.yaml` entry for the
-[pre-commit](https://pre-commit.com/) framework. Validates that git tags
-match gitcalver versions, or prevents commits that would break
-non-decreasing committer date ordering.
+A `.pre-commit-hooks.yaml` entry for the [pre-commit](https://pre-commit.com/)
+framework. Validates that git tags match gitcalver versions, or prevents commits
+that would break non-decreasing committer date ordering.
 
 ### Xcode / Swift Package Manager integration
 
 SPM uses semver git tags. An Xcode build phase script or SPM plugin that:
+
 - Sets `CFBundleShortVersionString` to `0.YYYYMMDD.N` (semver format)
-- Sets `CFBundleVersion` to `YYYYMMDD.N` (calver format, satisfies App
-  Store / TestFlight monotonicity requirements)
+- Sets `CFBundleVersion` to `YYYYMMDD.N` (calver format, satisfies App Store /
+  TestFlight monotonicity requirements)
 - Works via `agvtool` or direct Info.plist manipulation
 
 ### Android Gradle integration
 
 The Gradle plugin (above) with Android-specific support:
+
 - Sets `versionName` to `YYYYMMDD.N`
-- Derives `versionCode` as `YYYYMMDD * 100 + N` (Int32-safe, limits N
-  to 99/day)
+- Derives `versionCode` as `YYYYMMDD * 100 + N` (Int32-safe, limits N to 99/day)
 - Configurable multiplier for projects needing more than 99 builds/day
 
 ### HomeKit accessory firmware versioning
 
-Documentation and examples for using `YYYYMMDD.N` as the HAP
-`FirmwareRevision` characteristic (§9.40). Each segment is uint32;
-`20260412` fits. The strictly-increasing guarantee satisfies the HAP
-requirement that firmware revision must change after every update.
+Documentation and examples for using `YYYYMMDD.N` as the HAP `FirmwareRevision`
+characteristic (§9.40). Each segment is uint32; `20260412` fits. The
+strictly-increasing guarantee satisfies the HAP requirement that firmware
+revision must change after every update.
 
 ### Shell completions
 
-bash/zsh/fish completions for the `gitcalver` CLI. Could be generated
-from the Go CLI using cobra or similar, or hand-written for the shell
-script.
+bash/zsh/fish completions for the `gitcalver` CLI. Could be generated from the
+Go CLI using cobra or similar, or hand-written for the shell script.

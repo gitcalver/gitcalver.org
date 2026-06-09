@@ -1,0 +1,33 @@
+// Copyright © 2026 Michael Shields
+// SPDX-License-Identifier: MIT
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["config:best-practices", ":semanticCommitsDisabled"],
+  platformAutomerge: true,
+  // Run `go mod tidy` after Go updates so go.sum keeps h1: hashes for new
+  // transitive deps. Casing matters: `goModTidy` is silently ignored.
+  postUpdateOptions: ["gomodTidy"],
+  packageRules: [
+    {
+      description: "Automerge non-major updates",
+      matchUpdateTypes: ["minor", "patch", "pin", "digest"],
+      automerge: true,
+    },
+    {
+      description: "Automerge dev dependencies",
+      matchDepTypes: ["devDependencies"],
+      automerge: true,
+    },
+  ],
+  customManagers: [
+    {
+      // The Makefile pins Prettier (`prettier@x.y.z`) so `make lint` is
+      // reproducible; keep that version current like any other dependency.
+      customType: "regex",
+      managerFilePatterns: ["/^Makefile$/"],
+      matchStrings: ["prettier@(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
+      datasourceTemplate: "npm",
+      depNameTemplate: "prettier",
+    },
+  ],
+}

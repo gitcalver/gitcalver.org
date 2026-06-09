@@ -10,6 +10,7 @@ rendered HTML so any character used on the site is covered.
 
 Run via `make fonts` / `make check-fonts`, which build the site first.
 """
+
 import pathlib
 import sys
 
@@ -38,7 +39,10 @@ WEIGHTS = [
 FAVICON_SRC = "IBMPlexMono-SemiBold.otf"
 
 # Always keep printable ASCII + NBSP, independent of the current content.
-BASELINE = set(range(0x20, 0x7F)) | {0xA0}
+MIN_CODEPOINT = 0x20  # drop C0 control characters
+SURROGATES = range(0xD800, 0xE000)  # UTF-16 surrogate halves, never standalone
+REPLACEMENT = 0xFFFD  # U+FFFD, emitted by decode errors
+BASELINE = set(range(MIN_CODEPOINT, 0x7F)) | {0xA0}
 
 
 def collect_codepoints(html_dir: str) -> set[int]:
@@ -51,15 +55,29 @@ def collect_codepoints(html_dir: str) -> set[int]:
         sys.exit(f"no .html under {html_dir!r} — build the site first")
     for p in files:
         cps.update(ord(c) for c in p.read_text(encoding="utf-8", errors="replace"))
-    return {c for c in cps if c >= 0x20 and not (0xD800 <= c <= 0xDFFF) and c != 0xFFFD}
+    return {
+        c
+        for c in cps
+        if c >= MIN_CODEPOINT and c not in SURROGATES and c != REPLACEMENT
+    }
+
+
+def _cmap(font: TTFont) -> dict[int, str]:
+    """The font's best Unicode cmap, or fail loudly if it lacks one."""
+    cmap = font.getBestCmap()
+    if cmap is None:
+        sys.exit("font has no usable Unicode cmap")
+    return cmap
 
 
 def _subsetter() -> Subsetter:
     opt = Options()
     opt.flavor = "woff2"
     opt.layout_features = ["*"]  # keep kerning et al.
-    opt.name_IDs = ["*"]  # keep the name table (font/licence identification)
-    opt.drop_tables = opt.drop_tables + ["meta"]  # not web-relevant; drop quietly
+    # Keep the full name table for license identification. fontTools accepts the
+    # "*" wildcard at runtime, though its stub types name_IDs as list[int].
+    opt.name_IDs = ["*"]  # ty: ignore[invalid-assignment]
+    opt.drop_tables = [*opt.drop_tables, "meta"]  # not web-relevant; drop quietly
     # (new list, not += — Options.drop_tables is a shared class default)
     return Subsetter(options=opt)
 
@@ -85,26 +103,28 @@ def build(html_dir: str) -> None:
 def _favicon() -> None:
     """Outline 'gcv' (Mono SemiBold) to SVG paths — no font dependency."""
     font = TTFont(SRC / FAVICON_SRC)
-    scale = 21.0 / font["head"].unitsPerEm
-    cmap, gs, hmtx = font.getBestCmap(), font.getGlyphSet(), font["hmtx"]
+    scale = 21.0 / font["head"].unitsPerEm  # ty: ignore[unresolved-attribute]
+    cmap, gs, hmtx = _cmap(font), font.getGlyphSet(), font["hmtx"]
     names = [cmap[ord(c)] for c in "gcv"]
     penx, x = [], 0.0
     for n in names:
         penx.append(x)
         x += hmtx[n][0] * scale + -1.2  # advance + letter-spacing
     bounds = BoundsPen(gs)
-    for n, px in zip(names, penx):
+    for n, px in zip(names, penx, strict=True):
         gs[n].draw(TransformPen(bounds, Transform(scale, 0, 0, -scale, px, 0)))
+    if bounds.bounds is None:
+        sys.exit("favicon: glyphs produced empty bounds")
     x0, y0, x1, y1 = bounds.bounds
     tx, ty = 32.0 - (x0 + x1) / 2.0, 34.0 - (y0 + y1) / 2.0  # centre at (32,34)
     pen = SVGPathPen(gs, ntos=lambda v: format(round(v, 2) + 0, "g"))
-    for n, px in zip(names, penx):
+    for n, px in zip(names, penx, strict=True):
         gs[n].draw(TransformPen(pen, Transform(scale, 0, 0, -scale, px + tx, ty)))
     FAVICON.write_text(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">\n'
         '  <rect width="64" height="64" rx="14" fill="#23262b"/>\n'
         f'  <path d="{pen.getCommands()}" fill="#ffffff"/>\n'
-        "</svg>\n"
+        "</svg>\n",
     )
     print("  favicon.svg (outlined paths)")
 
@@ -117,10 +137,10 @@ def check(html_dir: str) -> None:
         if not path.exists():
             problems.append(f"{out}: not built")
             continue
-        have = set(TTFont(path).getBestCmap())
+        have = set(_cmap(TTFont(path)))
         # Only fault on glyphs the SOURCE font actually has — codepoints absent
         # from IBM Plex entirely (emoji, CJK, …) are an acceptable fallback.
-        source = set(TTFont(SRC / otf).getBestCmap())
+        source = set(_cmap(TTFont(SRC / otf)))
         missing = sorted((used & source) - have)
         if missing:
             shown = " ".join(f"U+{c:04X} {chr(c)!r}" for c in missing[:20])
@@ -134,6 +154,10 @@ def check(html_dir: str) -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3 or sys.argv[1] not in ("build", "check"):
-        sys.exit(__doc__)
-    (build if sys.argv[1] == "build" else check)(sys.argv[2])
+    match sys.argv[1:]:
+        case ["build", html_dir]:
+            build(html_dir)
+        case ["check", html_dir]:
+            check(html_dir)
+        case _:
+            sys.exit(__doc__)

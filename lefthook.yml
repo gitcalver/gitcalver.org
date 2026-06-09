@@ -1,0 +1,9 @@
+# Copyright © 2026 Michael Shields
+# SPDX-License-Identifier: MIT
+
+# One hook, one command: the same `make lint` that CI runs. If it fails, run
+# `make fmt` and re-stage. Don't pass --no-verify.
+pre-commit:
+  commands:
+    lint:
+      run: make lint

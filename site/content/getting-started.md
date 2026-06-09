@@ -1,13 +1,14 @@
 ---
 title: "Getting Started"
-description: "Add GitCalVer to your build — shell, Python, Go, GitHub Actions, npm, Docker"
+description:
+  "Add GitCalVer to your build—shell, Python, Go, GitHub Actions, npm, Docker"
 # Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0
 ---
 
 ## Shell script
 
-The reference implementation is a single POSIX shell script with no
-dependencies beyond `git`.
+The reference implementation is a single POSIX shell script with no dependencies
+beyond `git`.
 
 Quick version check:
 
@@ -33,8 +34,8 @@ Options:
 
 ## Python (Hatch)
 
-Add GitCalVer as a [Hatch](https://hatch.pypa.io/) version source plugin in
-your `pyproject.toml`:
+Add GitCalVer as a [Hatch](https://hatch.pypa.io/) version source plugin in your
+`pyproject.toml`:
 
 ```toml
 [project]
@@ -99,25 +100,25 @@ go build -ldflags "-X main.version=$VERSION" .
 ```yaml
 - uses: actions/checkout@v4
   with:
-    fetch-depth: 0  # Full history needed for accurate count
+    fetch-depth: 0 # Full history needed for accurate count
 
 - uses: gitcalver/sh@v20260412.1
   id: version
   with:
-    prefix: '0.'          # optional, for semver ecosystems
+    prefix: "0." # optional, for semver ecosystems
 
 - run: echo "Building version ${{ steps.version.outputs.version }}"
 ```
 
 The action outputs:
 
-| Output | Example |
-|---|---|
+| Output    | Example        |
+| --------- | -------------- |
 | `version` | `0.20260411.3` |
-| `date` | `20260411` |
-| `count` | `3` |
-| `dirty` | `false` |
-| `hash` | `a1b2c3d` |
+| `date`    | `20260411`     |
+| `count`   | `3`            |
+| `dirty`   | `false`        |
+| `hash`    | `a1b2c3d`      |
 
 ## npm
 

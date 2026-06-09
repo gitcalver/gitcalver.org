@@ -94,7 +94,7 @@
       <div class="step">
         <div class="num">1</div>
         <div>
-          <h3>Take the commit's UTC date</h3>
+          <h3>Take the commit’s UTC date</h3>
           <p>
             Committer date, normalized to UTC, formatted as
             <code>YYYYMMDD</code>. Time zones never leak in.
@@ -106,7 +106,7 @@
         <div>
           <h3>Count commits on that date</h3>
           <p>
-            Walk the default branch's first-parent history and count the
+            Walk the default branch’s first-parent history and count the
             consecutive commits that share this UTC date, up to and including
             this one. Merge commits are one commit.
           </p>
@@ -117,7 +117,7 @@
         <div>
           <h3>Join them with a dot</h3>
           <p>
-            The result is <code>YYYYMMDD.N</code> — e.g. the third commit on
+            The result is <code>YYYYMMDD.N</code>—e.g. the third commit on
             April 11 is <code>20260411.3</code>.
           </p>
         </div>
@@ -139,7 +139,7 @@
       <p>
         Later commits always sort after earlier ones.
         <code>20260607.1</code> &lt; <code>20260607.2</code> &lt;
-        <code>20260608.1</code> — by plain numeric order, as long as committer
+        <code>20260608.1</code>—by plain numeric order, as long as committer
         dates never go backwards.
       </p>
     </div>
@@ -182,7 +182,7 @@
     <div class="row">
       <div class="key">YYYYMMDD</div>
       <div class="val">
-        The commit's <strong>committer date</strong> in UTC, zero-padded. Local
+        The commit’s <strong>committer date</strong> in UTC, zero-padded. Local
         time is never used.
       </div>
     </div>
@@ -299,7 +299,7 @@ chmod +x gitcalver.sh</pre>
             >GitHub Action <span class="live soon">included</span></span
           >
           <span class="d"
-            ><span class="mono">uses: gitcalver/sh</span> — outputs
+            ><span class="mono">uses: gitcalver/sh</span>—outputs
             <span class="mono">version, date, count, dirty, hash</span></span
           >
         </span>
