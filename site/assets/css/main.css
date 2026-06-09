@@ -168,7 +168,7 @@ header.site-header{
 .legend .col-date{color:var(--date)}
 .legend .col-count{color:var(--count)}
 .legend .k{
-  font-family:"IBM Plex Sans";font-weight:600;font-size:15px;letter-spacing:-0.01em;
+  font-family:"IBM Plex Sans",system-ui,sans-serif;font-weight:600;font-size:15px;letter-spacing:-0.01em;
   display:flex;align-items:center;gap:9px;
 }
 .legend .k .mk{flex:none;width:8px;height:8px;background:currentColor}
@@ -179,7 +179,7 @@ header.site-header{
   margin-left:auto;opacity:.85;
 }
 .legend .v{
-  font-family:"IBM Plex Sans";font-size:13.5px;color:var(--text-soft);
+  font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:13.5px;color:var(--text-soft);
   margin-top:7px;line-height:1.55;text-wrap:pretty;
 }
 
@@ -195,7 +195,7 @@ header.site-header{
 .subdate .cell + .cell{border-left:1px solid var(--border)}
 .subdate .cell .big{font-size:clamp(18px,3vw,24px);color:var(--date);font-weight:500}
 .subdate .cell .lbl{
-  font-family:"IBM Plex Sans";font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;
+  font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;
   color:var(--muted);margin-top:6px;
 }
 
