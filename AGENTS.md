@@ -43,11 +43,16 @@ same `make lint` locally — `lefthook install` enables it.
 
 ## Font pipeline (the non-obvious part)
 
-The woff2 in `site/assets/fonts/` are **subsets** of the vendored IBM Plex OTFs
-in `fonts/src/` — only the glyphs the rendered HTML actually uses (~90 KB
-total). `fonts/build.py` builds the site, scans every codepoint in the output
-HTML, and subsets each weight to that set; it also outlines the `gcv` favicon
-from Mono SemiBold so the favicon carries no font dependency.
+The woff2 in `site/assets/fonts/` are **subsets** of the vendored IBM Plex
+TrueType files in `fonts/src/` — only the glyphs the rendered HTML actually uses
+(~90 KB total). `fonts/build.py` builds the site, scans every codepoint in the
+output HTML, and subsets each weight to that set; it also outlines the `gcv`
+favicon from Mono SemiBold so the favicon carries no font dependency.
+
+The sources are the **TrueType (`glyf`) builds**, not the CFF `.otf` builds, on
+purpose: iOS Lockdown Mode (Safari 26+) runs web fonts through a memory-safe
+parser that rejects CFF's charstring interpreter, so CFF subsets silently fall
+back to the system serif. `glyf` outlines pass it. Don't switch back to `.otf`.
 
 **If you add a character the site doesn't already use** (a new symbol, accented
 letter, arrow, etc.), `make check-fonts` will fail. Fix it with `make fonts` and

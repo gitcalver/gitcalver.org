@@ -2,8 +2,12 @@
 # Copyright © 2026 Michael Shields
 # SPDX-License-Identifier: MIT
 """Regenerate the site's subsetted web fonts and outlined favicon from the
-vendored IBM Plex OTFs (fonts/src/), deriving the glyph set from the actually
-rendered HTML so any character used on the site is covered.
+vendored IBM Plex TrueType files (fonts/src/), deriving the glyph set from the
+actually rendered HTML so any character used on the site is covered.
+
+TrueType (glyf) outlines, not the CFF .otf build: iOS Lockdown Mode (Safari 26+)
+runs web fonts through a memory-safe parser that rejects CFF's charstring VM, so
+CFF fonts silently fall back. glyf outlines pass it.
 
   python fonts/build.py build <rendered-html-dir>   # write woff2 + favicon
   python fonts/build.py check <rendered-html-dir>    # CI guard, exits 1 on gap
@@ -27,17 +31,17 @@ SRC = REPO / "fonts" / "src"
 OUT_FONTS = REPO / "site" / "assets" / "fonts"
 FAVICON = REPO / "site" / "static" / "favicon.svg"
 
-# Source OTF -> published woff2. The @font-face weights in main.css match these.
+# Source TTF -> published woff2. The @font-face weights in main.css match these.
 WEIGHTS = [
-    ("IBMPlexSans-Text.otf", "ibm-plex-sans-450.woff2"),
-    ("IBMPlexSans-Medium.otf", "ibm-plex-sans-500.woff2"),
-    ("IBMPlexSans-SemiBold.otf", "ibm-plex-sans-600.woff2"),
-    ("IBMPlexSans-Bold.otf", "ibm-plex-sans-700.woff2"),
-    ("IBMPlexMono-Regular.otf", "ibm-plex-mono-400.woff2"),
-    ("IBMPlexMono-Medium.otf", "ibm-plex-mono-500.woff2"),
-    ("IBMPlexMono-SemiBold.otf", "ibm-plex-mono-600.woff2"),
+    ("IBMPlexSans-Text.ttf", "ibm-plex-sans-450.woff2"),
+    ("IBMPlexSans-Medium.ttf", "ibm-plex-sans-500.woff2"),
+    ("IBMPlexSans-SemiBold.ttf", "ibm-plex-sans-600.woff2"),
+    ("IBMPlexSans-Bold.ttf", "ibm-plex-sans-700.woff2"),
+    ("IBMPlexMono-Regular.ttf", "ibm-plex-mono-400.woff2"),
+    ("IBMPlexMono-Medium.ttf", "ibm-plex-mono-500.woff2"),
+    ("IBMPlexMono-SemiBold.ttf", "ibm-plex-mono-600.woff2"),
 ]
-FAVICON_SRC = "IBMPlexMono-SemiBold.otf"
+FAVICON_SRC = "IBMPlexMono-SemiBold.ttf"
 
 # Always keep printable ASCII + NBSP, independent of the current content.
 MIN_CODEPOINT = 0x20  # drop C0 control characters
@@ -91,10 +95,10 @@ def build(html_dir: str) -> None:
     cps = collect_codepoints(html_dir)
     print(f"building fonts for {len(cps)} codepoints derived from {html_dir}")
     OUT_FONTS.mkdir(parents=True, exist_ok=True)
-    for otf, out in WEIGHTS:
+    for ttf, out in WEIGHTS:
         # recalcTimestamp=False keeps the source's head.modified instead of
         # stamping "now", so the output woff2 are byte-reproducible.
-        font = TTFont(SRC / otf, recalcTimestamp=False)
+        font = TTFont(SRC / ttf, recalcTimestamp=False)
         ss = _subsetter()
         ss.populate(unicodes=cps)
         ss.subset(font)
@@ -137,7 +141,7 @@ def _favicon() -> None:
 def check(html_dir: str) -> None:
     used = collect_codepoints(html_dir)
     problems = []
-    for otf, out in WEIGHTS:
+    for ttf, out in WEIGHTS:
         path = OUT_FONTS / out
         if not path.exists():
             problems.append(f"{out}: not built")
@@ -145,7 +149,7 @@ def check(html_dir: str) -> None:
         have = set(_cmap(TTFont(path)))
         # Only fault on glyphs the SOURCE font actually has — codepoints absent
         # from IBM Plex entirely (emoji, CJK, …) are an acceptable fallback.
-        source = set(_cmap(TTFont(SRC / otf)))
+        source = set(_cmap(TTFont(SRC / ttf)))
         missing = sorted((used & source) - have)
         if missing:
             shown = " ".join(f"U+{c:04X} {chr(c)!r}" for c in missing[:20])
