@@ -8,6 +8,8 @@ HUGO   := go tool hugo
 SITE   := site
 PUBLIC := $(SITE)/public
 CACHE  := $(or $(TMPDIR),/tmp)/gcv-hugo-cache
+# The full site render every build-dependent target starts from.
+RENDER := $(HUGO) -s $(SITE) --cacheDir "$(CACHE)" --cleanDestinationDir
 # Font deps (incl. the version-pinned woff2 toolchain) come from pyproject.toml;
 # --no-dev skips the lint tools the build itself doesn't need.
 PY       := uv run --quiet --no-dev python fonts/build.py
@@ -20,11 +22,11 @@ TY       := uv run ty
 # .github/renovate.json5 keeps this version current.
 LHCI     := npx --yes @lhci/cli@0.15.1
 
-.PHONY: build serve fonts check-fonts check-html lighthouse lint fmt clean
+.PHONY: build serve fonts check-fonts check-html check-css lighthouse lint fmt clean
 
 ## build: render the site to site/public
 build:
-	$(HUGO) -s $(SITE) --cacheDir "$(CACHE)" --cleanDestinationDir
+	$(RENDER)
 
 ## serve: live-reloading dev server
 serve:
@@ -33,18 +35,18 @@ serve:
 ## fonts: regenerate subsetted woff2 + outlined favicon from the vendored
 ## IBM Plex OTFs, with the glyph set derived from the rendered HTML.
 fonts:
-	$(HUGO) -s $(SITE) --cacheDir "$(CACHE)" --cleanDestinationDir
+	$(RENDER)
 	$(PY) build $(PUBLIC)
 
 ## check-fonts: fail if the committed fonts miss any glyph the site renders.
 check-fonts:
-	$(HUGO) -s $(SITE) --cacheDir "$(CACHE)" --cleanDestinationDir
+	$(RENDER)
 	$(PY) check $(PUBLIC)
 
 ## check-html: build and assert the go-import vanity tags, the /go -> pkg.go.dev
 ## redirect, robots.txt, and the hosted install script survive in the output.
 check-html:
-	$(HUGO) -s $(SITE) --cacheDir "$(CACHE)" --cleanDestinationDir
+	$(RENDER)
 	@grep -qF 'name="go-import" content="gitcalver.org/go git https://github.com/gitcalver/go"' $(PUBLIC)/go.html || { echo "FAIL: go-import meta missing from /go.html"; exit 1; }
 	@grep -qF 'name="go-source"' $(PUBLIC)/go.html || { echo "FAIL: go-source meta missing from /go.html"; exit 1; }
 	@grep -qF 'http-equiv="refresh" content="0; url=https://pkg.go.dev/gitcalver.org/go"' $(PUBLIC)/go.html || { echo "FAIL: /go meta-refresh missing"; exit 1; }
@@ -54,25 +56,33 @@ check-html:
 	@grep -q '^#!/bin/sh' $(PUBLIC)/gitcalver.sh || { echo "FAIL: /gitcalver.sh install script missing"; exit 1; }
 	@echo "html check OK"
 
+## check-css: fail if the rendered code samples emit a Modus-colored Chroma
+## token the trimmed syntax theme in main.css no longer styles (see check_css.py).
+check-css:
+	$(RENDER)
+	uv run --quiet --no-dev python check_css.py $(PUBLIC)
+
 ## lighthouse: build the site and audit it with Lighthouse
 ## (lighthouse:recommended) via lhci's static server; see lighthouserc.cjs.
 lighthouse:
-	$(HUGO) -s $(SITE) --cacheDir "$(CACHE)" --cleanDestinationDir
+	$(RENDER)
 	$(LHCI) collect --config=lighthouserc.cjs
 	$(LHCI) assert --config=lighthouserc.cjs
 
-## lint: check Markdown formatting and lint/typecheck the Python font script
+## lint: check Markdown formatting and lint/typecheck the Python tooling
+## (fonts/build.py + check_css.py); Ruff/ty walk the repo and skip the gitignored
+## .venv, so any new script is covered without listing it here.
 lint:
 	$(PRETTIER) --check
-	$(RUFF) format --check fonts
-	$(RUFF) check fonts
-	$(TY) check fonts
+	$(RUFF) format --check .
+	$(RUFF) check .
+	$(TY) check .
 
 ## fmt: auto-format Markdown and apply safe Python fixes + formatting
 fmt:
 	$(PRETTIER) --write
-	$(RUFF) check --fix fonts
-	$(RUFF) format fonts
+	$(RUFF) check --fix .
+	$(RUFF) format .
 
 ## clean: remove build output
 clean:

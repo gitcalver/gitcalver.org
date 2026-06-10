@@ -39,6 +39,9 @@ jobs:
       # Asserts the rendered HTML keeps the go-import vanity tags, the /go
       # redirect, and the robots.txt content signal (formerly the CF worker).
       - run: make check-html
+      # Fails if the rendered code samples emit a Modus-colored Chroma token
+      # the trimmed syntax theme in main.css no longer styles.
+      - run: make check-css
 
   lighthouse:
     name: Lighthouse

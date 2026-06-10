@@ -32,14 +32,19 @@ directive in `go.mod` (`go tool hugo`) and the font script's deps via
   a glyph
 - `make check-html` — CI guard; build and assert the go-import tags, `/go`
   redirect, and `robots.txt` survive
-- `make lint` — Prettier `--check` on Markdown, Ruff + ty on `fonts/build.py`
+- `make check-css` — CI guard; build and fail if a rendered code sample emits a
+  syntax-highlight (Chroma) token the trimmed Modus theme in `main.css` dropped
+  (see below)
+- `make lint` — Prettier `--check` on Markdown, Ruff + ty on the repo's Python
+  (`fonts/build.py`, `check_css.py`; the gitignored `.venv` is skipped)
 - `make fmt` — auto-format Markdown and apply Ruff fixes + formatting
 - `make clean` — remove `site/public` and `site/resources`
 
-CI (`.github/workflows/check.yml`) runs `make lint`, `make check-fonts`, and
-`make check-html` on every push/PR (the latter two also catch Hugo template
-errors, since they build the site first). A Lefthook `pre-commit` hook runs the
-same `make lint` locally — `lefthook install` enables it.
+CI (`.github/workflows/check.yml`) runs `make lint`, `make check-fonts`,
+`make check-html`, and `make check-css` on every push/PR (the last three also
+catch Hugo template errors, since they build the site first). A Lefthook
+`pre-commit` hook runs the same `make lint` locally — `lefthook install` enables
+it.
 
 ## Font pipeline (the non-obvious part)
 
@@ -77,7 +82,15 @@ woff2 bytes. See `fonts/README.md`.
   hand-formatted on purpose.
 - `site/assets/css/main.css` is run through `resources.ExecuteAsTemplate` — it
   contains Hugo template syntax (`{{ ... }}` for fingerprinted font URLs), then
-  is minified and fingerprinted. It is a template, not plain CSS.
+  is minified and inlined into every page's `<style>`. It is a template, not
+  plain CSS, so every byte ships on each load.
+- The `.chroma` syntax-highlight rules at the end of `main.css` are a **pruned**
+  Modus theme: only the Chroma tokens the rendered code samples actually emit
+  are styled (Chroma tags far more than the samples use). If you add or edit a
+  code block that introduces a new token, `make check-css` fails and prints the
+  exact rule to paste back in (light + dark); `check_css.py` holds the full
+  Modus palette as the reference. Don't restore the whole theme — just the rules
+  it names.
 - Markdown allows raw HTML (`markup.goldmark.renderer.unsafe = true`); the spec
   and getting-started pages rely on this.
 - **Analytics** is Cloudflare Web Analytics in _automatic_ mode — the beacon is
@@ -91,8 +104,9 @@ gitcalver.org is served by a Cloudflare **Worker (Static Assets)**, built and
 deployed by **Workers Builds** from `main` on push — build command `make build`
 (output `site/public`), deploy command `npx wrangler deploy`. `wrangler.jsonc`
 (repo root) is the assets-only Worker config pointing at `site/public`.
-`site/static/_headers` sets immutable long-cache on fingerprinted `/css/*` and
-`/fonts/*`. `site/static/_redirects` redirects `/sh` to `/gitcalver.sh` — the
+`site/static/_headers` sets immutable long-cache on the fingerprinted `/fonts/*`
+(the CSS is inlined into the HTML, so the fonts are the only fingerprinted
+assets left). `site/static/_redirects` redirects `/sh` to `/gitcalver.sh` — the
 install script, vendored at `site/static/gitcalver.sh` from `gitcalver/sh`
 (Workers Static Assets reject a 200-proxy to an external URL, so it's hosted
 here). `/go` is a standalone static page (`site/static/go.html`) carrying the
@@ -122,5 +136,5 @@ referenced here.
   hand-written layouts (`baseof.html`, `home.html`) don't, and nothing fixes em
   dash spacing automatically — apply both by hand there.
 - Source files carry an SPDX header: site content/layouts/CSS are `CC-BY-4.0`;
-  build tooling (`Makefile`, `fonts/build.py`, `pyproject.toml`, `lefthook.yml`,
-  workflows, Renovate config) is `MIT`.
+  build tooling (`Makefile`, `fonts/build.py`, `check_css.py`, `pyproject.toml`,
+  `lefthook.yml`, workflows, Renovate config) is `MIT`.
