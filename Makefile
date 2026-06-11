@@ -53,6 +53,7 @@ check-html:
 	@! grep -qF 'name="go-import"' $(PUBLIC)/index.html || { echo "FAIL: go-import should be /go-only but appears on the home page"; exit 1; }
 	@grep -qF 'Content-Signal:' $(PUBLIC)/robots.txt || { echo "FAIL: Content-Signal missing from robots.txt"; exit 1; }
 	@grep -q '^Allow: /' $(PUBLIC)/robots.txt || { echo "FAIL: Allow missing from robots.txt"; exit 1; }
+	@grep -qF 'Sitemap: https://gitcalver.org/sitemap.xml' $(PUBLIC)/robots.txt || { echo "FAIL: Sitemap missing from robots.txt"; exit 1; }
 	@grep -q '^#!/bin/sh' $(PUBLIC)/gitcalver.sh || { echo "FAIL: /gitcalver.sh install script missing"; exit 1; }
 	@echo "html check OK"
 
