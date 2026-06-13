@@ -15,7 +15,7 @@ RENDER := $(HUGO) -s $(SITE) --cacheDir "$(CACHE)" --cleanDestinationDir
 PY       := uv run --quiet --no-dev python fonts/build.py
 # Pinned for reproducible formatting (Ruff/ty are pinned via uv.lock); the
 # Renovate customManager in .github/renovate.json5 keeps this version current.
-PRETTIER := npx --yes prettier@3.8.3 '**/*.md'
+PRETTIER := npx --yes prettier@3.8.4 '**/*.md'
 RUFF     := uv run ruff
 TY       := uv run ty
 # Pinned like Prettier for reproducible audits; the Renovate customManager in
