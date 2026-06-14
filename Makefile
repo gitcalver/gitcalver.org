@@ -44,12 +44,14 @@ check-fonts:
 	$(PY) check $(PUBLIC)
 
 ## check-html: build and assert the go-import vanity tags, the /go -> pkg.go.dev
-## redirect, robots.txt, and the hosted install script survive in the output.
+## redirect, the /go/* subpackage redirect, robots.txt, and the hosted install
+## script survive in the output.
 check-html:
 	$(RENDER)
 	@grep -qF 'name="go-import" content="gitcalver.org/go git https://github.com/gitcalver/go"' $(PUBLIC)/go.html || { echo "FAIL: go-import meta missing from /go.html"; exit 1; }
 	@grep -qF 'name="go-source"' $(PUBLIC)/go.html || { echo "FAIL: go-source meta missing from /go.html"; exit 1; }
 	@grep -qF 'http-equiv="refresh" content="0; url=https://pkg.go.dev/gitcalver.org/go"' $(PUBLIC)/go.html || { echo "FAIL: /go meta-refresh missing"; exit 1; }
+	@grep -qF '/go/* /go' $(PUBLIC)/_redirects || { echo "FAIL: /go/* -> /go subpackage redirect missing from _redirects"; exit 1; }
 	@! grep -qF 'name="go-import"' $(PUBLIC)/index.html || { echo "FAIL: go-import should be /go-only but appears on the home page"; exit 1; }
 	@grep -qF 'Content-Signal:' $(PUBLIC)/robots.txt || { echo "FAIL: Content-Signal missing from robots.txt"; exit 1; }
 	@grep -q '^Allow: /' $(PUBLIC)/robots.txt || { echo "FAIL: Allow missing from robots.txt"; exit 1; }

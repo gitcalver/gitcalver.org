@@ -1,1 +1,5 @@
 /sh /gitcalver.sh 302
+# Vanity-import subpackages: `go get gitcalver.org/go/<pkg>` fetches /go/<pkg>,
+# which has no asset (would 404). Send it to /go, whose go-import meta names the
+# gitcalver.org/go repo root; go get follows the redirect and matches the prefix.
+/go/* /go 301

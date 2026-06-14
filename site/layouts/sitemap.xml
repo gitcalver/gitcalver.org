@@ -1,0 +1,25 @@
+{{- /* Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0 */ -}}
+{{- /* Mirrors Hugo's built-in sitemap, but emits canonical, no-trailing-slash
+       page URLs (/spec, not /spec/) to match the Worker's drop-trailing-slash
+       routing — otherwise the sitemap would advertise URLs that 307 to their
+       canonical form. The home page keeps its bare "/". */ -}}
+{{ printf "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>" | safeHTML }}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  {{- /* In the sitemap context .Pages includes the home page (Hugo renders the
+         sitemap over the whole site's pages, like its built-in template — the
+         pre-customization output listed "/"), so the not-.IsHome guard below is
+         what preserves the bare "/" while every other URL loses its slash. */ -}}
+  {{ range .Pages }}
+    {{- if .Permalink -}}
+      {{- $loc := .Permalink -}}
+      {{- if not .IsHome -}}{{- $loc = strings.TrimSuffix "/" $loc -}}{{- end -}}
+  <url>
+    <loc>{{ $loc }}</loc>{{ if not .Lastmod.IsZero }}
+    <lastmod>{{ safeHTML ( .Lastmod.Format "2006-01-02T15:04:05-07:00" ) }}</lastmod>{{ end }}{{ with .Sitemap.ChangeFreq }}
+    <changefreq>{{ . }}</changefreq>{{ end }}{{ if ge .Sitemap.Priority 0.0 }}
+    <priority>{{ .Sitemap.Priority }}</priority>{{ end }}
+  </url>
+    {{- end -}}
+  {{ end }}
+</urlset>

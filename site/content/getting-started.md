@@ -162,5 +162,5 @@ Or in CI:
 
 ## All formats
 
-See the [ecosystem mapping](/spec/#ecosystem-mapping) in the specification for
+See the [ecosystem mapping](/spec#ecosystem-mapping) in the specification for
 the recommended `--prefix` and `--dirty` flags for each package manager.

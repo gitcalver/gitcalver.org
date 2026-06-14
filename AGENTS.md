@@ -103,18 +103,25 @@ woff2 bytes. See `fonts/README.md`.
 gitcalver.org is served by a Cloudflare **Worker (Static Assets)**, built and
 deployed by **Workers Builds** from `main` on push — build command `make build`
 (output `site/public`), deploy command `npx wrangler deploy`. `wrangler.jsonc`
-(repo root) is the assets-only Worker config pointing at `site/public`.
+(repo root) is the assets-only Worker config pointing at `site/public`, with
+`html_handling: drop-trailing-slash` so pages serve at canonical no-slash URLs
+(`/spec`, not `/spec/`) and `/spec/` 307-redirects to `/spec`. A custom
+`layouts/sitemap.xml` emits those no-slash URLs (Hugo's `.Permalink` keeps the
+trailing slash); keep hand-written internal links no-slash too.
 `site/static/_headers` sets immutable long-cache on the fingerprinted `/fonts/*`
 (the CSS is inlined into the HTML, so the fonts are the only fingerprinted
 assets left). `site/static/_redirects` redirects `/sh` to `/gitcalver.sh` — the
 install script, vendored at `site/static/gitcalver.sh` from `gitcalver/sh`
 (Workers Static Assets reject a 200-proxy to an external URL, so it's hosted
-here). `/go` is a standalone static page (`site/static/go.html`) carrying the
-`go-import`/`go-source` meta tags that make `gitcalver.org/go` a vanity import
-path, plus a `<meta refresh>` so browsers land on pkg.go.dev while `go get`
-reads the tags. Served as a top-level file (not `/go/index.html`), `/go` — the
-path `go get` requests — has no trailing-slash redirect; Workers redirects
-`/go/<subpkg>` to `/go`, which `go get` follows for subpackage resolution.
+here) — and `/go/*` to `/go` (a 301 splat; see below). `/go` is a standalone
+static page (`site/static/go.html`) carrying the `go-import`/`go-source` meta
+tags that make `gitcalver.org/go` a vanity import path, plus a `<meta refresh>`
+so browsers land on pkg.go.dev while `go get` reads the tags. Served as a
+top-level file (not `/go/index.html`), `/go` itself returns 200 — the path
+`go get` requests. Subpackage imports (`go get gitcalver.org/go/<subpkg>`) fetch
+`/go/<subpkg>`, which has no asset; the splat 301-redirects it to `/go`, whose
+`go-import` prefix matches, and `go get` follows the redirect. Without the rule
+that path 404s, since `not_found_handling` is the default.
 
 The build needs only Go — Hugo is pinned via the `go tool` directive in
 `go.mod`, so there is no separate `HUGO_VERSION` to pin; `go tool hugo` resolves
