@@ -21,8 +21,8 @@
   src:url("{{ (resources.Get "fonts/ibm-plex-mono-600.woff2" | fingerprint).RelPermalink }}") format("woff2")}
 
 :root{
-  --bg:        oklch(99.2% 0.003 95);
-  --bg-sunk:   oklch(97.4% 0.004 95);
+  --bg:        oklch(99.2% 0 0);
+  --bg-sunk:   oklch(97.4% 0 0);
   --panel:     oklch(100% 0 0);
   --text:      oklch(24% 0.012 260);
   --text-soft: oklch(44% 0.012 260);
