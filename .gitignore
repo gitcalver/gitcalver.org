@@ -2,5 +2,11 @@
 /.venv/
 __pycache__/
 
+# npm dependencies are reproduced from package-lock.json.
+/node_modules/
+
+# Wrangler’s local deployment state.
+/.wrangler/
+
 # Lighthouse CI run artifacts (LHR reports + assertion results).
 /.lighthouseci/

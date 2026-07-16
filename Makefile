@@ -1,29 +1,25 @@
 # Copyright © 2026 Michael Shields
 # SPDX-License-Identifier: MIT
 
-# Repo tasks. Hugo is pinned via the `go tool` directive in go.mod and the font
-# script's deps via pyproject.toml + uv.lock, so build/serve/fonts need only Go
-# and uv; lint/fmt also use Node (npx) for Prettier.
+# Repo tasks. Hugo is pinned via the `go tool` directive in go.mod, Python and
+# uv via .python-version + pyproject.toml, and Node tools via package-lock.json.
 HUGO   := go tool hugo
 SITE   := site
 PUBLIC := $(SITE)/public
 CACHE  := $(or $(TMPDIR),/tmp)/gcv-hugo-cache
+NODE_BIN := node_modules/.bin
 # The full site render every build-dependent target starts from.
 RENDER := $(HUGO) -s $(SITE) --cacheDir "$(CACHE)" --cleanDestinationDir
 # Font deps (incl. the version-pinned woff2 toolchain) come from pyproject.toml;
 # --no-dev skips the lint tools the build itself doesn't need.
-PY       := uv run --quiet --no-dev python fonts/build.py
-# Pinned for reproducible formatting (Ruff/ty are pinned via uv.lock); the
-# Renovate customManager in .github/renovate.json5 keeps this version current.
-PRETTIER := npx --yes prettier@3.9.5 '**/*.md'
-RUFF     := uv run ruff
-TY       := uv run ty
-LINKS    := uv run --quiet --no-dev python check_links.py
-# Pinned like Prettier for reproducible audits; the Renovate customManager in
-# .github/renovate.json5 keeps this version current.
-LHCI     := npx --yes @lhci/cli@0.15.1
+PY       := uv run --frozen --quiet --no-dev python fonts/build.py
+PRETTIER := $(NODE_BIN)/prettier '**/*.md'
+RUFF     := uv run --frozen ruff
+TY       := uv run --frozen ty
+LINKS    := uv run --frozen --quiet --no-dev python check_links.py
+LHCI     := $(NODE_BIN)/lhci
 
-.PHONY: build serve fonts check-fonts check-html check-links check-css lighthouse lint fmt clean
+.PHONY: build serve fonts check-toolchain check-fonts check-html check-links check-css lighthouse lint fmt deploy clean
 
 ## build: render the site to site/public
 build:
@@ -38,6 +34,15 @@ serve:
 fonts:
 	$(RENDER)
 	$(PY) build $(PUBLIC)
+
+## check-toolchain: fail unless the exact Node, npm, uv, and Python versions
+## pinned for reproducible site work are active.
+check-toolchain:
+	@expected=$$(cat .node-version); test "$$(node --version)" = "v$$expected" || { echo "FAIL: Node $$expected required"; exit 1; }
+	@expected=$$(node -p "require('./package.json').packageManager.slice(4)"); test "$$(npm --version)" = "$$expected" || { echo "FAIL: npm $$expected required"; exit 1; }
+	@expected=$$(sed -n 's/^required-version = "==\(.*\)"$$/\1/p' pyproject.toml); test "$$(uv --version | awk '{print $$2}')" = "$$expected" || { echo "FAIL: uv $$expected required"; exit 1; }
+	@expected=$$(cat .python-version); test "$$(uv run --frozen --quiet python --version)" = "Python $$expected" || { echo "FAIL: Python $$expected required"; exit 1; }
+	@echo "toolchain check OK"
 
 ## check-fonts: fail if the committed fonts miss any glyph the site renders.
 check-fonts:
@@ -78,7 +83,7 @@ check-links:
 ## token the trimmed syntax theme in main.css no longer styles (see check_css.py).
 check-css:
 	$(RENDER)
-	uv run --quiet --no-dev python check_css.py $(PUBLIC)
+	uv run --frozen --quiet --no-dev python check_css.py $(PUBLIC)
 
 ## lighthouse: build the site and audit it with Lighthouse
 ## (lighthouse:recommended) via lhci's static server; see lighthouserc.cjs.
@@ -87,9 +92,9 @@ lighthouse:
 	$(LHCI) collect --config=lighthouserc.cjs
 	$(LHCI) assert --config=lighthouserc.cjs
 
-## lint: check Markdown formatting and lint/typecheck the Python tooling
-## Python tooling; Ruff/ty walk the repo and skip the gitignored .venv, so any
-## new script is covered without listing it here.
+## lint: check Markdown formatting and lint/typecheck the Python tooling;
+## Ruff/ty walk the repo and skip the gitignored .venv, so any new script is
+## covered without listing it here.
 lint:
 	$(PRETTIER) --check
 	$(RUFF) format --check .
@@ -101,6 +106,10 @@ fmt:
 	$(PRETTIER) --write
 	$(RUFF) check --fix .
 	$(RUFF) format .
+
+## deploy: upload the rendered site with the package-lock-pinned Wrangler.
+deploy:
+	npm run deploy
 
 ## clean: remove build output
 clean:

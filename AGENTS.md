@@ -21,30 +21,35 @@ between deploys (the server-rendered hero shows the date of the last build).
 
 Everything runs through the `Makefile`. Hugo is pinned via the `go tool`
 directive in `go.mod` (`go tool hugo`) and the font script's deps via
-`pyproject.toml` + `uv.lock`, so `build`/`serve`/`fonts` need only Go and `uv`;
-`lint`/`fmt` additionally use Node (`npx`) for Prettier.
+`pyproject.toml` + `uv.lock`, while Node tools are locked in
+`package-lock.json`. Run `npm ci` before Node-backed tasks.
 
 - `make serve` — live-reloading dev server
 - `make build` — render to `site/public`
 - `make fonts` — regenerate subsetted woff2 + favicon (see below); commit the
   result
+- `make check-toolchain` — verify the pinned Node, npm, uv, and Python versions
 - `make check-fonts` — CI guard; build the site and fail if committed fonts miss
   a glyph
 - `make check-html` — CI guard; build and assert the go-import tags, `/go`
   redirect, and `robots.txt` survive
+- `make check-links` — CI guard; build and verify rendered internal links and
+  fragments
 - `make check-css` — CI guard; build and fail if a rendered code sample emits a
   syntax-highlight (Chroma) token the trimmed Modus theme in `main.css` dropped
   (see below)
+- `make lighthouse` — build and audit every rendered content page with the
+  locked Lighthouse CI
 - `make lint` — Prettier `--check` on Markdown, Ruff + ty on the repo's Python
   (`fonts/build.py`, `check_css.py`; the gitignored `.venv` is skipped)
 - `make fmt` — auto-format Markdown and apply Ruff fixes + formatting
+- `make deploy` — deploy the rendered site with the locked Wrangler
 - `make clean` — remove `site/public` and `site/resources`
 
-CI (`.github/workflows/check.yml`) runs `make lint`, `make check-fonts`,
-`make check-html`, and `make check-css` on every push/PR (the last three also
-catch Hugo template errors, since they build the site first). A Lefthook
-`pre-commit` hook runs the same `make lint` locally — `lefthook install` enables
-it.
+CI (`.github/workflows/check.yml`) installs from both lockfiles, verifies the
+toolchain, and runs lint, font, HTML, CSS, and Lighthouse gates on every
+push/PR. A Lefthook `pre-commit` hook runs the same `make lint` locally —
+`lefthook install` enables it.
 
 ## Font pipeline (the non-obvious part)
 
@@ -102,8 +107,8 @@ woff2 bytes. See `fonts/README.md`.
 
 gitcalver.org is served by a Cloudflare **Worker (Static Assets)**, built and
 deployed by **Workers Builds** from `main` on push — build command `make build`
-(output `site/public`), deploy command `npx wrangler deploy`. `wrangler.jsonc`
-(repo root) is the assets-only Worker config pointing at `site/public`, with
+(output `site/public`), deploy command `npm run deploy`. `wrangler.jsonc` (repo
+root) is the assets-only Worker config pointing at `site/public`, with
 `html_handling: drop-trailing-slash` so pages serve at canonical no-slash URLs
 (`/spec`, not `/spec/`) and `/spec/` 307-redirects to `/spec`. A custom
 `layouts/sitemap.xml` emits those no-slash URLs (Hugo's `.Permalink` keeps the

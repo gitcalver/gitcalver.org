@@ -14,8 +14,9 @@ module.exports = {
       // (its CSS, JS, caching) instead of ours. lhci rewrites the host:port.
       url: [
         "http://localhost/index.html",
+        "http://localhost/compatibility/index.html",
         "http://localhost/getting-started/index.html",
-        "http://localhost/spec/index.html",
+        "http://localhost/spec/0.1/index.html",
       ],
       // Median of several runs steadies the variable performance metrics.
       numberOfRuns: 3,

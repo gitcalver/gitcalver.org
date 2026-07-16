@@ -1,0 +1,33 @@
+{
+  "//": "Copyright © 2026 Michael Shields. SPDX-License-Identifier: MIT",
+  "name": "gitcalver.org",
+  "private": true,
+  "license": "MIT",
+  "packageManager": "npm@11.16.0",
+  "engines": {
+    "node": "24.18.0",
+    "npm": "11.16.0"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24.18.0",
+      "onFail": "error"
+    },
+    "packageManager": {
+      "name": "npm",
+      "version": "11.16.0",
+      "onFail": "error"
+    }
+  },
+  "scripts": {
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
+    "@lhci/cli": "0.15.1",
+    "playwright": "1.61.1",
+    "prettier": "3.9.5",
+    "wrangler": "4.111.0"
+  }
+}
