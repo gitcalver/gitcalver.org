@@ -43,11 +43,17 @@ check-fonts:
 	$(RENDER)
 	$(PY) check $(PUBLIC)
 
-## check-html: build and assert the go-import vanity tags, the /go -> pkg.go.dev
-## redirect, the /go/* subpackage redirect, robots.txt, and the hosted install
-## script survive in the output.
+## check-html: build and assert the versioned specification, redirects,
+## go-import vanity tags, robots.txt, and hosted install script survive in the
+## output.
 check-html:
 	$(RENDER)
+	@test -f $(PUBLIC)/spec/0.1/index.html || { echo "FAIL: immutable /spec/0.1 page missing"; exit 1; }
+	@test ! -f $(PUBLIC)/spec/index.html || { echo "FAIL: /spec must not render a page (would shadow the /spec -> /spec/0.1 redirect)"; exit 1; }
+	@grep -qF 'Erratum (nonnormative).' $(PUBLIC)/spec/0.1/index.html || { echo "FAIL: /spec/0.1 erratum missing"; exit 1; }
+	@grep -qF '/spec /spec/0.1 302' $(PUBLIC)/_redirects || { echo "FAIL: /spec -> /spec/0.1 redirect missing from _redirects"; exit 1; }
+	@grep -qF '<loc>https://gitcalver.org/spec/0.1</loc>' $(PUBLIC)/sitemap.xml || { echo "FAIL: /spec/0.1 missing from sitemap"; exit 1; }
+	@! grep -qF '<loc>https://gitcalver.org/spec</loc>' $(PUBLIC)/sitemap.xml || { echo "FAIL: redirecting /spec must not appear in sitemap"; exit 1; }
 	@grep -qF 'name="go-import" content="gitcalver.org/go git https://github.com/gitcalver/go"' $(PUBLIC)/go.html || { echo "FAIL: go-import meta missing from /go.html"; exit 1; }
 	@grep -qF 'name="go-source"' $(PUBLIC)/go.html || { echo "FAIL: go-source meta missing from /go.html"; exit 1; }
 	@grep -qF 'http-equiv="refresh" content="0; url=https://pkg.go.dev/gitcalver.org/go"' $(PUBLIC)/go.html || { echo "FAIL: /go meta-refresh missing"; exit 1; }

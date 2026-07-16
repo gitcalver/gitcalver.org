@@ -1,3 +1,4 @@
+/spec /spec/0.1 302
 /sh /gitcalver.sh 302
 # Vanity-import subpackages: `go get gitcalver.org/go/<pkg>` fetches /go/<pkg>,
 # which has no asset (would 404). Send it to /go, whose go-import meta names the

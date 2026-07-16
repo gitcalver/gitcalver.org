@@ -1,6 +1,6 @@
 {{- /* Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0 */ -}}
 {{- /* Mirrors Hugo's built-in sitemap, but emits canonical, no-trailing-slash
-       page URLs (/spec, not /spec/) to match the Worker's drop-trailing-slash
+       page URLs (/spec/0.1, not /spec/0.1/) to match the Worker's drop-trailing-slash
        routing — otherwise the sitemap would advertise URLs that 307 to their
        canonical form. The home page keeps its bare "/". */ -}}
 {{ printf "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>" | safeHTML }}

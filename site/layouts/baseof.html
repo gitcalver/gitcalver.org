@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>{{ if .IsHome }}gitcalver—calendar versioning from git history{{ else }}{{ .Title }}—gitcalver{{ end }}</title>
-  <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}GitCalVer derives strictly-increasing, calendar-based version numbers from git history.{{ end }}">
+  <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}GitCalVer derives unique, increasing calendar versions from your default branch’s git history.{{ end }}">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 
   {{- /* Sans 450 is the body font (critical on every page). On the home hero the

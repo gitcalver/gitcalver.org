@@ -10,8 +10,8 @@
 <div class="hero wrap">
   <h1>Version numbers <em>your git history already knows.</em></h1>
   <p class="lede">
-    GitCalVer reads commit history to produce a unique, strictly increasing
-    version. Nothing to bump, no state to keep.
+    GitCalVer turns your default branch’s history into unique, increasing
+    versions. Nothing to bump, no state to keep.
   </p>
 </div>
 
@@ -147,15 +147,15 @@
     <div class="card">
       <h3>Unique per commit</h3>
       <p>
-        Each first-parent commit on the default branch maps to one
-        date-plus-count pair. No two ever resolve to the same clean string.
+        Each commit in the default branch’s first-parent history maps to one
+        date-plus-count pair. Clean versions don’t repeat within that history.
       </p>
     </div>
     <div class="card">
       <h3>Reversible</h3>
       <p>
         Pass a clean version back to GitCalVer and it returns the exact commit
-        hash. Versions are an index into history.
+        hash from that history. Versions are an index into your branch.
       </p>
     </div>
     <div class="card">
