@@ -40,7 +40,7 @@
       <div class="col col-date">
         <span class="k"
           ><span class="mk"></span> UTC date
-          <span class="val">{{ $today }}</span></span
+          <span class="val" id="gcv-date-val">{{ $today }}</span></span
         >
         <span class="v">The UTC day the commit landed.</span>
       </div>
@@ -354,6 +354,7 @@ chmod +x gitcalver.sh</pre>
     function render() {
       var p = parts();
       set("gcv-date", p.ymd);
+      set("gcv-date-val", p.ymd);
       set("gcv-year", p.y);
       set("gcv-month", p.m);
       set("gcv-day", p.d);
