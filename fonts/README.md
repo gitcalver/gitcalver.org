@@ -26,16 +26,18 @@ handled by regenerating:
 
 ```sh
 make fonts        # rebuild the subsets + favicon from src/, then commit them
-make check-fonts  # CI guard: fails if the committed fonts miss a used glyph
+make check-fonts  # byte-compare a clean rebuild and test tamper detection
 ```
 
 `build.py` renders the site, collects every codepoint in the output HTML (plus
 ASCII), and subsets each TTF to those. It also outlines the `gcv` favicon
 (`../site/static/favicon.svg`) from Mono SemiBold, so the favicon carries no
 font dependency. `check-fonts` runs in CI (`.github/workflows/check.yml`) and
-fails the build if a glyph the site uses is absent from the committed subset —
-the prompt is to run `make fonts`.
+fails unless every committed font and the favicon exactly match a clean
+regeneration. Because the glyph set comes from the rendered site, this also
+catches a newly used glyph that has not been committed yet.
 
 Output is **byte-reproducible**: `fonttools`/`brotli` are version-pinned in the
-`Makefile` and the source `head.modified` timestamp is preserved
-(`recalcTimestamp=False`), so `make fonts` yields identical woff2 every run.
+Python project and `uv.lock`, and the source `head.modified` timestamp is
+preserved (`recalcTimestamp=False`), so `make fonts` yields identical woff2
+every run.

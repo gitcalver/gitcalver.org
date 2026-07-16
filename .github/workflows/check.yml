@@ -45,8 +45,8 @@ jobs:
         with:
           enable-cache: true
       - run: uv python install
-      # Builds the site (catching template errors) and fails if the committed
-      # subsetted fonts don't cover every glyph the rendered HTML uses.
+      # Builds the site (catching template errors), byte-compares a clean
+      # regeneration, and proves font and favicon tampering is detected.
       - run: make check-fonts
       # Asserts the rendered HTML keeps the go-import vanity tags, the /go
       # redirect, and the robots.txt content signal (formerly the CF worker).
@@ -54,6 +54,25 @@ jobs:
       # Fails if the rendered code samples emit a Modus-colored Chroma token
       # the trimmed syntax theme in main.css no longer styles.
       - run: make check-css
+
+  worker:
+    name: Worker
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      # Exercises the rendered site through the package-lock-pinned Wrangler
+      # runtime, including canonical routes, redirects, and response headers.
+      - run: make check-worker
 
   lighthouse:
     name: Lighthouse

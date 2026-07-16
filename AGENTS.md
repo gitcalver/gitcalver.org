@@ -29,8 +29,8 @@ directive in `go.mod` (`go tool hugo`) and the font script's deps via
 - `make fonts` — regenerate subsetted woff2 + favicon (see below); commit the
   result
 - `make check-toolchain` — verify the pinned Node, npm, uv, and Python versions
-- `make check-fonts` — CI guard; build the site and fail if committed fonts miss
-  a glyph
+- `make check-fonts` — CI guard; build the site, byte-compare a clean font and
+  favicon regeneration, and test tamper detection
 - `make check-html` — CI guard; build and assert the go-import tags, `/go`
   redirect, and `robots.txt` survive
 - `make check-links` — CI guard; build and verify rendered internal links and
@@ -38,6 +38,8 @@ directive in `go.mod` (`go tool hugo`) and the font script's deps via
 - `make check-css` — CI guard; build and fail if a rendered code sample emits a
   syntax-highlight (Chroma) token the trimmed Modus theme in `main.css` dropped
   (see below)
+- `make check-worker` — CI guard; serve the build through locked local Wrangler
+  and assert routes, redirects, headers, and content types
 - `make lighthouse` — build and audit every rendered content page with the
   locked Lighthouse CI
 - `make lint` — Prettier `--check` on Markdown, Ruff + ty on the repo's Python
@@ -47,7 +49,7 @@ directive in `go.mod` (`go tool hugo`) and the font script's deps via
 - `make clean` — remove `site/public` and `site/resources`
 
 CI (`.github/workflows/check.yml`) installs from both lockfiles, verifies the
-toolchain, and runs lint, font, HTML, CSS, and Lighthouse gates on every
+toolchain, and runs lint, font, HTML, CSS, Worker, and Lighthouse gates on every
 push/PR. A Lefthook `pre-commit` hook runs the same `make lint` locally —
 `lefthook install` enables it.
 
@@ -65,8 +67,9 @@ parser that rejects CFF's charstring interpreter, so CFF subsets silently fall
 back to the system serif. `glyf` outlines pass it. Don't switch back to `.otf`.
 
 **If you add a character the site doesn't already use** (a new symbol, accented
-letter, arrow, etc.), `make check-fonts` will fail. Fix it with `make fonts` and
-commit the regenerated woff2 + `favicon.svg`.
+letter, arrow, etc.), `make check-fonts` will detect that a clean regeneration
+differs. Fix it with `make fonts` and commit the regenerated woff2 +
+`favicon.svg`.
 
 Output is **byte-reproducible**: `fonttools`/`brotli` are version-pinned in
 `pyproject.toml` (and locked in `uv.lock`) and source timestamps are preserved
@@ -115,18 +118,20 @@ root) is the assets-only Worker config pointing at `site/public`, with
 trailing slash); keep hand-written internal links no-slash too.
 `site/static/_headers` sets immutable long-cache on the fingerprinted `/fonts/*`
 (the CSS is inlined into the HTML, so the fonts are the only fingerprinted
-assets left). `site/static/_redirects` redirects `/sh` to `/gitcalver.sh` — the
-install script, vendored at `site/static/gitcalver.sh` from `gitcalver/sh`
-(Workers Static Assets reject a 200-proxy to an external URL, so it's hosted
-here) — and `/go/*` to `/go` (a 301 splat; see below). `/go` is a standalone
-static page (`site/static/go.html`) carrying the `go-import`/`go-source` meta
-tags that make `gitcalver.org/go` a vanity import path, plus a `<meta refresh>`
-so browsers land on pkg.go.dev while `go get` reads the tags. Served as a
-top-level file (not `/go/index.html`), `/go` itself returns 200 — the path
-`go get` requests. Subpackage imports (`go get gitcalver.org/go/<subpkg>`) fetch
-`/go/<subpkg>`, which has no asset; the splat 301-redirects it to `/go`, whose
-`go-import` prefix matches, and `go get` follows the redirect. Without the rule
-that path 404s, since `not_found_handling` is the default.
+assets left). `make check-worker` exercises those headers and the following
+redirects through local Wrangler. `site/static/_redirects` redirects `/sh` to
+`/gitcalver.sh` — the install script, vendored at `site/static/gitcalver.sh`
+from `gitcalver/sh` (Workers Static Assets reject a 200-proxy to an external
+URL, so it's hosted here) — and `/go/*` to `/go` (a 301 splat; see below). `/go`
+is a standalone static page (`site/static/go.html`) carrying the
+`go-import`/`go-source` meta tags that make `gitcalver.org/go` a vanity import
+path, plus a `<meta refresh>` so browsers land on pkg.go.dev while `go get`
+reads the tags. Served as a top-level file (not `/go/index.html`), `/go` itself
+returns 200 — the path `go get` requests. Subpackage imports
+(`go get gitcalver.org/go/<subpkg>`) fetch `/go/<subpkg>`, which has no asset;
+the splat 301-redirects it to `/go`, whose `go-import` prefix matches, and
+`go get` follows the redirect. Without the rule that path 404s, since
+`not_found_handling` is the default.
 
 The build needs only Go — Hugo is pinned via the `go tool` directive in
 `go.mod`, so there is no separate `HUGO_VERSION` to pin; `go tool hugo` resolves

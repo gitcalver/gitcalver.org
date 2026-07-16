@@ -21,7 +21,8 @@
     }
   },
   "scripts": {
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "test:worker": "node tests/worker.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.12.1",

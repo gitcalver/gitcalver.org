@@ -27,10 +27,11 @@ make build        # render to site/public
 make serve        # run the local development server
 make check-toolchain # verify Node, npm, uv, and Python versions
 make lint         # check Markdown and Python tooling
-make check-fonts  # verify the subsetted web fonts
+make check-fonts  # reproduce and byte-compare fonts and favicon
 make check-html   # verify routes and HTML
 make check-links  # verify rendered internal links and fragments
 make check-css    # verify syntax-highlight styles
+make check-worker # verify local Worker routes, redirects, and headers
 ```
 
 Run `make fonts` and commit the regenerated font files whenever rendered text
@@ -38,7 +39,7 @@ introduces a codepoint that the current subsets do not contain.
 
 The deployed site is served by a Cloudflare Static Assets Worker. Workers Builds
 uses `make build` followed by `npm run deploy`, which invokes the locked
-Wrangler. Canonical pages omit trailing slashes; keep internal links in that
-form.
+Wrangler. `make check-worker` exercises the same configuration locally.
+Canonical pages omit trailing slashes; keep internal links in that form.
 
 See [ROADMAP.md](ROADMAP.md) for release status and planned work.

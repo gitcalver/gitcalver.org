@@ -13,13 +13,14 @@ RENDER := $(HUGO) -s $(SITE) --cacheDir "$(CACHE)" --cleanDestinationDir
 # Font deps (incl. the version-pinned woff2 toolchain) come from pyproject.toml;
 # --no-dev skips the lint tools the build itself doesn't need.
 PY       := uv run --frozen --quiet --no-dev python fonts/build.py
+FONT_TEST := uv run --frozen --quiet --no-dev python -m fonts.test_build
 PRETTIER := $(NODE_BIN)/prettier '**/*.md'
 RUFF     := uv run --frozen ruff
 TY       := uv run --frozen ty
 LINKS    := uv run --frozen --quiet --no-dev python check_links.py
 LHCI     := $(NODE_BIN)/lhci
 
-.PHONY: build serve fonts check-toolchain check-fonts check-html check-links check-css lighthouse lint fmt deploy clean
+.PHONY: build serve fonts check-toolchain check-fonts check-html check-links check-css check-worker lighthouse lint fmt deploy clean
 
 ## build: render the site to site/public
 build:
@@ -30,7 +31,7 @@ serve:
 	$(HUGO) server -s $(SITE) --cacheDir "$(CACHE)"
 
 ## fonts: regenerate subsetted woff2 + outlined favicon from the vendored
-## IBM Plex OTFs, with the glyph set derived from the rendered HTML.
+## IBM Plex TTFs, with the glyph set derived from the rendered HTML.
 fonts:
 	$(RENDER)
 	$(PY) build $(PUBLIC)
@@ -44,10 +45,12 @@ check-toolchain:
 	@expected=$$(cat .python-version); test "$$(uv run --frozen --quiet python --version)" = "Python $$expected" || { echo "FAIL: Python $$expected required"; exit 1; }
 	@echo "toolchain check OK"
 
-## check-fonts: fail if the committed fonts miss any glyph the site renders.
+## check-fonts: byte-compare the committed fonts and favicon with a clean,
+## pinned regeneration; then prove the comparison catches tampering.
 check-fonts:
 	$(RENDER)
 	$(PY) check $(PUBLIC)
+	$(FONT_TEST)
 
 ## check-html: build and assert the documentation routes, versioned
 ## specification, redirects, go-import vanity tags, robots.txt, and hosted
@@ -84,6 +87,12 @@ check-links:
 check-css:
 	$(RENDER)
 	uv run --frozen --quiet --no-dev python check_css.py $(PUBLIC)
+
+## check-worker: run the built site through locked local Wrangler and assert
+## canonical routes, redirects, headers, content types, and private rule files.
+check-worker:
+	$(RENDER)
+	npm run test:worker
 
 ## lighthouse: build the site and audit it with Lighthouse
 ## (lighthouse:recommended) via lhci's static server; see lighthouserc.cjs.

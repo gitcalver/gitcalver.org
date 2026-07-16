@@ -10,14 +10,16 @@ runs web fonts through a memory-safe parser that rejects CFF's charstring VM, so
 CFF fonts silently fall back. glyf outlines pass it.
 
   python fonts/build.py build <rendered-html-dir>   # write woff2 + favicon
-  python fonts/build.py check <rendered-html-dir>    # CI guard, exits 1 on gap
+  python fonts/build.py check <rendered-html-dir>    # verify committed bytes
 
 Run via `make fonts` / `make check-fonts`, which build the site first.
 """
 
+import hashlib
 import html
 import pathlib
 import sys
+import tempfile
 
 from fontTools.misc.transform import Transform
 from fontTools.pens.boundsPen import BoundsPen
@@ -42,6 +44,7 @@ WEIGHTS = [
     ("IBMPlexMono-SemiBold.ttf", "ibm-plex-mono-600.woff2"),
 ]
 FAVICON_SRC = "IBMPlexMono-SemiBold.ttf"
+GENERATED_FONT_FILES = [out for _, out in WEIGHTS] + ["OFL.txt"]
 
 # Always keep printable ASCII + NBSP, independent of the current content.
 MIN_CODEPOINT = 0x20  # drop C0 control characters
@@ -91,10 +94,18 @@ def _subsetter() -> Subsetter:
     return Subsetter(options=opt)
 
 
-def build(html_dir: str) -> None:
+def build_assets(
+    html_dir: str,
+    out_fonts: pathlib.Path,
+    favicon: pathlib.Path,
+    *,
+    announce: bool,
+) -> int:
+    """Generate every published font asset at caller-selected paths."""
     cps = collect_codepoints(html_dir)
-    print(f"building fonts for {len(cps)} codepoints derived from {html_dir}")
-    OUT_FONTS.mkdir(parents=True, exist_ok=True)
+    if announce:
+        print(f"building fonts for {len(cps)} codepoints derived from {html_dir}")
+    out_fonts.mkdir(parents=True, exist_ok=True)
     for ttf, out in WEIGHTS:
         # recalcTimestamp=False keeps the source's head.modified instead of
         # stamping "now", so the output woff2 are byte-reproducible.
@@ -103,13 +114,21 @@ def build(html_dir: str) -> None:
         ss.populate(unicodes=cps)
         ss.subset(font)
         font.flavor = "woff2"
-        font.save(OUT_FONTS / out)
-        print(f"  {out:28} {(OUT_FONTS / out).stat().st_size:>7} bytes")
-    (OUT_FONTS / "OFL.txt").write_bytes((SRC / "OFL.txt").read_bytes())
-    _favicon()
+        font.save(out_fonts / out)
+        if announce:
+            print(f"  {out:28} {(out_fonts / out).stat().st_size:>7} bytes")
+    (out_fonts / "OFL.txt").write_bytes((SRC / "OFL.txt").read_bytes())
+    _favicon(favicon)
+    if announce:
+        print("  favicon.svg (outlined paths)")
+    return len(cps)
 
 
-def _favicon() -> None:
+def build(html_dir: str) -> None:
+    build_assets(html_dir, OUT_FONTS, FAVICON, announce=True)
+
+
+def _favicon(path: pathlib.Path) -> None:
     """Outline 'gcv' (Mono SemiBold) to SVG paths — no font dependency."""
     font = TTFont(SRC / FAVICON_SRC)
     scale = 21.0 / font["head"].unitsPerEm  # ty: ignore[unresolved-attribute]
@@ -129,37 +148,75 @@ def _favicon() -> None:
     pen = SVGPathPen(gs, ntos=lambda v: format(round(v, 2) + 0, "g"))
     for n, px in zip(names, penx, strict=True):
         gs[n].draw(TransformPen(pen, Transform(scale, 0, 0, -scale, px + tx, ty)))
-    FAVICON.write_text(
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">\n'
         '  <rect width="64" height="64" rx="14" fill="#23262b"/>\n'
         f'  <path d="{pen.getCommands()}" fill="#ffffff"/>\n'
         "</svg>\n",
+        encoding="utf-8",
     )
-    print("  favicon.svg (outlined paths)")
+
+
+def _sha256(path: pathlib.Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def compare_assets(
+    expected_fonts: pathlib.Path,
+    expected_favicon: pathlib.Path,
+    actual_fonts: pathlib.Path,
+    actual_favicon: pathlib.Path,
+) -> list[str]:
+    """Return every missing or byte-different generated asset."""
+    pairs = [
+        *(
+            (expected_fonts / name, actual_fonts / name)
+            for name in GENERATED_FONT_FILES
+        ),
+        (expected_favicon, actual_favicon),
+    ]
+    problems = []
+    for expected, actual in pairs:
+        if not actual.is_file():
+            problems.append(f"{actual.name}: missing")
+        elif expected.read_bytes() != actual.read_bytes():
+            problems.append(
+                f"{actual.name}: committed sha256 {_sha256(actual)} "
+                f"!= regenerated sha256 {_sha256(expected)}",
+            )
+    return problems
 
 
 def check(html_dir: str) -> None:
-    used = collect_codepoints(html_dir)
-    problems = []
-    for ttf, out in WEIGHTS:
-        path = OUT_FONTS / out
-        if not path.exists():
-            problems.append(f"{out}: not built")
-            continue
-        have = set(_cmap(TTFont(path)))
-        # Only fault on glyphs the SOURCE font actually has — codepoints absent
-        # from IBM Plex entirely (emoji, CJK, …) are an acceptable fallback.
-        source = set(_cmap(TTFont(SRC / ttf)))
-        missing = sorted((used & source) - have)
-        if missing:
-            shown = " ".join(f"U+{c:04X} {chr(c)!r}" for c in missing[:20])
-            problems.append(f"{out}: missing {len(missing)} glyph(s): {shown}")
+    with tempfile.TemporaryDirectory(prefix="gitcalver-fonts-") as tmp:
+        root = pathlib.Path(tmp)
+        expected_fonts = root / "fonts"
+        expected_favicon = root / "favicon.svg"
+        used_count = build_assets(
+            html_dir,
+            expected_fonts,
+            expected_favicon,
+            announce=False,
+        )
+        problems = compare_assets(
+            expected_fonts,
+            expected_favicon,
+            OUT_FONTS,
+            FAVICON,
+        )
     if problems:
-        print("FONT CHECK FAILED — run `make fonts` and commit the result:")
+        print(
+            "FONT CHECK FAILED — committed generated assets differ from the "
+            "pinned build; run `make fonts` and commit the result:",
+        )
         for p in problems:
             print("  " + p)
         sys.exit(1)
-    print(f"font check OK — every weight covers all {len(used)} used codepoints")
+    print(
+        "font check OK — committed fonts and favicon exactly match the pinned "
+        f"build for all {used_count} used codepoints",
+    )
 
 
 if __name__ == "__main__":
