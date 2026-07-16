@@ -314,18 +314,16 @@ chmod +x gitcalver.sh</pre>
       <span>.github/workflows/release.yml</span
       ><button
         class="copy"
-        data-copy="- uses: gitcalver/sh@v20260530.6&#10;  id: version&#10;  with:&#10;    prefix: 'v'&#10;    tag: 'true'"
+        data-copy="- uses: gitcalver/sh@v20260715.2&#10;  id: version&#10;  with:&#10;    prefix: '0.'"
       >
         copy
       </button>
     </div>
-    <pre><span class="cm"># mint a version on every push</span>
-<span class="cm"># pin to a release tag — or a full commit SHA for the strongest supply-chain guarantee</span>
-- uses: gitcalver/sh@v20260530.6
+    <pre><span class="cm"># compute a version on every push</span>
+- uses: gitcalver/sh@v20260715.2
   id: version
   with:
-    prefix: <span class="out">'v'</span>
-    tag: <span class="out">'true'</span></pre>
+    prefix: <span class="out">'0.'</span></pre>
   </div>
 </section>
 

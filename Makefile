@@ -18,11 +18,12 @@ PY       := uv run --quiet --no-dev python fonts/build.py
 PRETTIER := npx --yes prettier@3.9.5 '**/*.md'
 RUFF     := uv run ruff
 TY       := uv run ty
+LINKS    := uv run --quiet --no-dev python check_links.py
 # Pinned like Prettier for reproducible audits; the Renovate customManager in
 # .github/renovate.json5 keeps this version current.
 LHCI     := npx --yes @lhci/cli@0.15.1
 
-.PHONY: build serve fonts check-fonts check-html check-css lighthouse lint fmt clean
+.PHONY: build serve fonts check-fonts check-html check-links check-css lighthouse lint fmt clean
 
 ## build: render the site to site/public
 build:
@@ -43,16 +44,18 @@ check-fonts:
 	$(RENDER)
 	$(PY) check $(PUBLIC)
 
-## check-html: build and assert the versioned specification, redirects,
-## go-import vanity tags, robots.txt, and hosted install script survive in the
-## output.
+## check-html: build and assert the documentation routes, versioned
+## specification, redirects, go-import vanity tags, robots.txt, and hosted
+## install script survive in the output.
 check-html:
 	$(RENDER)
+	@test -f $(PUBLIC)/compatibility/index.html || { echo "FAIL: /compatibility page missing"; exit 1; }
 	@test -f $(PUBLIC)/spec/0.1/index.html || { echo "FAIL: immutable /spec/0.1 page missing"; exit 1; }
 	@test ! -f $(PUBLIC)/spec/index.html || { echo "FAIL: /spec must not render a page (would shadow the /spec -> /spec/0.1 redirect)"; exit 1; }
 	@grep -qF 'Erratum (nonnormative).' $(PUBLIC)/spec/0.1/index.html || { echo "FAIL: /spec/0.1 erratum missing"; exit 1; }
 	@grep -qF '/spec /spec/0.1 302' $(PUBLIC)/_redirects || { echo "FAIL: /spec -> /spec/0.1 redirect missing from _redirects"; exit 1; }
 	@grep -qF '<loc>https://gitcalver.org/spec/0.1</loc>' $(PUBLIC)/sitemap.xml || { echo "FAIL: /spec/0.1 missing from sitemap"; exit 1; }
+	@grep -qF '<loc>https://gitcalver.org/compatibility</loc>' $(PUBLIC)/sitemap.xml || { echo "FAIL: /compatibility missing from sitemap"; exit 1; }
 	@! grep -qF '<loc>https://gitcalver.org/spec</loc>' $(PUBLIC)/sitemap.xml || { echo "FAIL: redirecting /spec must not appear in sitemap"; exit 1; }
 	@grep -qF 'name="go-import" content="gitcalver.org/go git https://github.com/gitcalver/go"' $(PUBLIC)/go.html || { echo "FAIL: go-import meta missing from /go.html"; exit 1; }
 	@grep -qF 'name="go-source"' $(PUBLIC)/go.html || { echo "FAIL: go-source meta missing from /go.html"; exit 1; }
@@ -63,7 +66,13 @@ check-html:
 	@grep -q '^Allow: /' $(PUBLIC)/robots.txt || { echo "FAIL: Allow missing from robots.txt"; exit 1; }
 	@grep -qF 'Sitemap: https://gitcalver.org/sitemap.xml' $(PUBLIC)/robots.txt || { echo "FAIL: Sitemap missing from robots.txt"; exit 1; }
 	@grep -q '^#!/bin/sh' $(PUBLIC)/gitcalver.sh || { echo "FAIL: /gitcalver.sh install script missing"; exit 1; }
+	$(LINKS) $(PUBLIC)
 	@echo "html check OK"
+
+## check-links: build and verify every rendered internal page and fragment link.
+check-links:
+	$(RENDER)
+	$(LINKS) $(PUBLIC)
 
 ## check-css: fail if the rendered code samples emit a Modus-colored Chroma
 ## token the trimmed syntax theme in main.css no longer styles (see check_css.py).
@@ -79,8 +88,8 @@ lighthouse:
 	$(LHCI) assert --config=lighthouserc.cjs
 
 ## lint: check Markdown formatting and lint/typecheck the Python tooling
-## (fonts/build.py + check_css.py); Ruff/ty walk the repo and skip the gitignored
-## .venv, so any new script is covered without listing it here.
+## Python tooling; Ruff/ty walk the repo and skip the gitignored .venv, so any
+## new script is covered without listing it here.
 lint:
 	$(PRETTIER) --check
 	$(RUFF) format --check .

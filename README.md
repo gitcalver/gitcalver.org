@@ -1,0 +1,39 @@
+<!-- Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0 -->
+
+# gitcalver.org
+
+The specification and documentation site for [GitCalVer](https://gitcalver.org),
+a versioning scheme that derives `YYYYMMDD.N` versions from a git branch’s
+first-parent history.
+
+The implementations live in separate repositories:
+
+- [`gitcalver/sh`](https://github.com/gitcalver/sh)—POSIX shell reference
+  implementation, conformance suite, and GitHub Action
+- [`gitcalver/python`](https://github.com/gitcalver/python)—Python API, CLI, and
+  Hatch plugin
+- [`gitcalver/go`](https://github.com/gitcalver/go)—standalone Go CLI
+- [`gitcalver/rust`](https://github.com/gitcalver/rust)—experimental Rust port
+
+## Work on the site
+
+The site is built with Hugo. Go and uv provide the pinned build tools; Node.js
+is also needed for Markdown formatting.
+
+```sh
+make build        # render to site/public
+make serve        # run the local development server
+make lint         # check Markdown and Python tooling
+make check-fonts  # verify the subsetted web fonts
+make check-html   # verify routes and HTML
+make check-links  # verify rendered internal links and fragments
+make check-css    # verify syntax-highlight styles
+```
+
+Run `make fonts` and commit the regenerated font files whenever rendered text
+introduces a codepoint that the current subsets do not contain.
+
+The deployed site is served by a Cloudflare Static Assets Worker. Canonical
+pages omit trailing slashes; keep internal links in that form.
+
+See [ROADMAP.md](ROADMAP.md) for release status and planned work.

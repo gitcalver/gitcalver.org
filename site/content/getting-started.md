@@ -1,7 +1,8 @@
 ---
 title: "Getting Started"
 description:
-  "Add GitCalVer to your build—shell, Python, Go, GitHub Actions, npm, Docker"
+  "Add GitCalVer to your build—shell, Python, Go, Rust, GitHub Actions, npm,
+  Docker"
 # Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0
 ---
 
@@ -47,8 +48,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.version]
 source = "gitcalver"
-
-[tool.hatch.version.gitcalver]
 dirty = "+dirty"
 ```
 
@@ -64,45 +63,38 @@ hatch build  # version comes from git history
 Install the CLI:
 
 ```sh
-go install gitcalver.org/go@latest
+go install gitcalver.org/go/cmd/gitcalver@latest
 ```
 
-Or use it as a library:
-
-```go
-package main
-
-import (
-	"fmt"
-	"gitcalver.org/go"
-)
-
-func main() {
-	v, err := gitcalver.Version(gitcalver.Options{
-		Prefix: "v0.",
-	})
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(v) // → v0.20260411.3
-}
-```
-
-Set the version at build time with `-ldflags`:
+The Go implementation intentionally exposes only a CLI. Set an application’s
+version at build time with `-ldflags`:
 
 ```sh
-VERSION=$(gitcalver --prefix v0.)
+VERSION=$(gitcalver --prefix 0.)
 go build -ldflags "-X main.version=$VERSION" .
 ```
+
+## Rust (Cargo)
+
+Use the shell reference implementation to compute a crate’s version:
+
+```sh
+VERSION=$(./gitcalver.sh --prefix 0.)
+```
+
+Cargo requires the version in `Cargo.toml`; it has no built-in command-line
+override. Have the project’s release script update a temporary publication copy
+with `$VERSION`, then run `cargo publish`, so the source manifest does not
+become version state.
 
 ## GitHub Actions
 
 ```yaml
-- uses: actions/checkout@v4
+- uses: actions/checkout@v6
   with:
     fetch-depth: 0 # Full history needed for accurate count
 
-- uses: gitcalver/sh@v20260412.1
+- uses: gitcalver/sh@v20260715.2
   id: version
   with:
     prefix: "0." # optional, for semver ecosystems
@@ -135,11 +127,14 @@ Or in `package.json` scripts:
 ```json
 {
   "scripts": {
-    "version": "npm version $(./gitcalver.sh --prefix 0.) --no-git-tag-version",
-    "prepublishOnly": "npm run version"
+    "version:gitcalver": "npm version $(./gitcalver.sh --prefix 0.) --no-git-tag-version",
+    "prepublishOnly": "npm run version:gitcalver"
   }
 }
 ```
+
+Do not name this helper `version`: npm reserves that name for the lifecycle run
+by `npm version`, which would call the helper recursively.
 
 ## Docker
 
@@ -162,5 +157,5 @@ Or in CI:
 
 ## All formats
 
-See the [ecosystem mapping](/spec#ecosystem-mapping) in the specification for
-the recommended `--prefix` and `--dirty` flags for each package manager.
+See [Compatibility](/compatibility) for package-manager prefixes, dirty forms,
+dependency ranges, and constrained platform fields.
