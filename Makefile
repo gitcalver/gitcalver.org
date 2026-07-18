@@ -20,7 +20,7 @@ TY       := uv run --frozen ty
 LINKS    := uv run --frozen --quiet --no-dev python check_links.py
 LHCI     := $(NODE_BIN)/lhci
 
-.PHONY: build serve fonts check-toolchain check-fonts check-html check-links check-css check-worker lighthouse lint fmt deploy clean
+.PHONY: build serve fonts check-toolchain check-fonts check-html check-links check-css check-worker check-accessibility lighthouse lint fmt deploy clean
 
 ## build: render the site to site/public
 build:
@@ -93,6 +93,13 @@ check-css:
 check-worker:
 	$(RENDER)
 	npm run test:worker
+
+## check-accessibility: run Axe and responsive browser assertions at 320px and
+## desktop widths in both light and dark modes. Install the pinned browser with
+## `node_modules/.bin/playwright install chromium` once before running locally.
+check-accessibility:
+	$(RENDER)
+	npm run test:accessibility
 
 ## lighthouse: build the site and audit it with Lighthouse
 ## (lighthouse:recommended) via lhci's static server; see lighthouserc.cjs.

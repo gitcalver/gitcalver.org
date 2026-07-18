@@ -40,6 +40,9 @@ directive in `go.mod` (`go tool hugo`) and the font script's deps via
   (see below)
 - `make check-worker` — CI guard; serve the build through locked local Wrangler
   and assert routes, redirects, headers, and content types
+- `make check-accessibility` — CI guard; run Axe and responsive browser checks
+  at 320 px and desktop widths in light and dark modes (install the browser once
+  with `node_modules/.bin/playwright install chromium` for local use)
 - `make lighthouse` — build and audit every rendered content page with the
   locked Lighthouse CI
 - `make lint` — Prettier `--check` on Markdown, Ruff + ty on the repo's Python
@@ -49,9 +52,9 @@ directive in `go.mod` (`go tool hugo`) and the font script's deps via
 - `make clean` — remove `site/public` and `site/resources`
 
 CI (`.github/workflows/check.yml`) installs from both lockfiles, verifies the
-toolchain, and runs lint, font, HTML, CSS, Worker, and Lighthouse gates on every
-push/PR. A Lefthook `pre-commit` hook runs the same `make lint` locally —
-`lefthook install` enables it.
+toolchain, and runs lint, font, HTML, CSS, Worker, accessibility, and Lighthouse
+gates on every push/PR. A Lefthook `pre-commit` hook runs the same `make lint`
+locally — `lefthook install` enables it.
 
 ## Font pipeline (the non-obvious part)
 

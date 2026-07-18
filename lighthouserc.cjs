@@ -40,13 +40,6 @@ module.exports = {
         // it visible but non-blocking rather than hard-failing on an
         // experimental scorer.
         "network-dependency-tree-insight": ["warn", { minScore: 0.9 }],
-        // The "gitcalver" logo link is announced as "gitcalver home" (aria-
-        // label) — a good name. axe flags it only because the visible "gcv"
-        // monogram is rendered as text, so it wants the name to literally
-        // contain "gcv gitcalver". Folding the monogram into the name would make
-        // screen readers say "gcv gitcalver", which is worse, so warn instead of
-        // degrading the spoken label.
-        "label-content-name-mismatch": ["warn", { minScore: 0.9 }],
       },
     },
   },
