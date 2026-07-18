@@ -23,6 +23,7 @@
   "scripts": {
     "deploy": "wrangler deploy",
     "test:accessibility": "node tests/accessibility.mjs",
+    "test:interactions": "node tests/interactions.mjs",
     "test:worker": "node tests/worker.mjs"
   },
   "devDependencies": {

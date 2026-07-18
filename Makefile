@@ -20,7 +20,7 @@ TY       := uv run --frozen ty
 LINKS    := uv run --frozen --quiet --no-dev python check_links.py
 LHCI     := $(NODE_BIN)/lhci
 
-.PHONY: build serve fonts check-toolchain check-fonts check-html check-links check-css check-worker check-accessibility lighthouse lint fmt deploy clean
+.PHONY: build serve fonts check-toolchain check-fonts check-html check-links check-css check-worker check-accessibility check-interactions lighthouse lint fmt deploy clean
 
 ## build: render the site to site/public
 build:
@@ -100,6 +100,12 @@ check-worker:
 check-accessibility:
 	$(RENDER)
 	npm run test:accessibility
+
+## check-interactions: exercise keyboard TOCs and scrollspy, Clipboard API and
+## fallback outcomes, and keyboard-accessible horizontal overflow.
+check-interactions:
+	$(RENDER)
+	npm run test:interactions
 
 ## lighthouse: build the site and audit it with Lighthouse
 ## (lighthouse:recommended) via lhci's static server; see lighthouserc.cjs.

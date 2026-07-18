@@ -1,8 +1,19 @@
 {{- /* Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0 */ -}}
 {{ define "main" }}
-<article class="prose wrap">
-  <h1>{{ .Title }}</h1>
-  {{ with .Description }}<p class="lede">{{ . }}</p>{{ end }}
-  {{ .Content }}
-</article>
+{{- $toc := .TableOfContents | replaceRE `(?s)^<nav id="TableOfContents">\s*|\s*</nav>$` "" -}}
+<div class="docs-shell wrap">
+  <aside class="page-toc toc-desktop" aria-label="On this page" tabindex="0">
+    <p class="toc-title">On this page</p>
+    <nav aria-label="Page contents">{{ $toc | safeHTML }}</nav>
+  </aside>
+  <article class="prose">
+    <details class="page-toc toc-mobile">
+      <summary>On this page</summary>
+      <nav aria-label="Page contents">{{ $toc | safeHTML }}</nav>
+    </details>
+    <h1>{{ .Title }}</h1>
+    {{ with .Description }}<p class="lede">{{ . }}</p>{{ end }}
+    {{ .Content }}
+  </article>
+</div>
 {{ end }}

@@ -95,8 +95,9 @@ jobs:
       # package lock; --with-deps supplies the runner's native browser libraries.
       - run: node_modules/.bin/playwright install --with-deps chromium
       # Covers every rendered page type at 320px and desktop widths in both
-      # color modes, including Axe, keyboard, gutters, and reduced motion.
-      - run: make check-accessibility
+      # color modes, then exercises copy outcomes, TOCs, scrollspy, and
+      # keyboard-accessible horizontal overflow.
+      - run: make check-accessibility check-interactions
 
   lighthouse:
     name: Lighthouse

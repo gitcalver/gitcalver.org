@@ -48,7 +48,12 @@
     </div>
   </header>
 
-  <main id="main-content" tabindex="-1">{{ block "main" . }}{{ end }}</main>
+  <main id="main-content" tabindex="-1">
+    <p id="horizontal-scroll-instructions" class="visually-hidden">
+      Use the left and right arrow keys to scroll horizontally.
+    </p>
+    {{ block "main" . }}{{ end }}
+  </main>
 
   <footer class="site-footer">
     <div class="wrap">
@@ -83,5 +88,11 @@
       </div>
     </div>
   </footer>
+
+  {{- /* The shared interaction layer is small enough to inline. Keeping it in
+         the asset pipeline gives every page the same minified, dependency-free
+         copy, overflow, TOC, and UTC-rollover behavior. */ -}}
+  {{- $js := resources.Get "js/main.js" | minify -}}
+  <script>{{ $js.Content | safeJS }}</script>
 </body>
 </html>

@@ -232,15 +232,24 @@
     </p>
   </div>
   <div class="two-col">
+    <!-- Copy controls use Lucide icons (ISC): https://lucide.dev/license -->
     <div class="code">
       <div class="bar">
-        <span>install.sh</span
-        ><button
-          class="copy"
-          data-copy="curl -fsSLO https://github.com/gitcalver/sh/releases/latest/download/gitcalver.sh&#10;chmod +x gitcalver.sh"
-        >
-          copy
-        </button>
+        <span>install.sh</span>
+        <span class="copy-control">
+          <button
+            class="copy"
+            type="button"
+            data-copy="curl -fsSLO https://github.com/gitcalver/sh/releases/latest/download/gitcalver.sh&#10;chmod +x gitcalver.sh"
+            data-state="idle"
+          >
+            <svg class="copy-icon copy-icon-idle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            <svg class="copy-icon copy-icon-success" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg>
+            <svg class="copy-icon copy-icon-error" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            <span class="copy-label">Copy</span>
+          </button>
+          <span class="copy-status visually-hidden" role="status" aria-live="polite"></span>
+        </span>
       </div>
       <pre><span class="cm"># grab the script, make it executable</span>
 curl -fsSLO https://github.com/gitcalver/sh/\
@@ -249,8 +258,16 @@ chmod +x gitcalver.sh</pre>
     </div>
     <div class="code">
       <div class="bar">
-        <span>run it</span
-        ><button class="copy" data-copy="./gitcalver.sh">copy</button>
+        <span>run it</span>
+        <span class="copy-control">
+          <button class="copy" type="button" data-copy="./gitcalver.sh" data-state="idle">
+            <svg class="copy-icon copy-icon-idle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            <svg class="copy-icon copy-icon-success" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg>
+            <svg class="copy-icon copy-icon-error" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            <span class="copy-label">Copy</span>
+          </button>
+          <span class="copy-status visually-hidden" role="status" aria-live="polite"></span>
+        </span>
       </div>
       <pre><span class="cm"># version for HEAD</span>
 <span class="pr">$</span> ./gitcalver.sh
@@ -311,13 +328,21 @@ chmod +x gitcalver.sh</pre>
   <!-- CI snippet -->
   <div class="code" style="margin-top: 24px">
     <div class="bar">
-      <span>.github/workflows/release.yml</span
-      ><button
-        class="copy"
-        data-copy="- uses: gitcalver/sh@v20260715.2&#10;  id: version&#10;  with:&#10;    prefix: '0.'"
-      >
-        copy
-      </button>
+      <span>.github/workflows/release.yml</span>
+      <span class="copy-control">
+        <button
+          class="copy"
+          type="button"
+          data-copy="- uses: gitcalver/sh@v20260715.2&#10;  id: version&#10;  with:&#10;    prefix: '0.'"
+          data-state="idle"
+        >
+          <svg class="copy-icon copy-icon-idle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+          <svg class="copy-icon copy-icon-success" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg>
+          <svg class="copy-icon copy-icon-error" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          <span class="copy-label">Copy</span>
+        </button>
+        <span class="copy-status visually-hidden" role="status" aria-live="polite"></span>
+      </span>
     </div>
     <pre><span class="cm"># compute a version on every push</span>
 - uses: gitcalver/sh@v20260715.2
@@ -327,80 +352,4 @@ chmod +x gitcalver.sh</pre>
   </div>
 </section>
 
-<script>
-  (function () {
-    function pad(v) {
-      return v < 10 ? "0" + v : "" + v;
-    }
-    function parts() {
-      var d = new Date();
-      return {
-        ymd:
-          "" +
-          d.getUTCFullYear() +
-          pad(d.getUTCMonth() + 1) +
-          pad(d.getUTCDate()),
-        y: "" + d.getUTCFullYear(),
-        m: pad(d.getUTCMonth() + 1),
-        d: pad(d.getUTCDate()),
-      };
-    }
-    function set(id, t) {
-      var el = document.getElementById(id);
-      if (el) el.textContent = t;
-    }
-    function render() {
-      var p = parts();
-      set("gcv-date", p.ymd);
-      set("gcv-date-val", p.ymd);
-      set("gcv-year", p.y);
-      set("gcv-month", p.m);
-      set("gcv-day", p.d);
-      var v = document.getElementById("gcv-version");
-      if (v) v.setAttribute("aria-label", "Example version " + p.ymd + ".1");
-      var t = document.getElementById("gcv-today");
-      if (t)
-        t.innerHTML =
-          '<span class="pulse"></span>Today is <span class="mono">' +
-          p.ymd +
-          '</span> in UTC. The first commit pushed today would be <span class="mono">' +
-          p.ymd +
-          ".1</span>.";
-    }
-    render();
-    // Re-render just after each UTC midnight (1s cushion so it never fires early)
-    // so a page left open rolls over to the new day, every day.
-    (function tick() {
-      var d = new Date();
-      var next = Date.UTC(
-        d.getUTCFullYear(),
-        d.getUTCMonth(),
-        d.getUTCDate() + 1,
-        0,
-        0,
-        1,
-      );
-      setTimeout(function () {
-        render();
-        tick();
-      }, next - d.getTime());
-    })();
-    document.querySelectorAll(".copy").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        var txt = btn.getAttribute("data-copy");
-        if (navigator.clipboard)
-          navigator.clipboard
-            .writeText(txt)
-            .then(function () {
-              var old = btn.textContent;
-              btn.textContent = "copied";
-              setTimeout(function () {
-                btn.textContent = old;
-              }, 1400);
-            })
-            .catch(function () {});
-      });
-    });
-  })();
-</script>
 {{ end }}

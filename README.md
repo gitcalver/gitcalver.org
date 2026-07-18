@@ -34,6 +34,7 @@ make check-css    # verify syntax-highlight styles
 make check-worker # verify local Worker routes, redirects, and headers
 node_modules/.bin/playwright install chromium # install the locked test browser
 make check-accessibility # run Axe and responsive browser checks
+make check-interactions # test copy, TOC, scrollspy, and overflow interactions
 ```
 
 Run `make fonts` and commit the regenerated font files whenever rendered text

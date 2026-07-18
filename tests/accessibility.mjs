@@ -67,11 +67,7 @@ try {
         assert(navigation?.ok(), `${label} responds successfully`);
         await page.evaluate(() => document.fonts.ready);
 
-        // PR 7 owns keyboard-accessible overflow for code and tables. Keep that
-        // one known rule isolated while this gate enforces the rest of Axe.
-        const results = await new AxeBuilder({ page })
-          .disableRules(["scrollable-region-focusable"])
-          .analyze();
+        const results = await new AxeBuilder({ page }).analyze();
         assert.equal(
           results.violations.length,
           0,
