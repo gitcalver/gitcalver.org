@@ -73,8 +73,9 @@ jobs:
           cache: npm
       - run: npm ci
       # Exercises the rendered site through the package-lock-pinned Wrangler
-      # runtime, including canonical routes, redirects, and response headers.
-      - run: make check-worker
+      # runtime, including canonical routes, redirects, response headers,
+      # metadata, the social card, the custom 404, and RSS removal.
+      - run: make check-worker check-metadata
 
   accessibility:
     name: Accessibility
@@ -94,9 +95,9 @@ jobs:
       # The Playwright package and its Chromium build are both selected by the
       # package lock; --with-deps supplies the runner's native browser libraries.
       - run: node_modules/.bin/playwright install --with-deps chromium
-      # Covers every rendered page type at 320px and desktop widths in both
-      # color modes, then exercises copy outcomes, TOCs, scrollspy, and
-      # keyboard-accessible horizontal overflow.
+      # Covers every rendered page type (including the 404) at 320px and
+      # desktop widths in both color modes, then exercises copy outcomes, TOCs,
+      # scrollspy, keyboard-accessible overflow, and the UTC date rollover.
       - run: make check-accessibility check-interactions
 
   lighthouse:

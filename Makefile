@@ -20,7 +20,7 @@ TY       := uv run --frozen ty
 LINKS    := uv run --frozen --quiet --no-dev python check_links.py
 LHCI     := $(NODE_BIN)/lhci
 
-.PHONY: build serve fonts check-toolchain check-fonts check-html check-links check-css check-worker check-accessibility check-interactions lighthouse lint fmt deploy clean
+.PHONY: build serve fonts social-card check-toolchain check-fonts check-html check-links check-css check-worker check-metadata check-accessibility check-interactions lighthouse lint fmt deploy clean
 
 ## build: render the site to site/public
 build:
@@ -35,6 +35,11 @@ serve:
 fonts:
 	$(RENDER)
 	$(PY) build $(PUBLIC)
+
+## social-card: render the 1200×630 PNG from its editable SVG source with the
+## package-lock-pinned Playwright browser.
+social-card:
+	node scripts/build-social-card.mjs
 
 ## check-toolchain: fail unless the exact Node, npm, uv, and Python versions
 ## pinned for reproducible site work are active.
@@ -74,6 +79,9 @@ check-html:
 	@grep -q '^Allow: /' $(PUBLIC)/robots.txt || { echo "FAIL: Allow missing from robots.txt"; exit 1; }
 	@grep -qF 'Sitemap: https://gitcalver.org/sitemap.xml' $(PUBLIC)/robots.txt || { echo "FAIL: Sitemap missing from robots.txt"; exit 1; }
 	@grep -q '^#!/bin/sh' $(PUBLIC)/gitcalver.sh || { echo "FAIL: /gitcalver.sh install script missing"; exit 1; }
+	@test -f $(PUBLIC)/404.html || { echo "FAIL: custom 404 page missing"; exit 1; }
+	@test -f $(PUBLIC)/social-card.png || { echo "FAIL: social card missing"; exit 1; }
+	@test ! -f $(PUBLIC)/index.xml || { echo "FAIL: RSS output must remain disabled"; exit 1; }
 	$(LINKS) $(PUBLIC)
 	@echo "html check OK"
 
@@ -93,6 +101,12 @@ check-css:
 check-worker:
 	$(RENDER)
 	npm run test:worker
+
+## check-metadata: assert canonical and social metadata, social-card dimensions,
+## the noindex 404 response, and the absence of RSS through local Wrangler.
+check-metadata:
+	$(RENDER)
+	npm run test:metadata
 
 ## check-accessibility: run Axe and responsive browser assertions at 320px and
 ## desktop widths in both light and dark modes. Install the pinned browser with

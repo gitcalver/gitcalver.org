@@ -85,6 +85,10 @@ try {
     status: 301,
     location: "/go",
   });
+  await expectResponse("/social-card.png", {
+    status: 200,
+    contentType: /^image\/png\b/,
+  });
 
   const home = await response("/");
   const fontPath = (await home.text()).match(
@@ -99,7 +103,11 @@ try {
 
   await expectResponse("/_headers", { status: 404 });
   await expectResponse("/_redirects", { status: 404 });
-  await expectResponse("/not-a-real-page", { status: 404 });
+  await expectResponse("/not-a-real-page", {
+    status: 404,
+    contentType: /^text\/html\b/,
+    bodyIncludes: /data-page=not-found/,
+  });
   console.log("worker smoke tests OK");
 } finally {
   await worker.stop();

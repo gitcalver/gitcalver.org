@@ -24,6 +24,7 @@
     "deploy": "wrangler deploy",
     "test:accessibility": "node tests/accessibility.mjs",
     "test:interactions": "node tests/interactions.mjs",
+    "test:metadata": "node tests/metadata.mjs",
     "test:worker": "node tests/worker.mjs"
   },
   "devDependencies": {

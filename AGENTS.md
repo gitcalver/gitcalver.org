@@ -40,11 +40,15 @@ directive in `go.mod` (`go tool hugo`) and the font script's deps via
   (see below)
 - `make check-worker` — CI guard; serve the build through locked local Wrangler
   and assert routes, redirects, headers, and content types
+- `make check-metadata` — CI guard; assert canonical and social metadata, the
+  shared social card, the custom noindex 404, and RSS removal
 - `make check-accessibility` — CI guard; run Axe and responsive browser checks
   at 320 px and desktop widths in light and dark modes (install the browser once
   with `node_modules/.bin/playwright install chromium` for local use)
 - `make lighthouse` — build and audit every rendered content page with the
   locked Lighthouse CI
+- `make social-card` — regenerate the shared 1200×630 social image from its SVG
+  source with the locked Playwright browser
 - `make lint` — Prettier `--check` on Markdown, Ruff + ty on the repo's Python
   (`fonts/build.py`, `check_css.py`; the gitignored `.venv` is skipped)
 - `make fmt` — auto-format Markdown and apply Ruff fixes + formatting
@@ -52,9 +56,9 @@ directive in `go.mod` (`go tool hugo`) and the font script's deps via
 - `make clean` — remove `site/public` and `site/resources`
 
 CI (`.github/workflows/check.yml`) installs from both lockfiles, verifies the
-toolchain, and runs lint, font, HTML, CSS, Worker, accessibility, and Lighthouse
-gates on every push/PR. A Lefthook `pre-commit` hook runs the same `make lint`
-locally — `lefthook install` enables it.
+toolchain, and runs lint, font, HTML, CSS, Worker, metadata, accessibility, and
+Lighthouse gates on every push/PR. A Lefthook `pre-commit` hook runs the same
+`make lint` locally — `lefthook install` enables it.
 
 ## Font pipeline (the non-obvious part)
 
@@ -133,8 +137,8 @@ reads the tags. Served as a top-level file (not `/go/index.html`), `/go` itself
 returns 200 — the path `go get` requests. Subpackage imports
 (`go get gitcalver.org/go/<subpkg>`) fetch `/go/<subpkg>`, which has no asset;
 the splat 301-redirects it to `/go`, whose `go-import` prefix matches, and
-`go get` follows the redirect. Without the rule that path 404s, since
-`not_found_handling` is the default.
+`go get` follows the redirect. The redirect is applied before the custom
+`404-page` fallback used for other missing routes.
 
 The build needs only Go — Hugo is pinned via the `go tool` directive in
 `go.mod`, so there is no separate `HUGO_VERSION` to pin; `go tool hugo` resolves

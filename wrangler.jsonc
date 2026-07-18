@@ -10,8 +10,9 @@
     // Canonical page URLs carry no trailing slash: /spec serves spec/index.html
     // (200) and /spec/ -> 307 -> /spec. This only affects directory-index pages;
     // top-level files (go.html served at /go) behave identically under
-    // drop- and the default auto-trailing-slash, and non-existent paths
-    // (/go/<subpkg>, governed by not_found_handling) are untouched.
-    "html_handling": "drop-trailing-slash"
+    // drop- and the default auto-trailing-slash. Redirect rules are applied
+    // before the custom 404 fallback, so /go/<subpkg> still reaches /go.
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "404-page"
   }
 }

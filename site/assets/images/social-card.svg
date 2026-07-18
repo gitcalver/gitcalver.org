@@ -1,0 +1,53 @@
+<!-- Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">GitCalVer</title>
+  <desc id="description">Version numbers your git history already knows: YYYYMMDD.N</desc>
+  <defs>
+    <style>
+      @font-face {
+        font-family: "IBM Plex Sans";
+        font-weight: 450;
+        src: url("../../../fonts/src/IBMPlexSans-Text.ttf");
+      }
+      @font-face {
+        font-family: "IBM Plex Sans";
+        font-weight: 600;
+        src: url("../../../fonts/src/IBMPlexSans-SemiBold.ttf");
+      }
+      @font-face {
+        font-family: "IBM Plex Mono";
+        font-weight: 500;
+        src: url("../../../fonts/src/IBMPlexMono-Medium.ttf");
+      }
+      @font-face {
+        font-family: "IBM Plex Mono";
+        font-weight: 600;
+        src: url("../../../fonts/src/IBMPlexMono-SemiBold.ttf");
+      }
+      .sans { font-family: "IBM Plex Sans", sans-serif; }
+      .mono { font-family: "IBM Plex Mono", monospace; }
+    </style>
+    <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse">
+      <path d="M28 0H0V28" fill="none" stroke="#e7e8eb" stroke-width="1"/>
+    </pattern>
+    <radialGradient id="fade" cx="50%" cy="46%" r="66%">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#fff"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#f6f6f7"/>
+  <rect x="52" y="52" width="1096" height="526" rx="36" fill="#fff" stroke="#dfe1e5" stroke-width="2"/>
+  <rect x="53" y="53" width="1094" height="524" rx="35" fill="url(#grid)"/>
+  <rect x="53" y="53" width="1094" height="524" rx="35" fill="url(#fade)"/>
+
+  <g transform="translate(100 96)">
+    <rect width="82" height="72" rx="18" fill="#23262b"/>
+    <text class="mono" x="41" y="45" fill="#fff" font-size="24" font-weight="600" text-anchor="middle" letter-spacing="-1.5">gcv</text>
+    <text class="sans" x="108" y="46" fill="#23262b" font-size="34" font-weight="600" letter-spacing="-1">git<tspan fill="#60646c" font-weight="450">calver</tspan></text>
+  </g>
+
+  <text class="sans" x="100" y="250" fill="#60646c" font-size="22" font-weight="600" letter-spacing="2.6">CALENDAR VERSIONING FROM GIT HISTORY</text>
+  <text class="mono" x="94" y="390" font-size="104" font-weight="500" letter-spacing="-4"><tspan fill="#23658b">YYYYMMDD</tspan><tspan fill="#60646c">.</tspan><tspan fill="#2c7858">N</tspan></text>
+  <text class="sans" x="100" y="478" fill="#23262b" font-size="34" font-weight="450" letter-spacing="-.4">Version numbers your git history already knows.</text>
+  <text class="mono" x="100" y="536" fill="#737780" font-size="20" font-weight="500">gitcalver.org</text>
+</svg>

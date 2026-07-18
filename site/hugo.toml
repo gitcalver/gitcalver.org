@@ -3,7 +3,7 @@ baseURL = "https://gitcalver.org/"
 title = "gitcalver"
 locale = "en-us"
 
-disableKinds = ["taxonomy", "term"]
+disableKinds = ["RSS", "taxonomy", "term"]
 
 [minify]
 # minifyOutput is the config-file equivalent of `hugo --minify`; it minifies

@@ -26,6 +26,12 @@ const routes = [
     headerCurrent: ["Spec"],
     footerCurrent: ["Specification"],
   },
+  {
+    path: "/not-a-real-page",
+    status: 404,
+    headerCurrent: [],
+    footerCurrent: [],
+  },
 ];
 const viewports = [
   { width: 320, height: 800, gutter: 22 },
@@ -64,7 +70,11 @@ try {
         });
         const page = await context.newPage();
         const navigation = await page.goto(`${worker.base}${route.path}`);
-        assert(navigation?.ok(), `${label} responds successfully`);
+        assert.equal(
+          navigation?.status(),
+          route.status ?? 200,
+          `${label} responds with the expected status`,
+        );
         await page.evaluate(() => document.fonts.ready);
 
         const results = await new AxeBuilder({ page }).analyze();
@@ -276,7 +286,7 @@ try {
   );
   await motionContext.close();
 
-  console.log("responsive accessibility tests OK (16 Axe scans)");
+  console.log("responsive accessibility tests OK (20 Axe scans)");
 } finally {
   if (browser) await browser.close();
   await worker.stop();

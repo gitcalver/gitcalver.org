@@ -263,8 +263,45 @@ try {
   );
   await overflowContext.close();
 
+  const rolloverContext = await browser.newContext({
+    reducedMotion: "reduce",
+    viewport: { width: 1280, height: 900 },
+  });
+  const rolloverPage = await rolloverContext.newPage();
+  await rolloverPage.clock.install({
+    time: new Date("2026-12-31T23:59:59.500Z"),
+  });
+  await rolloverPage.goto(`${worker.base}/`);
+  assert.equal(
+    await rolloverPage.locator("#gcv-date").textContent(),
+    "20261231",
+    "the client renders the current UTC date",
+  );
+  await rolloverPage.clock.fastForward(1600);
+  assert.equal(
+    await rolloverPage.locator("#gcv-date").textContent(),
+    "20270101",
+    "the example rolls over after UTC midnight",
+  );
+  assert.equal(
+    await rolloverPage.locator("#gcv-date-val").textContent(),
+    "20270101",
+    "the legend rolls over with the example",
+  );
+  assert.equal(
+    await rolloverPage.locator("#gcv-version").getAttribute("aria-label"),
+    "Example version 20270101.1",
+    "the accessible version label rolls over",
+  );
+  assert.match(
+    await rolloverPage.locator("#gcv-today").textContent(),
+    /Today is 20270101 in UTC.*20270101\.1/s,
+    "the explanatory sentence rolls over",
+  );
+  await rolloverContext.close();
+
   console.log(
-    "interaction tests OK (copy success/fallback/failure, TOCs, scrollspy, overflow)",
+    "interaction tests OK (copy success/fallback/failure, TOCs, scrollspy, overflow, UTC rollover)",
   );
 } finally {
   if (browser) await browser.close();
