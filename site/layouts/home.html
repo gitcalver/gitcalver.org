@@ -251,7 +251,7 @@
           <span class="copy-status visually-hidden" role="status" aria-live="polite"></span>
         </span>
       </div>
-      <pre><span class="cm"># grab the script, make it executable</span>
+      <pre tabindex="0" aria-label="Code example: install.sh" aria-describedby="horizontal-scroll-instructions" data-horizontal-scroll="true"><span class="cm"># grab the script, make it executable</span>
 curl -fsSLO https://github.com/gitcalver/sh/\
 releases/download/v20260719.1/gitcalver.sh
 chmod +x gitcalver.sh</pre>
@@ -269,7 +269,7 @@ chmod +x gitcalver.sh</pre>
           <span class="copy-status visually-hidden" role="status" aria-live="polite"></span>
         </span>
       </div>
-      <pre><span class="cm"># version for HEAD</span>
+      <pre tabindex="0" aria-label="Code example: run it" aria-describedby="horizontal-scroll-instructions" data-horizontal-scroll="true"><span class="cm"># version for HEAD</span>
 <span class="pr">$</span> ./gitcalver.sh
 <span class="out">20260607.1</span>
 
@@ -344,7 +344,7 @@ chmod +x gitcalver.sh</pre>
         <span class="copy-status visually-hidden" role="status" aria-live="polite"></span>
       </span>
     </div>
-    <pre><span class="cm"># compute a version on every push</span>
+    <pre tabindex="0" aria-label="Code example: .github/workflows/release.yml" aria-describedby="horizontal-scroll-instructions" data-horizontal-scroll="true"><span class="cm"># compute a version on every push</span>
 - uses: gitcalver/sh@v20260719.1
   id: version
   with:

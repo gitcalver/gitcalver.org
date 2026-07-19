@@ -177,19 +177,29 @@ try {
     8,
     "desktop TOC contains each section",
   );
-  const dockerLink = desktopToc.getByRole("link", { name: "Docker" });
-  await dockerLink.focus();
-  await desktopPage.keyboard.press("Enter");
-  await desktopPage.waitForFunction(() => location.hash === "#docker");
-  await desktopPage.waitForFunction(
-    () =>
-      document.querySelectorAll(
-        '.page-toc a[href="#docker"][aria-current="location"]',
-      ).length === 2,
+  assert.equal(
+    await desktopPage.evaluate(
+      () =>
+        CSS.supports("scroll-target-group", "auto") &&
+        CSS.supports("selector(a:target-current)"),
+    ),
+    true,
+    "the test browser supports the native scrollspy contract",
   );
   assert.equal(
+    await desktopToc
+      .locator("nav > ul")
+      .evaluate((list) => getComputedStyle(list).scrollTargetGroup),
+    "auto",
+    "the TOC establishes a native scroll target group",
+  );
+  const goLink = desktopToc.getByRole("link", { name: "Go", exact: true });
+  await goLink.focus();
+  await desktopPage.keyboard.press("Enter");
+  await desktopPage.waitForFunction(() => location.hash === "#go");
+  assert.equal(
     await desktopPage
-      .locator("#docker")
+      .locator("#go")
       .evaluate((heading) => heading.getBoundingClientRect().top >= 62),
     true,
     "TOC navigation leaves the heading below the sticky header",
@@ -230,6 +240,7 @@ try {
   await mobileContext.close();
 
   const overflowContext = await browser.newContext({
+    javaScriptEnabled: false,
     viewport: { width: 320, height: 800 },
   });
   const overflowPage = await overflowContext.newPage();
@@ -260,6 +271,23 @@ try {
   assert(
     (await table.evaluate((element) => element.scrollLeft)) > 0,
     "ArrowRight scrolls the focused table",
+  );
+  await overflowPage.goto(`${worker.base}/getting-started`);
+  const codeExample = overflowPage.locator(".prose pre").first();
+  assert.equal(
+    await codeExample.getAttribute("tabindex"),
+    "0",
+    "rendered code examples enter the keyboard order",
+  );
+  assert.equal(
+    await codeExample.getAttribute("aria-label"),
+    "Code example",
+    "rendered code examples have an accessible label",
+  );
+  assert.match(
+    await codeExample.getAttribute("aria-describedby"),
+    /horizontal-scroll-instructions/,
+    "rendered code examples expose keyboard instructions",
   );
   await overflowContext.close();
 
@@ -301,7 +329,7 @@ try {
   await rolloverContext.close();
 
   console.log(
-    "interaction tests OK (copy success/fallback/failure, TOCs, scrollspy, overflow, UTC rollover)",
+    "interaction tests OK (copy success/fallback/failure, TOCs, CSS scrollspy contract, rendered overflow, UTC rollover)",
   );
 } finally {
   if (browser) await browser.close();

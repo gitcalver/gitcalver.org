@@ -371,6 +371,7 @@ article.prose .lede{font-size:18px;color:var(--text-soft)}
 }
 .toc-title{font-weight:600;color:var(--text);margin-bottom:12px}
 .page-toc nav ul{list-style:none;padding:0;margin:0}
+.page-toc nav > ul{scroll-target-group:auto}
 .page-toc nav ul ul{padding-left:12px;margin-top:3px}
 .page-toc nav li{margin:3px 0}
 .page-toc nav a{
@@ -378,7 +379,7 @@ article.prose .lede{font-size:18px;color:var(--text-soft)}
   color:var(--text-soft);line-height:1.35;text-decoration:none;
 }
 .page-toc nav a:hover{color:var(--text)}
-.page-toc nav a[aria-current="location"]{
+.page-toc nav a:target-current{
   color:var(--text);font-weight:500;border-left-color:var(--date);background:var(--date-soft);
 }
 .toc-mobile{display:none;margin-bottom:34px;border:1px solid var(--border);border-radius:10px;background:var(--bg-sunk)}
