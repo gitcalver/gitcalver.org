@@ -235,7 +235,7 @@
       if (!tocFrame) tocFrame = requestAnimationFrame(updateToc);
     }
 
-    updateToc();
+    queueTocUpdate();
     document.addEventListener("scroll", queueTocUpdate, { passive: true });
     window.addEventListener("resize", queueTocUpdate, { passive: true });
     window.addEventListener("hashchange", queueTocUpdate);
