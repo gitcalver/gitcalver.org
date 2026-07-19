@@ -92,9 +92,9 @@ become version state.
 ```yaml
 - uses: actions/checkout@v6
   with:
-    fetch-depth: 0 # Full history needed for accurate count
+    fetch-depth: 0 # Make the complete first-parent history available
 
-- uses: gitcalver/sh@v20260715.2
+- uses: gitcalver/sh@v20260719.1
   id: version
   with:
     prefix: "0." # optional, for semver ecosystems
@@ -104,13 +104,17 @@ become version state.
 
 The action outputs:
 
-| Output    | Example        |
-| --------- | -------------- |
-| `version` | `0.20260411.3` |
-| `date`    | `20260411`     |
-| `count`   | `3`            |
-| `dirty`   | `false`        |
-| `hash`    | `a1b2c3d`      |
+| Output    | Example         |
+| --------- | --------------- |
+| `version` | `0.20260411.3`  |
+| `date`    | `20260411`      |
+| `count`   | `3`             |
+| `dirty`   | `false`         |
+| `hash`    | `a1b2c3d`       |
+| `tag`     | `v0.20260411.3` |
+
+In a release workflow, `tag-prefix: "v"` and `tag: "true"` make the action claim
+the publication tag without force after preceding checks succeed.
 
 ## npm
 

@@ -8,6 +8,8 @@ SITE   := site
 PUBLIC := $(SITE)/public
 CACHE  := $(or $(TMPDIR),/tmp)/gcv-hugo-cache
 NODE_BIN := node_modules/.bin
+SHELL_RELEASE := v20260719.1
+SHELL_SHA256 := e49209093bdbf584e901efacae465ba59cb03b70a69af3b5f47c015e8255cbc4
 # The full site render every build-dependent target starts from.
 RENDER := $(HUGO) -s $(SITE) --cacheDir "$(CACHE)" --cleanDestinationDir
 # Font deps (incl. the version-pinned woff2 toolchain) come from pyproject.toml;
@@ -64,10 +66,13 @@ check-html:
 	$(RENDER)
 	@test -f $(PUBLIC)/compatibility/index.html || { echo "FAIL: /compatibility page missing"; exit 1; }
 	@test -f $(PUBLIC)/spec/0.1/index.html || { echo "FAIL: immutable /spec/0.1 page missing"; exit 1; }
-	@test ! -f $(PUBLIC)/spec/index.html || { echo "FAIL: /spec must not render a page (would shadow the /spec -> /spec/0.1 redirect)"; exit 1; }
+	@test -f $(PUBLIC)/spec/0.2/index.html || { echo "FAIL: immutable /spec/0.2 page missing"; exit 1; }
+	@test ! -f $(PUBLIC)/spec/index.html || { echo "FAIL: /spec must not render a page (would shadow the /spec -> /spec/0.2 redirect)"; exit 1; }
 	@grep -qF 'Erratum (nonnormative).' $(PUBLIC)/spec/0.1/index.html || { echo "FAIL: /spec/0.1 erratum missing"; exit 1; }
-	@grep -qF '/spec /spec/0.1 302' $(PUBLIC)/_redirects || { echo "FAIL: /spec -> /spec/0.1 redirect missing from _redirects"; exit 1; }
+	@grep -qF '<strong>Version</strong>: 0.2' $(PUBLIC)/spec/0.2/index.html || { echo "FAIL: /spec/0.2 version marker missing"; exit 1; }
+	@grep -qF '/spec /spec/0.2 302' $(PUBLIC)/_redirects || { echo "FAIL: /spec -> /spec/0.2 redirect missing from _redirects"; exit 1; }
 	@grep -qF '<loc>https://gitcalver.org/spec/0.1</loc>' $(PUBLIC)/sitemap.xml || { echo "FAIL: /spec/0.1 missing from sitemap"; exit 1; }
+	@grep -qF '<loc>https://gitcalver.org/spec/0.2</loc>' $(PUBLIC)/sitemap.xml || { echo "FAIL: /spec/0.2 missing from sitemap"; exit 1; }
 	@grep -qF '<loc>https://gitcalver.org/compatibility</loc>' $(PUBLIC)/sitemap.xml || { echo "FAIL: /compatibility missing from sitemap"; exit 1; }
 	@! grep -qF '<loc>https://gitcalver.org/spec</loc>' $(PUBLIC)/sitemap.xml || { echo "FAIL: redirecting /spec must not appear in sitemap"; exit 1; }
 	@grep -qF 'name="go-import" content="gitcalver.org/go git https://github.com/gitcalver/go"' $(PUBLIC)/go.html || { echo "FAIL: go-import meta missing from /go.html"; exit 1; }
@@ -79,6 +84,8 @@ check-html:
 	@grep -q '^Allow: /' $(PUBLIC)/robots.txt || { echo "FAIL: Allow missing from robots.txt"; exit 1; }
 	@grep -qF 'Sitemap: https://gitcalver.org/sitemap.xml' $(PUBLIC)/robots.txt || { echo "FAIL: Sitemap missing from robots.txt"; exit 1; }
 	@grep -q '^#!/bin/sh' $(PUBLIC)/gitcalver.sh || { echo "FAIL: /gitcalver.sh install script missing"; exit 1; }
+	@grep -qF 'VERSION="$(patsubst v%,%,$(SHELL_RELEASE))"' $(PUBLIC)/gitcalver.sh || { echo "FAIL: /gitcalver.sh is not $(SHELL_RELEASE)"; exit 1; }
+	@actual=$$(shasum -a 256 $(PUBLIC)/gitcalver.sh | awk '{print $$1}'); test "$$actual" = "$(SHELL_SHA256)" || { echo "FAIL: /gitcalver.sh sha256 $$actual != $(SHELL_SHA256)"; exit 1; }
 	@test -f $(PUBLIC)/404.html || { echo "FAIL: custom 404 page missing"; exit 1; }
 	@test -f $(PUBLIC)/social-card.png || { echo "FAIL: social card missing"; exit 1; }
 	@test ! -f $(PUBLIC)/index.xml || { echo "FAIL: RSS output must remain disabled"; exit 1; }

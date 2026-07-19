@@ -17,6 +17,7 @@ module.exports = {
         "http://localhost/compatibility/index.html",
         "http://localhost/getting-started/index.html",
         "http://localhost/spec/0.1/index.html",
+        "http://localhost/spec/0.2/index.html",
       ],
       // Median of several runs steadies the variable performance metrics.
       numberOfRuns: 3,

@@ -97,6 +97,12 @@ try {
       title: "Specification—gitcalver",
       type: "article",
     },
+    {
+      path: "/spec/0.2",
+      canonical: "https://gitcalver.org/spec/0.2",
+      title: "Specification—gitcalver",
+      type: "article",
+    },
   ];
 
   for (const route of indexedRoutes) {

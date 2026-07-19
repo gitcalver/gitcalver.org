@@ -240,7 +240,7 @@
           <button
             class="copy"
             type="button"
-            data-copy="curl -fsSLO https://github.com/gitcalver/sh/releases/latest/download/gitcalver.sh&#10;chmod +x gitcalver.sh"
+            data-copy="curl -fsSLO https://github.com/gitcalver/sh/releases/download/v20260719.1/gitcalver.sh&#10;chmod +x gitcalver.sh"
             data-state="idle"
           >
             <svg class="copy-icon copy-icon-idle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
@@ -253,7 +253,7 @@
       </div>
       <pre><span class="cm"># grab the script, make it executable</span>
 curl -fsSLO https://github.com/gitcalver/sh/\
-releases/latest/download/gitcalver.sh
+releases/download/v20260719.1/gitcalver.sh
 chmod +x gitcalver.sh</pre>
     </div>
     <div class="code">
@@ -333,7 +333,7 @@ chmod +x gitcalver.sh</pre>
         <button
           class="copy"
           type="button"
-          data-copy="- uses: gitcalver/sh@v20260715.2&#10;  id: version&#10;  with:&#10;    prefix: '0.'"
+          data-copy="- uses: gitcalver/sh@v20260719.1&#10;  id: version&#10;  with:&#10;    prefix: '0.'"
           data-state="idle"
         >
           <svg class="copy-icon copy-icon-idle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
@@ -345,7 +345,7 @@ chmod +x gitcalver.sh</pre>
       </span>
     </div>
     <pre><span class="cm"># compute a version on every push</span>
-- uses: gitcalver/sh@v20260715.2
+- uses: gitcalver/sh@v20260719.1
   id: version
   with:
     prefix: <span class="out">'0.'</span></pre>

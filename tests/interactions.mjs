@@ -48,7 +48,7 @@ try {
   await waitForCopyState(successPage, ".copy", "success");
   assert.equal(
     await successPage.evaluate(() => window.__copiedText),
-    "curl -fsSLO https://github.com/gitcalver/sh/releases/latest/download/gitcalver.sh\nchmod +x gitcalver.sh",
+    "curl -fsSLO https://github.com/gitcalver/sh/releases/download/v20260719.1/gitcalver.sh\nchmod +x gitcalver.sh",
     "keyboard activation writes the exact install command",
   );
   assert.equal(

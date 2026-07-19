@@ -27,6 +27,11 @@ const routes = [
     footerCurrent: ["Specification"],
   },
   {
+    path: "/spec/0.2",
+    headerCurrent: ["Spec"],
+    footerCurrent: ["Specification"],
+  },
+  {
     path: "/not-a-real-page",
     status: 404,
     headerCurrent: [],
@@ -286,7 +291,11 @@ try {
   );
   await motionContext.close();
 
-  console.log("responsive accessibility tests OK (20 Axe scans)");
+  console.log(
+    `responsive accessibility tests OK (` +
+      routes.length * colorSchemes.length * viewports.length +
+      ` Axe scans)`,
+  );
 } finally {
   if (browser) await browser.close();
   await worker.stop();

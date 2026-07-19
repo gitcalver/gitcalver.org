@@ -56,7 +56,7 @@ try {
   });
   await expectResponse("/spec", {
     status: 302,
-    location: "/spec/0.1",
+    location: "/spec/0.2",
   });
   await expectResponse("/spec/0.1", {
     status: 200,
@@ -65,6 +65,14 @@ try {
   await expectResponse("/spec/0.1/", {
     status: 307,
     location: "/spec/0.1",
+  });
+  await expectResponse("/spec/0.2", {
+    status: 200,
+    contentType: /^text\/html\b/,
+  });
+  await expectResponse("/spec/0.2/", {
+    status: 307,
+    location: "/spec/0.2",
   });
   await expectResponse("/sh", {
     status: 302,
