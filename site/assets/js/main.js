@@ -174,74 +174,22 @@
     region.setAttribute(
       "aria-label",
       title
-        ? "Scrollable code example: " + title.textContent.trim()
-        : "Scrollable code example",
+        ? "Code example: " + title.textContent.trim()
+        : "Code example",
     );
-    region.dataset.scrollLabel = "true";
-  }
-
-  function setScrollDescription(region, enabled) {
-    var ids = (region.getAttribute("aria-describedby") || "")
-      .split(/\s+/)
-      .filter(Boolean)
-      .filter(function (id) {
-        return id !== scrollInstructions;
-      });
-    if (enabled) ids.push(scrollInstructions);
-    if (ids.length) region.setAttribute("aria-describedby", ids.join(" "));
-    else region.removeAttribute("aria-describedby");
-  }
-
-  function updateScrollRegion(region) {
-    var scrollable = region.scrollWidth > region.clientWidth + 1;
-    if (scrollable) {
-      if (!region.hasAttribute("tabindex")) {
-        region.tabIndex = 0;
-        region.dataset.scrollTabindex = "true";
-      }
-      if (region.tagName === "PRE") describeCode(region);
-      setScrollDescription(region, true);
-      region.dataset.horizontalScroll = "true";
-      return;
-    }
-
-    if (region.dataset.scrollTabindex === "true") {
-      region.removeAttribute("tabindex");
-      delete region.dataset.scrollTabindex;
-    }
-    if (region.dataset.scrollLabel === "true") {
-      region.removeAttribute("aria-label");
-      delete region.dataset.scrollLabel;
-    }
-    setScrollDescription(region, false);
-    delete region.dataset.horizontalScroll;
-  }
-
-  function updateScrollRegions() {
-    scrollRegions.forEach(updateScrollRegion);
   }
 
   scrollRegions.forEach(function (region) {
-    region.addEventListener("keydown", function (event) {
-      if (
-        (event.key !== "ArrowLeft" && event.key !== "ArrowRight") ||
-        event.altKey ||
-        event.ctrlKey ||
-        event.metaKey
-      ) {
-        return;
-      }
-      var oldPosition = region.scrollLeft;
-      region.scrollLeft += event.key === "ArrowRight" ? 48 : -48;
-      if (region.scrollLeft !== oldPosition) event.preventDefault();
-    });
-  });
+    if (!region.hasAttribute("tabindex")) region.tabIndex = 0;
+    if (region.tagName === "PRE") describeCode(region);
 
-  requestAnimationFrame(updateScrollRegions);
-  window.addEventListener("resize", updateScrollRegions, { passive: true });
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(updateScrollRegions);
-  }
+    var ids = (region.getAttribute("aria-describedby") || "")
+      .split(/\s+/)
+      .filter(Boolean);
+    if (!ids.includes(scrollInstructions)) ids.push(scrollInstructions);
+    region.setAttribute("aria-describedby", ids.join(" "));
+    region.dataset.horizontalScroll = "true";
+  });
 
   var tocLinks = Array.from(
     document.querySelectorAll('.page-toc a[href^="#"]'),
