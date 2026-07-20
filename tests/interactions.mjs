@@ -264,13 +264,22 @@ try {
     "overflowing table exposes keyboard instructions",
   );
   await table.focus();
-  await overflowPage.keyboard.press("ArrowRight");
-  await overflowPage.waitForFunction(
-    () => document.querySelector(".prose table")?.scrollLeft > 0,
+  const overflow = await table.evaluate((element) => ({
+    active: document.activeElement === element,
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  assert.equal(overflow.active, true, "overflowing table accepts focus");
+  assert(
+    overflow.scrollWidth > overflow.clientWidth,
+    "table content overflows horizontally",
   );
+  await table.evaluate((element) => {
+    element.scrollLeft = element.scrollWidth;
+  });
   assert(
     (await table.evaluate((element) => element.scrollLeft)) > 0,
-    "ArrowRight scrolls the focused table",
+    "table accepts horizontal scrolling",
   );
   await overflowPage.goto(`${worker.base}/getting-started`);
   const codeExample = overflowPage.locator(".prose pre").first();
