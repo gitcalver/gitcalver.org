@@ -32,6 +32,6 @@
     "@lhci/cli": "0.15.1",
     "playwright": "1.61.1",
     "prettier": "3.9.5",
-    "wrangler": "4.111.0"
+    "wrangler": "4.112.0"
   }
 }
