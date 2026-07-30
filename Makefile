@@ -67,12 +67,16 @@ check-html:
 	@test -f $(PUBLIC)/compatibility/index.html || { echo "FAIL: /compatibility page missing"; exit 1; }
 	@test -f $(PUBLIC)/spec/0.1/index.html || { echo "FAIL: immutable /spec/0.1 page missing"; exit 1; }
 	@test -f $(PUBLIC)/spec/0.2/index.html || { echo "FAIL: immutable /spec/0.2 page missing"; exit 1; }
-	@test ! -f $(PUBLIC)/spec/index.html || { echo "FAIL: /spec must not render a page (would shadow the /spec -> /spec/0.2 redirect)"; exit 1; }
+	@test -f $(PUBLIC)/spec/0.3/index.html || { echo "FAIL: immutable /spec/0.3 page missing"; exit 1; }
+	@test ! -f $(PUBLIC)/spec/index.html || { echo "FAIL: /spec must not render a page (would shadow the /spec -> /spec/0.3 redirect)"; exit 1; }
 	@grep -qF 'Erratum (nonnormative).' $(PUBLIC)/spec/0.1/index.html || { echo "FAIL: /spec/0.1 erratum missing"; exit 1; }
-	@grep -qF '<strong>Version</strong>: 0.2' $(PUBLIC)/spec/0.2/index.html || { echo "FAIL: /spec/0.2 version marker missing"; exit 1; }
-	@grep -qF '/spec /spec/0.2 302' $(PUBLIC)/_redirects || { echo "FAIL: /spec -> /spec/0.2 redirect missing from _redirects"; exit 1; }
+	@grep -qF 'Erratum (nonnormative).' $(PUBLIC)/spec/0.2/index.html || { echo "FAIL: /spec/0.2 erratum missing"; exit 1; }
+	@grep -qF '<strong>Version</strong>: 0.3' $(PUBLIC)/spec/0.3/index.html || { echo "FAIL: /spec/0.3 version marker missing"; exit 1; }
+	@test "$$(grep -oF 'role="img"' $(PUBLIC)/spec/0.3/index.html | wc -l | tr -d ' ')" = 5 || { echo "FAIL: /spec/0.3 must render exactly 5 figures"; exit 1; }
+	@grep -qF '/spec /spec/0.3 302' $(PUBLIC)/_redirects || { echo "FAIL: /spec -> /spec/0.3 redirect missing from _redirects"; exit 1; }
 	@grep -qF '<loc>https://gitcalver.org/spec/0.1</loc>' $(PUBLIC)/sitemap.xml || { echo "FAIL: /spec/0.1 missing from sitemap"; exit 1; }
 	@grep -qF '<loc>https://gitcalver.org/spec/0.2</loc>' $(PUBLIC)/sitemap.xml || { echo "FAIL: /spec/0.2 missing from sitemap"; exit 1; }
+	@grep -qF '<loc>https://gitcalver.org/spec/0.3</loc>' $(PUBLIC)/sitemap.xml || { echo "FAIL: /spec/0.3 missing from sitemap"; exit 1; }
 	@grep -qF '<loc>https://gitcalver.org/compatibility</loc>' $(PUBLIC)/sitemap.xml || { echo "FAIL: /compatibility missing from sitemap"; exit 1; }
 	@! grep -qF '<loc>https://gitcalver.org/spec</loc>' $(PUBLIC)/sitemap.xml || { echo "FAIL: redirecting /spec must not appear in sitemap"; exit 1; }
 	@grep -qF 'name="go-import" content="gitcalver.org/go git https://github.com/gitcalver/go"' $(PUBLIC)/go.html || { echo "FAIL: go-import meta missing from /go.html"; exit 1; }

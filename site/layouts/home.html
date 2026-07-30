@@ -50,8 +50,8 @@
           <span class="val">1</span></span
         >
         <span class="v"
-          >Consecutive first-parent commits up to this one that share its UTC
-          day.</span
+          >Commits reachable from this one, through any parent, that share
+          its UTC day.</span
         >
       </div>
     </div>
@@ -107,9 +107,9 @@
         <div>
           <h3>Count commits on that date</h3>
           <p>
-            Walk the default branch’s first-parent history and count the
-            consecutive commits that share this UTC date, up to and including
-            this one. Merge commits are one commit.
+            Count every commit reachable from this one—through any
+            parent—that shares its UTC date. A same-day merge can add more
+            than one at once.
           </p>
         </div>
       </div>
@@ -190,8 +190,8 @@
     <div class="row">
       <div class="key">N</div>
       <div class="val">
-        1-based count of consecutive first-parent commits sharing that UTC date,
-        up to and including this commit.
+        Count of commits reachable from this one, through any parent, sharing
+        that UTC date—including this commit.
       </div>
     </div>
     <div class="row">

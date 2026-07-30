@@ -298,6 +298,37 @@ try {
     /horizontal-scroll-instructions/,
     "rendered code examples expose keyboard instructions",
   );
+  await overflowPage.goto(`${worker.base}/spec/0.3`);
+  const figure = overflowPage.locator('.prose figure[data-horizontal-scroll="true"]').first();
+  await figure.waitFor();
+  assert.equal(
+    await figure.getAttribute("tabindex"),
+    "0",
+    "overflowing figure enters the keyboard order",
+  );
+  assert.match(
+    await figure.getAttribute("aria-describedby"),
+    /horizontal-scroll-instructions/,
+    "overflowing figure exposes keyboard instructions",
+  );
+  await figure.focus();
+  const figureOverflow = await figure.evaluate((element) => ({
+    active: document.activeElement === element,
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  assert.equal(figureOverflow.active, true, "overflowing figure accepts focus");
+  assert(
+    figureOverflow.scrollWidth > figureOverflow.clientWidth,
+    "figure content overflows horizontally",
+  );
+  await figure.evaluate((element) => {
+    element.scrollLeft = element.scrollWidth;
+  });
+  assert(
+    (await figure.evaluate((element) => element.scrollLeft)) > 0,
+    "figure accepts horizontal scrolling",
+  );
   await overflowContext.close();
 
   const rolloverContext = await browser.newContext({

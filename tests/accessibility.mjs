@@ -32,6 +32,11 @@ const routes = [
     footerCurrent: ["Specification"],
   },
   {
+    path: "/spec/0.3",
+    headerCurrent: ["Spec"],
+    footerCurrent: ["Specification"],
+  },
+  {
     path: "/not-a-real-page",
     status: 404,
     headerCurrent: [],

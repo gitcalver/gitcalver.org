@@ -410,6 +410,9 @@ article.prose td code{white-space:nowrap}
   scrollbar-color:var(--border-strong) transparent;
 }
 [data-horizontal-scroll="true"]:focus-visible{outline-offset:2px}
+article.prose figure{margin:0 0 24px;overflow-x:auto}
+article.prose figure:not([data-horizontal-scroll]) svg{display:block;max-width:100%;height:auto}
+article.prose figcaption{margin-top:10px;font-size:13.5px;color:var(--muted)}
 
 /* footer */
 footer.site-footer{border-top:1px solid var(--border);padding:48px 0 60px;margin-top:30px}
