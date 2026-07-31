@@ -22,7 +22,7 @@ TY       := uv run --frozen ty
 LINKS    := uv run --frozen --quiet --no-dev python check_links.py
 LHCI     := $(NODE_BIN)/lhci
 
-.PHONY: build serve fonts social-card check-toolchain check-fonts check-html check-links check-css check-worker check-metadata check-accessibility check-interactions lighthouse lint fmt deploy clean
+.PHONY: build serve fonts diagrams social-card check-toolchain check-diagrams check-fonts check-html check-links check-css check-worker check-metadata check-accessibility check-interactions lighthouse lint fmt deploy clean
 
 ## build: render the site to site/public
 build:
@@ -43,6 +43,11 @@ fonts:
 social-card:
 	node scripts/build-social-card.mjs
 
+## diagrams: regenerate the spec's commit-graph figure SVGs from their
+## gitgraph.js scene definitions (offline, deterministic; no browser).
+diagrams:
+	node scripts/diagrams/render.mjs
+
 ## check-toolchain: fail unless the exact Node, npm, uv, and Python versions
 ## pinned for reproducible site work are active.
 check-toolchain:
@@ -51,6 +56,11 @@ check-toolchain:
 	@expected=$$(sed -n 's/^required-version = "==\(.*\)"$$/\1/p' pyproject.toml); test "$$(uv --version | awk '{print $$2}')" = "$$expected" || { echo "FAIL: uv $$expected required"; exit 1; }
 	@expected=$$(cat .python-version); test "$$(uv run --frozen --quiet python --version)" = "Python $$expected" || { echo "FAIL: Python $$expected required"; exit 1; }
 	@echo "toolchain check OK"
+
+## check-diagrams: byte-compare the committed figure SVGs with a clean
+## regeneration from their scene definitions.
+check-diagrams:
+	node scripts/diagrams/render.mjs --check
 
 ## check-fonts: byte-compare the committed fonts and favicon with a clean,
 ## pinned regeneration; then prove the comparison catches tampering.

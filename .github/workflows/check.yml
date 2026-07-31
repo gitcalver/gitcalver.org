@@ -32,6 +32,9 @@ jobs:
       # Prettier comes from package-lock.json; Ruff and ty come from uv.lock.
       # This is the same `make lint` the pre-commit hook runs locally.
       - run: make lint
+      # Byte-compares the committed figure SVGs with a clean, offline
+      # regeneration from their gitgraph.js scene definitions (no browser).
+      - run: make check-diagrams
 
   fonts:
     name: Fonts

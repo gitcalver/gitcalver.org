@@ -1,0 +1,9 @@
+{{- /* Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0 */ -}}
+{{- /* Inline a generated figure SVG from site/assets/diagrams (see
+scripts/diagrams/render.mjs), dropping its generated-file comments. */ -}}
+{{- $name := .Get 0 -}}
+{{- with resources.Get (printf "diagrams/%s.svg" $name) -}}
+  {{- .Content | replaceRE `(?s)<!--.*?-->\s*` "" | safeHTML -}}
+{{- else -}}
+  {{- errorf "diagram %q not found under assets/diagrams" $name -}}
+{{- end -}}

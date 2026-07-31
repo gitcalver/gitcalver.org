@@ -28,6 +28,10 @@ directive in `go.mod` (`go tool hugo`) and the font script's deps via
 - `make build` — render to `site/public`
 - `make fonts` — regenerate subsetted woff2 + favicon (see below); commit the
   result
+- `make diagrams` — regenerate the spec's figure SVGs from their gitgraph.js
+  scene definitions (see below); commit the result
+- `make check-diagrams` — CI guard; byte-compare the committed figure SVGs with
+  a clean regeneration
 - `make check-toolchain` — verify the pinned Node, npm, uv, and Python versions
 - `make check-fonts` — CI guard; build the site, byte-compare a clean font and
   favicon regeneration, and test tamper detection
@@ -59,6 +63,26 @@ CI (`.github/workflows/check.yml`) installs from both lockfiles, verifies the
 toolchain, and runs lint, font, HTML, CSS, Worker, metadata, accessibility, and
 Lighthouse gates on every push/PR. A Lefthook `pre-commit` hook runs the same
 `make lint` locally — `lefthook install` enables it.
+
+## Figure pipeline
+
+The 0.3 specification's commit-graph figures are not hand-drawn: each is a
+gitgraph.js scene in `scripts/diagrams/figures/<id>.js`, rendered by
+`scripts/diagrams/render.mjs` into a committed SVG in `site/assets/diagrams/`
+that the `{{</* diagram "<id>" */>}}` shortcode inlines (the `<figure>` wrapper
+and `<figcaption>` stay in the Markdown). Rendering is **offline and
+deterministic** — the scenes run against jsdom with analytic text metrics (IBM
+Plex Mono is strictly monospace), so no browser is involved and
+`make check-diagrams` byte-compares in CI. To change a figure, edit its scene,
+run `make diagrams`, and commit both files; never edit the generated SVGs. Scene
+rules: colors only via the site's CSS custom properties (the SVGs follow the
+page's light/dark scheme), every commit gets an explicit `fig-N-`-prefixed hash
+(the harness rejects gitgraph's random ones), and all visible strings stay
+within the glyph set the site already uses or `make check-fonts` will demand a
+font regeneration. For visual review, `render.mjs` takes `--preview FILE`
+(self-contained HTML, `#dark` forces dark mode) and `--screenshot DIR`
+(light/dark PNGs via the package-lock-pinned Playwright browser; the only
+diagram task that needs one).
 
 ## Font pipeline (the non-obvious part)
 
