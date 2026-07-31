@@ -1,244 +1,354 @@
 // Copyright © 2026 Michael Shields
 // SPDX-License-Identifier: CC-BY-4.0
 
-// Figure 5: publication continuity under the same reparenting topology as
-// Figure 2. C4, the previous canonical tag's target, is no longer M's
-// first-parent ancestor, but it is still reachable through M's second parent
-// with an unchanged date, so step 5 passes. A contrast panel shows a target
-// that is reachable but later-dated than the publishing commit, which still
-// fails the check.
+// Figure 5: publication continuity on the exact incident topology from
+// Figure 2. The graph identifies the previous tag target and publishing tip;
+// matched cards then expose step 5's two independent predicates.
 
 "use strict";
 
-// prettier (run by render.mjs on the finalized markup) is whitespace-
-// sensitive for known HTML inline elements but not for SVG <tspan>, so it
-// reformats sibling tspans onto their own indented lines — whitespace a
-// browser then renders as a literal space. That's invisible for the site's
-// existing tspan usage (a single highlighted word always ends the sentence),
-// but fig-5's captions resume plain text right after the highlighted word.
-// Laying each run out as its own positioned <text> (monospace advance is a
-// fixed 0.6em; see render.mjs's header comment) sidesteps the reflow because
-// stray whitespace between sibling elements outside a text-layout context
-// isn't rendered at all.
-function flowText(h, parent, { x, y, size, runs }) {
-  const ADVANCE = 0.6;
-  let cursor = x;
-  for (const run of runs) {
-    h.text(parent, { x: cursor, y, content: run.text, size, ...run });
-    cursor += run.text.length * size * ADVANCE;
-  }
-}
-
 window.figure = {
   id: "fig-5",
-  title: "Publication continuity under the reparenting topology",
+  title: "Publication continuity checks reachability and date",
   desc:
-    "The same graph as Figure 2: the previous canonical tag’s target C4 " +
-    "is no longer the publishing commit M’s first-parent ancestor, but it " +
-    "is still reachable through M’s second parent with an unchanged date, " +
-    "so step 5 passes. A reachable target with a later date than the " +
-    "publishing commit still fails the check.",
+    "An older common ancestor O forks into the main and feature histories. " +
+    "The publishing commit M reaches the previous canonical tag target C4 " +
+    "through its second parent, and C4 has the same date as M. Both step 5 " +
+    "conditions pass, so publication may continue to later checks. In the " +
+    "contrast, M reaches D1 but D1 is later-dated than M, so the date " +
+    "condition fails and step 5 blocks publication.",
   draw({ GitgraphJS, container, h }) {
-    const gitgraph = GitgraphJS.createGitgraph(container, {
-      orientation: GitgraphJS.Orientation.Horizontal,
-      reverseArrow: true,
-      template: h.template(GitgraphJS, {}),
-    });
-
-    // Two independent roots (no shared ancestor drawn): main carries the
-    // C1..C4 chain, feature the orphan F1-F2 pair the "..." stub continues.
-    const main = gitgraph.branch("main");
-    const feature = gitgraph.branch("feature");
-
-    main.commit({
-      hash: "fig-5-c1",
-      subject: "C1",
-      dotText: "C1",
-      style: { dot: h.dot.neutral },
-    });
-    main.commit({
-      hash: "fig-5-c2",
-      subject: "C2",
-      dotText: "C2",
-      style: { dot: h.dot.neutral },
-    });
-    feature.commit({
-      hash: "fig-5-f1",
-      subject: "F1",
-      dotText: "F1",
-      style: { dot: h.dot.neutral },
-    });
-    main.commit({
-      hash: "fig-5-c3",
-      subject: "C3",
-      dotText: "C3",
-      style: { dot: h.dot.neutral },
-    });
-    feature.commit({
-      hash: "fig-5-f2",
-      subject: "F2",
-      dotText: "F2",
-      style: { dot: h.dot.neutral },
-    });
-    main.commit({
-      hash: "fig-5-c4",
-      subject: "C4",
-      dotText: "C4",
-      style: { dot: h.dot.emphasis },
-    });
-    feature.merge({
-      branch: main,
-      commitOptions: {
-        hash: "fig-5-m",
-        subject: "M",
-        dotText: "M",
-        style: { dot: h.dot.emphasis },
+    h.incidentGraph(GitgraphJS, container, {
+      id: "fig-5",
+      templateOverrides: {
+        branch: { spacing: 62 },
+        commit: { spacing: 76 },
       },
+      styleFor: (label) =>
+        label === "O"
+          ? h.dot.pruned
+          : ["C4", "M"].includes(label)
+            ? h.dot.emphasis
+            : h.dot.neutral,
     });
   },
   annotate({ svg, h }) {
     const R = h.DOT_RADIUS;
     const at = (name) => h.center(svg, name);
-    const c4 = at("C4");
-    const f1 = at("F1");
-    const f2 = at("F2");
-    const m = at("M");
+    const O = at("O");
+    const C1 = at("C1");
+    const C4 = at("C4");
+    const F1 = at("F1");
+    const F2 = at("F2");
+    const M = at("M");
     const o = h.overlay(svg);
 
-    // The dashed stub left of F1: an off-screen, earlier orphan ancestor.
-    h.arrow(o, {
-      x1: f1.x - R - 16,
-      y1: f1.y,
-      x2: f1.x - R - 2,
-      y2: f1.y,
-      dash: "2 3",
-    });
+    h.backDots(svg, ["O", "C1", "C2", "C3", "C4", "F1", "F2", "M"]);
+    h.dashDot(svg, "O");
+    for (const node of svg.querySelectorAll("g > text")) {
+      if (node.textContent === "O") node.setAttribute("fill", h.C.textSoft);
+    }
     h.text(o, {
-      x: f1.x - R - 46,
-      y: f1.y + 5,
-      content: "...",
-      size: 14,
+      x: O.x,
+      y: O.y - R - 10,
+      content: "older common ancestor",
+      size: 9.5,
       fill: h.C.textSoft,
+      anchor: "middle",
     });
 
-    // The 2nd-parent edge (M -> C4) is the one step 5 relies on; recolor it
-    // and its label to match the check below.
-    h.recolorArrow(svg, "M", "C4", h.C.count);
+    // Step 5 relies on the whole second-parent edge. Extract gitgraph's exact
+    // final Bézier from the main rail and repaint that segment behind the
+    // commit dots, so the highlight cannot double or drift from the rail.
+    const mainRail = svg.querySelector("path[transform][stroke]");
+    const railData = mainRail && mainRail.getAttribute("d");
+    const curve =
+      railData &&
+      railData.match(
+        /C\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s*$/,
+      );
+    if (!mainRail || !curve)
+      throw new Error("fig-5: main merge rail not found");
+    const beforeCurve = railData.slice(0, curve.index);
+    const start = beforeCurve.match(/(-?[\d.]+)\s+(-?[\d.]+)\s*$/);
+    if (!start) throw new Error("fig-5: merge curve start not found");
+    h.el(mainRail.parentElement, "path", {
+      d: `M ${start[1]} ${start[2]} ${curve[0]}`,
+      stroke: h.C.count,
+      "stroke-width": 2.5,
+      fill: "none",
+      "stroke-linecap": "round",
+      transform: mainRail.getAttribute("transform"),
+    });
+    const parentMarker = h.marker(svg, "fig-5-parent-arrow");
+    const countMarker = h.marker(svg, "fig-5-count-arrow", h.C.count);
+    for (const [child, parent] of [
+      ["C1", "O"],
+      ["F1", "O"],
+      ["C2", "C1"],
+      ["C3", "C2"],
+      ["C4", "C3"],
+      ["F2", "F1"],
+      ["M", "F2"],
+      ["M", "C4"],
+    ]) {
+      const highlighted = child === "M" && parent === "C4";
+      h.replaceParentArrow(svg, {
+        child,
+        parent,
+        overlay: o,
+        markerEnd: highlighted ? countMarker : parentMarker,
+        color: highlighted ? h.C.count : h.C.borderStrong,
+      });
+    }
 
     h.text(o, {
-      x: (m.x + f2.x) / 2 - 4,
-      y: (m.y + f2.y) / 2 - 10,
+      x: (F2.x + M.x) / 2,
+      y: F2.y + 27,
       content: "1st parent",
-      size: 10.5,
+      size: 9.5,
       fill: h.C.textSoft,
       anchor: "middle",
     });
     h.text(o, {
-      x: c4.x + 0.62 * (m.x - c4.x) + 8,
-      y: c4.y + 0.62 * (m.y - c4.y) - 16,
+      x: M.x + R + 9,
+      y: (C4.y + M.y) / 2 + 4,
       content: "2nd parent",
-      size: 10.5,
-      fill: h.C.count,
+      size: 9.5,
+      fill: h.C.live,
+      weight: 600,
     });
-
-    const graphBottom = Math.max(f1.y, f2.y, m.y) + R;
-    const left = f1.x - R - 46 - 10;
-
     h.text(o, {
-      x: left,
-      y: graphBottom + 30,
-      content:
-        "C4 = target of the previously published canonical tag · M = " +
-        "publishing commit",
-      size: 11.5,
+      x: O.x - R,
+      y: O.y - R - 30,
+      content: "PARENT LINKS POINT LEFT",
+      size: 10,
       fill: h.C.textSoft,
-    });
-
-    h.check(o, { x: left, y: graphBottom + 43 });
-    flowText(h, o, {
-      x: left + 26,
-      y: graphBottom + 52,
-      size: 12.5,
-      runs: [
-        { text: "M reaches C4 (2nd parent, non-later date): step 5 " },
-        { text: "passes", fill: h.C.count, weight: 600 },
-        { text: "." },
-      ],
-    });
-
-    const contrastY = graphBottom + 90;
-    h.text(o, {
-      x: left,
-      y: contrastY,
-      content: "Contrast — a target that fails step 5",
-      size: 13,
       weight: 600,
     });
 
-    // A minimal M -> D1 pair drawn as overlay boxes, matching the original
-    // figure's own hand-placed callout rather than a second gitgraph scene.
-    const mY = contrastY + 15;
-    const mBox = { x: left + 34, y: mY, width: 58, height: 30 };
-    const d1Box = { x: mBox.x + 122, y: mY, width: 58, height: 30 };
-    h.rect(o, {
-      ...mBox,
-      fill: h.dot.counted.color,
-      stroke: h.dot.counted.strokeColor,
-      strokeWidth: h.dot.counted.strokeWidth,
+    // Role badges make the otherwise abstract C4 and M labels concrete.
+    h.pill(o, {
+      x: C4.x - 79,
+      y: C4.y - R - 25,
+      width: 158,
+      height: 25,
+      label: "PREVIOUS TAG TARGET",
+      size: 9.5,
+      fill: h.C.bgSunk,
+      stroke: h.C.count,
     });
-    h.text(o, {
-      x: mBox.x + mBox.width / 2,
-      y: mBox.y + mBox.height / 2 + 4,
-      content: "M",
-      size: 12,
-      anchor: "middle",
-    });
-    h.rect(o, {
-      ...d1Box,
-      fill: h.dot.rejected.color,
-      stroke: h.dot.rejected.strokeColor,
-      strokeWidth: h.dot.rejected.strokeWidth,
-    });
-    h.text(o, {
-      x: d1Box.x + d1Box.width / 2,
-      y: d1Box.y + d1Box.height / 2 + 4,
-      content: "D1",
-      size: 12,
-      anchor: "middle",
-    });
-    h.arrow(o, {
-      x1: mBox.x + mBox.width,
-      y1: mY + mBox.height / 2,
-      x2: d1Box.x - 7,
-      y2: mY + mBox.height / 2,
-      stroke: h.C.error,
-      width: 1.5,
-    });
-    h.arrowhead(o, {
-      x: d1Box.x,
-      y: mY + mBox.height / 2,
-      deg: 0,
-      color: h.C.error,
+    h.pill(o, {
+      x: M.x - 68,
+      y: M.y + R + 11,
+      width: 136,
+      height: 25,
+      label: "PUBLISHING TIP",
+      size: 9.5,
+      fill: h.C.countSoft,
+      stroke: h.C.count,
     });
 
-    h.cross(o, { x: d1Box.x + d1Box.width + 20, y: mY + 3 });
-    h.text(o, {
-      x: d1Box.x + d1Box.width + 46,
-      y: mY + 20,
-      content: "later date than M, still reachable",
-      size: 11,
-      fill: h.C.error,
-    });
+    const graphBottom = M.y + R + 52;
+    const left = O.x - R;
+    const cardGap = 14;
+    const cardWidth = 324;
+    const cardHeight = 184;
+    const passX = left;
+    const failX = passX + cardWidth + cardGap;
+    const cardY = graphBottom + 26;
 
-    flowText(h, o, {
+    h.text(o, {
       x: left,
-      y: mY + d1Box.height + 32,
-      size: 12.5,
-      runs: [
-        { text: "D1 is later-dated than M: step 5 " },
-        { text: "fails", fill: h.C.error, weight: 600 },
-        { text: " despite being reachable." },
+      y: graphBottom,
+      content: "STEP 5 ASKS TWO QUESTIONS",
+      size: 12,
+      fill: h.C.textSoft,
+      weight: 600,
+    });
+
+    function commitCircle(parent, { x, y, label, state }) {
+      h.el(parent, "circle", {
+        cx: x,
+        cy: y,
+        r: R,
+        fill: state.color,
+        stroke: state.strokeColor,
+        "stroke-width": state.strokeWidth,
+      });
+      h.text(parent, {
+        x,
+        y: y + 4,
+        content: label,
+        size: 11.5,
+        anchor: "middle",
+      });
+    }
+
+    function relation(parent, { x, y, ancestor, color, note }) {
+      const ancestorX = x + 42;
+      const tipX = x + 126;
+      commitCircle(parent, {
+        x: ancestorX,
+        y,
+        label: ancestor,
+        state: ancestor === "D1" ? h.dot.rejected : h.dot.emphasis,
+      });
+      commitCircle(parent, {
+        x: tipX,
+        y,
+        label: "M",
+        state: h.dot.emphasis,
+      });
+      h.arrow(parent, {
+        x1: tipX - R,
+        y1: y,
+        x2: ancestorX + R + 5,
+        y2: y,
+        stroke: color,
+        width: 2,
+      });
+      h.arrowhead(parent, {
+        x: ancestorX + R,
+        y,
+        color,
+      });
+      h.text(parent, {
+        x: x + 158,
+        y: y + 4,
+        content: note,
+        size: 10,
+        fill: color === h.C.count ? h.C.live : color,
+        weight: 600,
+      });
+    }
+
+    function conditionRow(
+      parent,
+      { x, y, passes, label, detail, color = passes ? h.C.count : h.C.error },
+    ) {
+      if (passes) h.check(parent, { x, y: y - 7, color });
+      else h.cross(parent, { x: x + 2, y: y - 9, color });
+      h.text(parent, {
+        x: x + 27,
+        y: y + 2,
+        content: label,
+        size: 10.5,
+      });
+      h.text(parent, {
+        x: x + 198,
+        y: y + 2,
+        content: detail,
+        size: 10,
+        fill: color === h.C.count ? h.C.live : color,
+        weight: 600,
+      });
+    }
+
+    function outcomeCard({
+      x,
+      title,
+      status,
+      color,
+      relationColor = color,
+      ancestor,
+      note,
+      rows,
+      footer,
+    }) {
+      h.rect(o, {
+        x,
+        y: cardY,
+        width: cardWidth,
+        height: cardHeight,
+        rx: 12,
+        fill: h.C.bgSunk,
+        stroke: color,
+        strokeWidth: 1.5,
+      });
+      h.text(o, {
+        x: x + 16,
+        y: cardY + 25,
+        content: title,
+        size: 11.5,
+        weight: 600,
+      });
+      h.pill(o, {
+        x: x + cardWidth - 75,
+        y: cardY + 10,
+        width: 59,
+        height: 24,
+        label: status,
+        size: 10,
+        fill: h.C.bgSunk,
+        stroke: color,
+        labelFill: color === h.C.count ? h.C.live : color,
+      });
+      relation(o, {
+        x: x + 16,
+        y: cardY + 61,
+        ancestor,
+        color: relationColor,
+        note,
+      });
+      conditionRow(o, { x: x + 17, y: cardY + 99, ...rows[0] });
+      conditionRow(o, { x: x + 17, y: cardY + 126, ...rows[1] });
+      h.pill(o, {
+        x: x + 16,
+        y: cardY + 144,
+        width: cardWidth - 32,
+        height: 26,
+        label: footer,
+        size: 10.5,
+        fill: color === h.C.count ? h.C.countSoft : h.C.bgSunk,
+        stroke: color,
+        labelFill: color === h.C.count ? h.C.live : color,
+      });
+    }
+
+    outcomeCard({
+      x: passX,
+      title: "C4 · PREVIOUS TAG TARGET",
+      status: "PASS",
+      color: h.C.count,
+      ancestor: "C4",
+      note: "via 2nd parent",
+      rows: [
+        {
+          passes: true,
+          label: "reachable from M",
+          detail: "YES",
+        },
+        {
+          passes: true,
+          label: "date no later than M",
+          detail: "YES · SAME",
+        },
       ],
+      footer: "STEP 5 PASSES · CONTINUE",
+    });
+    outcomeCard({
+      x: failX,
+      title: "D1 · CONTRAST",
+      status: "FAIL",
+      color: h.C.error,
+      relationColor: h.C.count,
+      ancestor: "D1",
+      note: "reachable",
+      rows: [
+        {
+          passes: true,
+          label: "reachable from M",
+          detail: "YES",
+          color: h.C.count,
+        },
+        {
+          passes: false,
+          label: "date no later than M",
+          detail: "NO · LATER",
+        },
+      ],
+      footer: "STEP 5 FAILS · BLOCK",
     });
   },
 };

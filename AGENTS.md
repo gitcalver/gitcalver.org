@@ -71,18 +71,17 @@ gitgraph.js scene in `scripts/diagrams/figures/<id>.js`, rendered by
 `scripts/diagrams/render.mjs` into a committed SVG in `site/assets/diagrams/`
 that the `{{</* diagram "<id>" */>}}` shortcode inlines (the `<figure>` wrapper
 and `<figcaption>` stay in the Markdown). Rendering is **offline and
-deterministic** — the scenes run against jsdom with analytic text metrics (IBM
-Plex Mono is strictly monospace), so no browser is involved and
-`make check-diagrams` byte-compares in CI. To change a figure, edit its scene,
-run `make diagrams`, and commit both files; never edit the generated SVGs. Scene
-rules: colors only via the site's CSS custom properties (the SVGs follow the
-page's light/dark scheme), every commit gets an explicit `fig-N-`-prefixed hash
-(the harness rejects gitgraph's random ones), and all visible strings stay
-within the glyph set the site already uses or `make check-fonts` will demand a
-font regeneration. For visual review, `render.mjs` takes `--preview FILE`
-(self-contained HTML, `#dark` forces dark mode) and `--screenshot DIR`
-(light/dark PNGs via the package-lock-pinned Playwright browser; the only
-diagram task that needs one).
+deterministic** — the scenes run against jsdom with conservative analytic IBM
+Plex Sans text bounds, so no browser is involved and `make check-diagrams`
+byte-compares in CI. To change a figure, edit its scene, run `make diagrams`,
+and commit both files; never edit the generated SVGs. Scene rules: colors only
+via the site's CSS custom properties (the SVGs follow the page's light/dark
+scheme), every commit gets an explicit `fig-N-`-prefixed hash (the harness
+rejects gitgraph's random ones), and all visible strings stay within the glyph
+set the site already uses or `make check-fonts` will demand a font regeneration.
+For visual review, `render.mjs` takes `--preview FILE` (self-contained HTML,
+`#dark` forces dark mode) and `--screenshot DIR` (light/dark PNGs via the
+package-lock-pinned Playwright browser; the only diagram task that needs one).
 
 ## Font pipeline (the non-obvious part)
 

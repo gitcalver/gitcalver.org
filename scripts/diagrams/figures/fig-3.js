@@ -1,30 +1,29 @@
 // Copyright © 2026 Michael Shields
 // SPDX-License-Identifier: CC-BY-4.0
 
-// Figure 3: target T's date-cohort walk. A2 <- A1 <- T is a same-date chain
-// of counted commits, drawn with gitgraph.js. T's two other parents can't be
-// drawn as a real octopus merge, so they're annotated boxes: B1, an
-// older-dated safe boundary (pruned, not counted, nothing behind it visited),
-// and C1, a later-dated parent that forces rejection.
+// Figure 3: the backward date-cohort walk, centered on target T. Parents are
+// consistently to the left of their children: same-date A1 and A2 are counted
+// and keep the walk going, older B1 stops only its path, and later C1 rejects
+// the entire calculation.
 
 "use strict";
 window.figure = {
   id: "fig-3",
   title: "Computing a target’s date cohort: count, prune, or reject",
   desc:
-    "From target T, a same-date parent A1 is counted and explored further " +
-    "to A2. An older-dated parent B1 is a safe boundary: not counted, and " +
-    "nothing behind it needs to be visited. A later-dated parent C1 " +
-    "triggers rejection as a decreasing-history error.",
+    "The walk starts by counting target T, then follows child-to-parent " +
+    "arrows from right to left. Same-date A1 and A2 are counted and " +
+    "continued through. Older B1 is not counted and prunes only its path. " +
+    "Later C1 rejects the entire calculation.",
   draw({ GitgraphJS, container, h }) {
     const gitgraph = GitgraphJS.createGitgraph(container, {
       orientation: GitgraphJS.Orientation.Horizontal,
       reverseArrow: true,
-      template: h.template(GitgraphJS, { commit: { spacing: 120 } }),
+      template: h.template(GitgraphJS, { commit: { spacing: 144 } }),
     });
 
     const main = gitgraph.branch("main");
-    for (const name of ["A2", "A1", "T"]) {
+    for (const name of ["A2", "A1"]) {
       main.commit({
         hash: `fig-3-${name.toLowerCase()}`,
         subject: name,
@@ -32,152 +31,192 @@ window.figure = {
         style: { dot: h.dot.counted },
       });
     }
+    main.commit({
+      hash: "fig-3-t",
+      subject: "T",
+      dotText: "T",
+      style: { dot: h.dot.emphasis },
+    });
   },
   annotate({ svg, h }) {
     const R = h.DOT_RADIUS;
-    const BOX_W = 64;
-    const BOX_H = 32;
     const at = (name) => h.center(svg, name);
+    const A2 = at("A2");
     const A1 = at("A1");
     const T = at("T");
+    const B1 = { x: A1.x, y: T.y - 110 };
+    const C1 = { x: A1.x, y: T.y + 110 };
     const o = h.overlay(svg);
 
-    // A point on the line from `from` toward `to`, `r` away from `from` —
-    // used to land arrow endpoints on a dot's ring or a box's edge.
-    const edgePoint = (from, to, r) => {
+    const edgePoint = (from, to, distance) => {
       const dx = to.x - from.x;
       const dy = to.y - from.y;
-      const len = Math.hypot(dx, dy) || 1;
-      return { x: from.x + (dx / len) * r, y: from.y + (dy / len) * r };
+      const length = Math.hypot(dx, dy) || 1;
+      return {
+        x: from.x + (dx / length) * distance,
+        y: from.y + (dy / length) * distance,
+      };
     };
 
-    const b1 = { x: T.x + 150, y: T.y - 78 };
-    const c1 = { x: T.x, y: T.y + 98 };
+    const parentArrow = (parent, { color, marker }) => {
+      const start = edgePoint(T, parent, R + 2);
+      const end = edgePoint(parent, T, R + 3);
+      h.arrow(o, {
+        x1: start.x,
+        y1: start.y,
+        x2: end.x,
+        y2: end.y,
+        stroke: color,
+        end: marker,
+      });
+    };
 
-    // Arrows and the dashed stub first, so the boxes drawn afterward paint
-    // cleanly over where the arrowheads land, matching the original figure's
-    // layering (its own <path> arrows precede the box/text elements).
-    // Dashed stub past B1: elided safe history that never needs visiting.
-    h.arrow(o, {
-      x1: b1.x + BOX_W / 2,
-      y1: b1.y,
-      x2: b1.x + BOX_W / 2 + 30,
-      y2: b1.y,
-      dash: "2 3",
-    });
-    const bMarker = h.marker(svg, "fig-3-arrow");
-    {
-      const start = edgePoint(T, b1, R + 2);
-      const end = edgePoint(b1, T, 26);
-      h.arrow(o, { x1: start.x, y1: start.y, x2: end.x, y2: end.y, end: bMarker });
+    h.backDots(svg, ["A2", "A1", "T"]);
+    const countMarker = h.marker(svg, "fig-3-count-arrow", h.C.count);
+    for (const [child, parent] of [
+      ["A1", "A2"],
+      ["T", "A1"],
+    ]) {
+      h.replaceParentArrow(svg, {
+        child,
+        parent,
+        overlay: o,
+        markerEnd: countMarker,
+        color: h.C.count,
+      });
     }
-    const cMarker = h.marker(svg, "fig-3-arrow-error", h.C.error);
-    h.arrow(o, {
-      x1: T.x,
-      y1: T.y + R,
-      x2: c1.x,
-      y2: c1.y - BOX_H / 2 - 1,
-      stroke: h.C.error,
-      end: cMarker,
-    });
+    const parentMarker = h.marker(svg, "fig-3-parent-arrow");
+    const errorMarker = h.marker(svg, "fig-3-error-arrow", h.C.error);
+    parentArrow(B1, { color: h.C.borderStrong, marker: parentMarker });
+    parentArrow(C1, { color: h.C.error, marker: errorMarker });
 
-    // "target" caption below T, nudged left of the T-C1 edge it would
-    // otherwise straddle; "same date" near the T-A1 edge above the rail.
-    h.text(o, {
-      x: T.x - 8,
-      y: T.y + R + 18,
-      content: "target",
-      size: 10,
-      fill: h.C.textSoft,
-      anchor: "end",
-    });
-    h.text(o, {
-      x: (A1.x + T.x) / 2,
-      y: T.y - R - 10,
-      content: "same date",
-      size: 10,
-      fill: h.C.textSoft,
-      anchor: "middle",
-    });
+    const commitCircle = (
+      label,
+      center,
+      { stroke, strokeWidth = 1.5, dash, fill = h.C.bgSunk },
+    ) => {
+      h.el(o, "circle", {
+        id: `fig-3-${label.toLowerCase()}`,
+        cx: center.x,
+        cy: center.y,
+        r: R,
+        fill,
+        stroke,
+        "stroke-width": strokeWidth,
+        "stroke-dasharray": dash,
+      });
+      h.text(o, {
+        x: center.x,
+        y: center.y + 4,
+        content: label,
+        size: 13,
+        fill: dash ? h.C.textSoft : h.C.text,
+        anchor: "middle",
+      });
+    };
 
-    // B1: T's older, safe-boundary parent — gitgraph.js can't draw a
-    // three-parent octopus merge, so an annotated dashed box up-right of T.
-    h.rect(o, {
-      x: b1.x - BOX_W / 2,
-      y: b1.y - BOX_H / 2,
-      width: BOX_W,
-      height: BOX_H,
+    commitCircle("B1", B1, {
       stroke: h.C.border,
       dash: "4 3",
     });
-    h.text(o, {
-      x: b1.x,
-      y: b1.y + 4,
-      content: "B1",
-      size: 13,
-      fill: h.C.textSoft,
-      anchor: "middle",
-    });
-    h.text(o, {
-      x: b1.x,
-      y: b1.y - BOX_H / 2 - 14,
-      content: "older date—pruned",
-      size: 10,
-      fill: h.C.textSoft,
-      anchor: "middle",
-    });
-
-    // C1: T's newer parent — a later date means rejection, not pruning.
-    h.rect(o, {
-      x: c1.x - BOX_W / 2,
-      y: c1.y - BOX_H / 2,
-      width: BOX_W,
-      height: BOX_H,
+    commitCircle("C1", C1, {
       stroke: h.C.error,
       strokeWidth: 2,
     });
+
+    // Explicit traversal grammar: all arrowheads point from a child toward
+    // its parent, which is always farther left.
     h.text(o, {
-      x: c1.x,
-      y: c1.y + 4,
-      content: "C1",
-      size: 13,
+      x: (A1.x + T.x) / 2,
+      y: B1.y - 70,
+      content: "walk: child -> parent (right to left)",
+      size: 10.5,
+      fill: h.C.textSoft,
       anchor: "middle",
-    });
-    h.text(o, {
-      x: c1.x,
-      y: c1.y + BOX_H / 2 + 18,
-      content: "later date—rejected",
-      size: 10,
-      fill: h.C.error,
-      anchor: "middle",
+      weight: 600,
     });
 
-    // Legend.
-    const legendY = c1.y + BOX_H / 2 + 46;
-    const legendX = A1.x - 120;
-    const swatch = (x, label, options) => {
-      h.rect(o, { x, y: legendY, width: 14, height: 14, rx: 0, ...options });
-      h.text(o, {
-        x: x + 20,
-        y: legendY + 11,
-        content: label,
-        size: 10.5,
-        fill: h.C.textSoft,
-      });
-    };
-    swatch(legendX, "counted (same date)", {
-      fill: h.C.countSoft,
-      stroke: h.C.count,
+    const sameX = (A2.x + A1.x) / 2;
+    h.pill(o, {
+      x: sameX - 44,
+      y: T.y - 58,
+      width: 88,
+      height: 24,
+      label: "same date",
+      size: 10.5,
     });
-    swatch(legendX + 175, "pruned (older, safe)", {
+    h.pill(o, {
+      x: sameX - 66,
+      y: T.y + 26,
+      width: 132,
+      height: 24,
+      label: "count + continue",
+      size: 10.5,
+    });
+
+    h.pill(o, {
+      x: T.x + R + 12,
+      y: T.y - 30,
+      width: 94,
+      height: 24,
+      label: "target date",
+      size: 10.5,
+    });
+    h.pill(o, {
+      x: T.x + R + 12,
+      y: T.y + 6,
+      width: 76,
+      height: 24,
+      label: "count T",
+      size: 10.5,
+    });
+
+    h.pill(o, {
+      x: B1.x - 45,
+      y: B1.y - 50,
+      width: 90,
+      height: 24,
+      label: "older date",
+      size: 10.5,
       fill: h.C.bgSunk,
       stroke: h.C.border,
-      dash: "2 2",
+      labelFill: h.C.textSoft,
+      dash: "4 3",
     });
-    swatch(legendX + 175 + 165, "rejected (newer)", {
+    h.pill(o, {
+      x: B1.x - 140,
+      y: B1.y - 12,
+      width: 116,
+      height: 24,
+      label: "no count + prune",
+      size: 10.5,
+      fill: h.C.bgSunk,
+      stroke: h.C.border,
+      labelFill: h.C.textSoft,
+      dash: "4 3",
+    });
+
+    h.pill(o, {
+      x: C1.x - 158,
+      y: C1.y - 12,
+      width: 134,
+      height: 24,
+      label: "reject calculation",
+      size: 10.5,
       fill: h.C.bgSunk,
       stroke: h.C.error,
-      strokeWidth: 2,
+      labelFill: h.C.error,
+    });
+    h.pill(o, {
+      x: C1.x - 45,
+      y: C1.y + 28,
+      width: 90,
+      height: 24,
+      label: "later date",
+      size: 10.5,
+      fill: h.C.bgSunk,
+      stroke: h.C.error,
+      labelFill: h.C.error,
     });
   },
 };

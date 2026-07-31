@@ -1,225 +1,464 @@
 // Copyright © 2026 Michael Shields
 // SPDX-License-Identifier: CC-BY-4.0
 
-// Figure 2: one shared commit graph, scored two ways. Four main-branch
-// commits are merged into a feature branch and fast-forwarded back onto
-// main; Panel A (0.2, first-parent-only) sees the count drop 4 to 3, Panel B
-// (0.3, date cohort) sees it rise 4 to 7 on the exact same graph.
+// Figure 2: a before panel establishes two branches from one older common
+// ancestor. Two matched after panels then score the merge-then-fast-forward
+// DAG under 0.2's first-parent rule and 0.3's all-parent date-cohort rule.
 
 "use strict";
+
+let beforeDiv;
+let firstParentDiv;
+let allParentsDiv;
+
 window.figure = {
   id: "fig-2",
-  title: "The incident topology, scored two ways",
+  title: "Before and after the incident, scored by 0.2 and 0.3",
   desc:
-    "A shared commit graph where four main-branch commits are merged into a " +
-    "feature branch and the merge is fast-forwarded back onto main. Panel A " +
-    "shows 0.2’s first-parent-only count dropping from 4 to 3. Panel B " +
-    "shows 0.3’s date-cohort count rising from 4 to 7 on the exact same " +
-    "graph, because every commit stays reachable.",
+    "Before the incident, an older common ancestor O forks into main commits " +
+    "C1 through C4 and unmerged feature commits F1 and F2; main points to C4 " +
+    "with N equal to 4. After main is merged into feature and main " +
+    "fast-forwards to merge M, M's first parent is F2 and its second parent " +
+    "is C4. Under 0.2, only M, F2, and F1 count, so N decreases from 4 to 3. " +
+    "Under 0.3, all seven same-date commits reachable from M count, so N " +
+    "increases from 4 to 7.",
   draw({ GitgraphJS, container, h }) {
-    const gitgraph = GitgraphJS.createGitgraph(container, {
-      orientation: GitgraphJS.Orientation.Horizontal,
-      reverseArrow: true,
-      template: h.template(GitgraphJS, {
-        branch: { spacing: 72 },
-        commit: { spacing: 92 },
-      }),
+    beforeDiv = container.ownerDocument.createElement("div");
+    firstParentDiv = container.ownerDocument.createElement("div");
+    allParentsDiv = container.ownerDocument.createElement("div");
+    container.append(beforeDiv, firstParentDiv, allParentsDiv);
+
+    const overrides = {
+      branch: { spacing: 58 },
+      commit: { spacing: 74 },
+    };
+    h.incidentGraph(GitgraphJS, beforeDiv, {
+      id: "fig-2-before",
+      templateOverrides: overrides,
+      merge: false,
+      styleFor: (label) =>
+        label === "O"
+          ? h.dot.pruned
+          : label.startsWith("C")
+            ? h.dot.counted
+            : h.dot.neutral,
     });
-
-    // main and feature are both created before any commit exists, so
-    // neither has a parent: feature's own ancestry (before F1) is elided
-    // from the figure, drawn as a dashed stub in annotate() instead of a
-    // real fork edge.
-    const main = gitgraph.branch("main");
-    const feature = gitgraph.branch("feature");
-
-    for (const name of ["C1", "C2", "C3", "C4"]) {
-      main.commit({
-        hash: `fig-2-${name}`,
-        subject: name,
-        dotText: name,
-        style: { dot: h.dot.neutral },
-      });
-    }
-    for (const name of ["F1", "F2"]) {
-      feature.commit({
-        hash: `fig-2-${name}`,
-        subject: name,
-        dotText: name,
-        style: { dot: h.dot.neutral },
-      });
-    }
-    // feature tip (F2) is the first parent, main tip (C4) the second.
-    feature.merge({
-      branch: main,
-      commitOptions: {
-        hash: "fig-2-M",
-        subject: "M",
-        dotText: "M",
-        style: { dot: h.dot.neutral },
-      },
+    h.incidentGraph(GitgraphJS, firstParentDiv, {
+      id: "fig-2-a",
+      templateOverrides: overrides,
+      styleFor: (label) =>
+        label === "O"
+          ? h.dot.pruned
+          : ["F1", "F2", "M"].includes(label)
+            ? label === "M"
+              ? h.dot.emphasis
+              : h.dot.counted
+            : h.dot.pruned,
+    });
+    h.incidentGraph(GitgraphJS, allParentsDiv, {
+      id: "fig-2-b",
+      templateOverrides: overrides,
+      styleFor: (label) =>
+        label === "O"
+          ? h.dot.pruned
+          : label === "M"
+            ? h.dot.emphasis
+            : h.dot.counted,
     });
   },
   annotate({ svg, h }) {
-    const R = h.DOT_RADIUS;
-    const at = (name) => h.center(svg, name);
-    const C1 = at("C1");
-    const C4 = at("C4");
-    const F1 = at("F1");
-    const F2 = at("F2");
-    const M = at("M");
-    const o = h.overlay(svg);
+    const beforeSvg = svg;
+    const firstSvg = firstParentDiv.querySelector("svg");
+    const allSvg = allParentsDiv.querySelector("svg");
 
-    h.text(o, {
-      x: C1.x - R - 4,
-      y: C1.y - R - 18,
-      content:
-        "Seven same-date commits; Panel A and Panel B disagree on how many count",
-      size: 11.5,
-      fill: h.C.textSoft,
-    });
+    function soften(svgNode, labels) {
+      for (const node of svgNode.querySelectorAll("g > text")) {
+        if (!labels.includes(node.textContent)) continue;
+        node.setAttribute("fill", h.C.textSoft);
+      }
+    }
 
-    // F1's own ancestry is elided: a dashed stub trailing off to "..."
-    // instead of a real parent edge.
-    h.el(o, "path", {
-      d: `M${F1.x - R - 4},${F1.y} L${F1.x - R - 26},${F1.y}`,
-      stroke: h.C.borderStrong,
-      "stroke-width": 1.5,
-      "stroke-dasharray": "2 3",
-      fill: "none",
-    });
-    h.text(o, {
-      x: F1.x - R - 54,
-      y: F1.y + 5,
-      content: "...",
-      size: 14,
-      fill: h.C.textSoft,
-    });
+    function addBeforePanel(svgNode) {
+      const at = (name) => h.center(svgNode, name);
+      const O = at("O");
+      const C1 = at("C1");
+      const C4 = at("C4");
+      const F1 = at("F1");
+      const F2 = at("F2");
+      const raw = svgNode.getBBox();
+      const o = h.overlay(svgNode);
 
-    // The generated merge arrows (reverseArrow: true, arrowhead at the
-    // parent) already land correctly since every dot here is a plain
-    // circle; just label the two parent edges.
-    h.text(o, {
-      x: (F2.x + M.x) / 2,
-      y: F2.y + 28,
-      content: "1st parent",
-      size: 10.5,
-      fill: h.C.textSoft,
-      anchor: "middle",
-    });
-    h.text(o, {
-      x: (C4.x + M.x) / 2,
-      y: (C4.y + M.y) / 2 - 10,
-      content: "2nd parent",
-      size: 10.5,
-      fill: h.C.textSoft,
-      anchor: "middle",
-    });
+      h.backDots(
+        svgNode,
+        ["O", "C1", "C2", "C3", "C4", "F1", "F2"],
+        h.C.bgSunk,
+      );
+      h.dashDot(svgNode, "O");
+      soften(svgNode, ["O"]);
 
-    const arrowEnd = h.marker(svg, "fig-2-arrow");
-    const x0 = C1.x - R - 4;
-    const graphBottom = Math.max(F1.y, F2.y, M.y) + R;
-    // IBM Plex Mono's 0.6em advance (see helpers.js), used to place the
-    // colored tail of a sentence directly after its plain lead-in as two
-    // separate <text> elements: an h.text() tspan array would work too, but
-    // the render pipeline's HTML pretty-printer inserts whitespace between
-    // sibling tspans that a browser collapses into a visible extra space,
-    // doubling the gap after the sentence's non-breaking space.
-    const MONO_ADVANCE = 0.6;
-    function sentence({ y, lead, tail, tailFill }) {
-      h.text(o, { x: x0, y, content: lead, size: 13 });
+      const parentMarker = h.marker(svgNode, "fig-2-before-parent-arrow");
+      const countMarker = h.marker(
+        svgNode,
+        "fig-2-before-count-arrow",
+        h.C.count,
+      );
+      const countedEdges = new Set(["C2:C1", "C3:C2", "C4:C3"]);
+      for (const [child, parent] of [
+        ["C1", "O"],
+        ["F1", "O"],
+        ["C2", "C1"],
+        ["C3", "C2"],
+        ["C4", "C3"],
+        ["F2", "F1"],
+      ]) {
+        const countedEdge = countedEdges.has(`${child}:${parent}`);
+        h.replaceParentArrow(svgNode, {
+          child,
+          parent,
+          overlay: o,
+          markerEnd: countedEdge ? countMarker : parentMarker,
+          color: countedEdge ? h.C.count : h.C.borderStrong,
+        });
+      }
+
       h.text(o, {
-        x: x0 + lead.length * 13 * MONO_ADVANCE,
-        y,
-        content: tail,
-        size: 13,
-        fill: tailFill,
+        x: O.x,
+        y: O.y - h.DOT_RADIUS - 28,
+        content: "older common ancestor · outside cohort",
+        size: 9.5,
+        fill: h.C.textSoft,
+        anchor: "middle",
+      });
+      h.text(o, {
+        x: C1.x,
+        y: C1.y - h.DOT_RADIUS - 10,
+        content: "SELECTED BRANCH",
+        size: 9.5,
+        fill: h.C.live,
+        weight: 600,
+        anchor: "middle",
+      });
+      h.text(o, {
+        x: F1.x,
+        y: F1.y + h.DOT_RADIUS + 29,
+        content: "FEATURE BRANCH",
+        size: 9.5,
+        fill: h.C.textSoft,
+        weight: 600,
+        anchor: "middle",
+      });
+      h.pill(o, {
+        x: C4.x - 68,
+        y: C4.y + h.DOT_RADIUS + 12,
+        width: 136,
+        height: 26,
+        label: "SELECTED TIP · N=4",
+        size: 10,
+      });
+      h.pill(o, {
+        x: F2.x - 49,
+        y: F2.y - h.DOT_RADIUS - 38,
+        width: 98,
+        height: 25,
+        label: "FEATURE TIP",
+        size: 9.5,
+        fill: h.C.bgSunk,
+        stroke: h.C.borderStrong,
+      });
+
+      const headingY = raw.y - 52;
+      h.pill(o, {
+        x: raw.x,
+        y: headingY - 15,
+        width: 68,
+        height: 25,
+        label: "BEFORE",
+        size: 10.5,
+        fill: h.C.bgSunk,
+        stroke: h.C.borderStrong,
+      });
+      h.text(o, {
+        x: raw.x + 80,
+        y: headingY + 3,
+        content: "BRANCHES NOT MERGED",
+        size: 12.5,
         weight: 600,
       });
-    }
 
-    // A row of chained count pills, mirroring the panel's mapping from
-    // commit to running count.
-    function pillRow({ y, height, size, width, gap, items }) {
-      let x = x0;
-      items.forEach((label, index) => {
-        h.pill(o, { x, y, width, height, label, size });
-        if (index < items.length - 1) {
-          h.arrow(o, {
-            x1: x + width,
-            y1: y + height / 2,
-            x2: x + width + gap,
-            y2: y + height / 2,
-            end: arrowEnd,
-          });
-        }
-        x += width + gap;
+      const footerY = Math.max(C4.y, F1.y, F2.y) + h.DOT_RADIUS + 67;
+      h.text(o, {
+        x: raw.x,
+        y: footerY,
+        content: "NEXT: MERGE MAIN INTO FEATURE, THEN FAST-FORWARD MAIN TO M",
+        size: 10.5,
+        fill: h.C.textSoft,
+        weight: 600,
       });
-      return x - gap;
+
+      const full = svgNode.getBBox();
+      const card = h.rect(svgNode, {
+        x: full.x - 12,
+        y: full.y - 12,
+        width: full.width + 24,
+        height: full.height + 24,
+        rx: 12,
+        fill: h.C.bgSunk,
+        stroke: h.C.border,
+        strokeWidth: 1,
+      });
+      svgNode.insertBefore(card, svgNode.firstChild);
+      return { full: svgNode.getBBox() };
     }
 
-    // Panel A — 0.2's first-parent-only count: only F1, F2, and M sit on
-    // the first-parent chain, so C1-C4 don't count at all.
-    const panelAY = graphBottom + 36;
-    h.text(o, {
-      x: x0,
-      y: panelAY,
-      content: "Panel A — 0.2 (position in date block, first-parent chain only)",
-      size: 13,
-      weight: 600,
+    function addPanel(svgNode, options) {
+      const {
+        key,
+        version,
+        rule,
+        counted,
+        ignored,
+        before,
+        after,
+        outcome,
+        outcomeColor,
+        countAll = false,
+        dashExcluded = false,
+      } = options;
+      const at = (name) => h.center(svgNode, name);
+      const O = at("O");
+      const C1 = at("C1");
+      const C4 = at("C4");
+      const F1 = at("F1");
+      const F2 = at("F2");
+      const M = at("M");
+      const raw = svgNode.getBBox();
+      const o = h.overlay(svgNode);
+
+      h.backDots(
+        svgNode,
+        ["O", "C1", "C2", "C3", "C4", "F1", "F2", "M"],
+        h.C.bgSunk,
+      );
+      h.dashDot(svgNode, "O");
+      soften(svgNode, ["O"]);
+      const parentMarker = h.marker(svgNode, `fig-2-${key}-parent-arrow`);
+      const countMarker = h.marker(
+        svgNode,
+        `fig-2-${key}-count-arrow`,
+        h.C.count,
+      );
+      const countedEdges = new Set(["F2:F1", "M:F2"]);
+      const boundaryEdges = new Set(["C1:O", "F1:O"]);
+      for (const [child, parent] of [
+        ["C1", "O"],
+        ["F1", "O"],
+        ["C2", "C1"],
+        ["C3", "C2"],
+        ["C4", "C3"],
+        ["F2", "F1"],
+        ["M", "F2"],
+        ["M", "C4"],
+      ]) {
+        const edge = `${child}:${parent}`;
+        const countedEdge =
+          !boundaryEdges.has(edge) && (countAll || countedEdges.has(edge));
+        h.replaceParentArrow(svgNode, {
+          child,
+          parent,
+          overlay: o,
+          markerEnd: countedEdge ? countMarker : parentMarker,
+          color: countedEdge ? h.C.count : h.C.borderStrong,
+        });
+      }
+
+      if (dashExcluded) {
+        for (const label of ["C1", "C2", "C3", "C4"]) h.dashDot(svgNode, label);
+        soften(svgNode, ["C1", "C2", "C3", "C4"]);
+      }
+
+      h.text(o, {
+        x: O.x,
+        y: O.y - h.DOT_RADIUS - 10,
+        content: "older common ancestor · outside cohort",
+        size: 9.5,
+        fill: h.C.textSoft,
+        anchor: "middle",
+      });
+
+      h.text(o, {
+        x: (F2.x + M.x) / 2,
+        y: F2.y + 27,
+        content: "1st parent",
+        size: 9.5,
+        fill: h.C.textSoft,
+        anchor: "middle",
+      });
+      h.text(o, {
+        x: C4.x + 0.55 * (M.x - C4.x),
+        y: C4.y + 0.55 * (M.y - C4.y) - 10,
+        content: "2nd parent",
+        size: 9.5,
+        fill: h.C.textSoft,
+        anchor: "middle",
+      });
+      h.text(o, {
+        x: C4.x,
+        y: C4.y - h.DOT_RADIUS - 10,
+        content: "old tip",
+        size: 9.5,
+        fill: h.C.textSoft,
+        anchor: "middle",
+      });
+      h.text(o, {
+        x: M.x,
+        y: M.y - h.DOT_RADIUS - 10,
+        content: "new tip",
+        size: 9.5,
+        fill: h.C.live,
+        weight: 600,
+        anchor: "middle",
+      });
+
+      const headingY = raw.y - 48;
+      h.pill(o, {
+        x: raw.x,
+        y: headingY - 15,
+        width: 48,
+        height: 25,
+        label: version,
+        size: 11,
+        fill: h.C.bgSunk,
+        stroke: h.C.borderStrong,
+      });
+      h.text(o, {
+        x: raw.x + 60,
+        y: headingY + 3,
+        content: rule,
+        size: 12.5,
+        weight: 600,
+      });
+
+      const resultX = raw.x + raw.width - 180;
+      const resultY = headingY - 18;
+      h.rect(o, {
+        x: resultX,
+        y: resultY,
+        width: 180,
+        height: 38,
+        rx: 8,
+        fill: h.C.bgSunk,
+        stroke: outcomeColor,
+        strokeWidth: 1.5,
+      });
+      h.text(o, {
+        x: resultX + 11,
+        y: resultY + 25,
+        content: before,
+        size: 18,
+        weight: 600,
+      });
+      h.arrow(o, {
+        x1: resultX + 38,
+        y1: resultY + 19,
+        x2: resultX + 64,
+        y2: resultY + 19,
+        stroke: outcomeColor,
+        width: 1.5,
+      });
+      h.arrowhead(o, {
+        x: resultX + 68,
+        y: resultY + 19,
+        deg: 0,
+        color: outcomeColor,
+      });
+      h.text(o, {
+        x: resultX + 78,
+        y: resultY + 25,
+        content: after,
+        size: 18,
+        fill: outcomeColor,
+        weight: 600,
+      });
+      h.text(o, {
+        x: resultX + 106,
+        y: resultY + 23,
+        content: outcome,
+        size: 9.5,
+        fill: outcomeColor === h.C.count ? h.C.live : outcomeColor,
+        weight: 600,
+      });
+
+      const footerY = Math.max(F1.y, F2.y, M.y) + h.DOT_RADIUS + 24;
+      h.pill(o, {
+        x: raw.x,
+        y: footerY,
+        width: counted.width,
+        height: 28,
+        label: counted.label,
+        size: 10.5,
+      });
+      if (ignored) {
+        h.pill(o, {
+          x: raw.x + counted.width + 12,
+          y: footerY,
+          width: ignored.width,
+          height: 28,
+          label: ignored.label,
+          size: 10.5,
+          fill: h.C.bgSunk,
+          stroke: h.C.border,
+          dash: "4 3",
+          labelFill: h.C.textSoft,
+        });
+      }
+
+      const full = svgNode.getBBox();
+      const card = h.rect(svgNode, {
+        x: full.x - 12,
+        y: full.y - 12,
+        width: full.width + 24,
+        height: full.height + 24,
+        rx: 12,
+        fill: h.C.bgSunk,
+        stroke: h.C.border,
+        strokeWidth: 1,
+      });
+      svgNode.insertBefore(card, svgNode.firstChild);
+
+      return { C1, full: svgNode.getBBox() };
+    }
+
+    const beforePanel = addBeforePanel(beforeSvg);
+    const first = addPanel(firstSvg, {
+      key: "a",
+      version: "0.2",
+      rule: "AFTER · FIRST-PARENT POSITION",
+      counted: { label: "COUNTS  F1  F2  M", width: 184 },
+      ignored: { label: "IGNORES  C1–C4", width: 170 },
+      before: "4",
+      after: "3",
+      outcome: "DECREASES",
+      outcomeColor: h.C.error,
+      dashExcluded: true,
     });
-    const pillAY = panelAY + 12;
-    const lastA = pillRow({
-      y: pillAY,
-      height: 26,
-      size: 12,
-      width: 64,
-      gap: 14,
-      items: ["F1=1", "F2=2", "M=3"],
-    });
-    h.pill(o, {
-      x: lastA + 36,
-      y: pillAY,
-      width: 250,
-      height: 26,
-      label: "C1, C2, C3, C4 — not counted",
-      size: 11.5,
-      fill: "none",
-      stroke: h.C.border,
-      dash: "3 3",
-      labelFill: h.C.textSoft,
-    });
-    sentence({
-      y: panelAY + 60,
-      lead: "Before the merge, C4’s own count was 4. ",
-      tail: "4 to 3: decrease",
-      tailFill: h.C.error,
+    const second = addPanel(allSvg, {
+      key: "b",
+      version: "0.3",
+      rule: "AFTER · ALL-PARENT DATE COHORT",
+      counted: { label: "COUNTS ALL 7 REACHABLE COMMITS", width: 294 },
+      before: "4",
+      after: "7",
+      outcome: "INCREASES",
+      outcomeColor: h.C.count,
+      countAll: true,
     });
 
-    // Panel B — 0.3's date-cohort count: every commit stays reachable, so
-    // all seven still count, just through a different parent.
-    const panelBY = panelAY + 90;
-    h.text(o, {
-      x: x0,
-      y: panelBY,
-      content: "Panel B — 0.3 (date cohort, all parents)",
-      size: 13,
-      weight: 600,
-    });
-    const pillBY = panelBY + 12;
-    pillRow({
-      y: pillBY,
-      height: 26,
-      size: 11.5,
-      width: 58,
-      gap: 14,
-      items: ["C1=1", "C2=2", "C3=3", "C4=4", "F1=5", "F2=6", "M=7"],
-    });
-    sentence({
-      y: panelBY + 63,
-      lead: "Before the merge, C4’s own count was 4. ",
-      tail: "4 to 7: increase",
-      tailFill: h.C.count,
-    });
+    const gap = 18;
+    const firstDy =
+      beforePanel.full.y + beforePanel.full.height + gap - first.full.y;
+    h.embed(beforeSvg, firstSvg, { dy: firstDy });
+    const combined = beforeSvg.getBBox();
+    const secondDy = combined.y + combined.height + gap - second.full.y;
+    h.embed(beforeSvg, allSvg, { dy: secondDy });
   },
 };

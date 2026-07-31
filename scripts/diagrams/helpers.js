@@ -5,17 +5,21 @@
 // template bound to the site's design tokens, an annotation overlay (arrows,
 // pills, checks, crosses), and the finalize pass that turns gitgraph.js output
 // into the site's accessible, theme-aware inline SVG. Also provides the SVG
-// geometry jsdom lacks (getBBox), computed analytically; IBM Plex Mono is
-// strictly monospace (600/1000 em advance), so text metrics need no renderer.
+// geometry jsdom lacks (getBBox), computed analytically with conservative IBM
+// Plex Sans bounds so rendering stays deterministic and browser-free.
 
 "use strict";
 (() => {
   const NS = "http://www.w3.org/2000/svg";
-  const MONO_ADVANCE = 0.6;
+  const TEXT_BOUND_ADVANCE = 1.1;
+  const TEXT_ASCENT = 1.025;
+  const TEXT_DESCENT = 0.275;
+  const TEXT_CENTRAL_HALF = 0.65;
 
   // Design tokens from site/assets/css/main.css. The rendered SVG keeps these
   // var() references, so figures follow the page's light/dark scheme.
   const C = {
+    bg: "var(--bg)",
     text: "var(--text)",
     textSoft: "var(--text-soft)",
     border: "var(--border)",
@@ -23,6 +27,7 @@
     bgSunk: "var(--bg-sunk)",
     count: "var(--count)",
     countSoft: "var(--count-soft)",
+    live: "var(--live)",
     error: "var(--error)",
     date: "var(--date)",
   };
@@ -58,12 +63,61 @@
         message: { display: false, ...(overrides.commit || {}).message },
         dot: {
           size: DOT_RADIUS,
-          font: "13px 'IBM Plex Mono', monospace",
+          font: "450 13px 'IBM Plex Sans', system-ui, sans-serif",
           ...(overrides.commit || {}).dot,
         },
       },
     };
     return GitgraphJS.templateExtend(GitgraphJS.TemplateName.Metro, merged);
+  }
+
+  // The merge-then-fast-forward topology shared by Figures 2 and 5. Keeping
+  // it here prevents the two explanations from drifting: M's first parent is
+  // F2, its second parent is C4, and the selected branch advances from C4 to
+  // M without rewriting any commit.
+  function incidentGraph(
+    GitgraphJS,
+    container,
+    { id, styleFor = () => dot.neutral, templateOverrides = {}, merge = true },
+  ) {
+    const gitgraph = GitgraphJS.createGitgraph(container, {
+      orientation: GitgraphJS.Orientation.Horizontal,
+      reverseArrow: true,
+      template: template(GitgraphJS, templateOverrides),
+    });
+    const commit = (branch, label) =>
+      branch.commit({
+        hash: `${id}-${label.toLowerCase()}`,
+        subject: label,
+        dotText: label,
+        style: { dot: styleFor(label) },
+      });
+
+    const base = gitgraph.branch("base");
+    commit(base, "O");
+    const main = base;
+    const feature = base.branch("feature");
+
+    // O is the older common ancestor outside the illustrated date cohort.
+    // Interleaving the branch commits keeps both lanes easy to compare.
+    commit(main, "C1");
+    commit(feature, "F1");
+    commit(main, "C2");
+    commit(feature, "F2");
+    commit(main, "C3");
+    commit(main, "C4");
+    if (merge) {
+      feature.merge({
+        branch: main,
+        commitOptions: {
+          hash: `${id}-m`,
+          subject: "M",
+          dotText: "M",
+          style: { dot: styleFor("M") },
+        },
+      });
+    }
+    return gitgraph;
   }
 
   // ---------- analytic geometry ----------
@@ -94,6 +148,14 @@
     const match = style.match(/font:[^;]*?([\d.]+)px/);
     if (match) return Number(match[1]);
     return 13;
+  }
+
+  function fontWeightOf(element) {
+    const attr = element.getAttribute("font-weight");
+    if (attr) return Number(attr);
+    const style = element.getAttribute("style") || "";
+    const match = style.match(/font:\s*(\d+)/);
+    return match ? Number(match[1]) : 450;
   }
 
   const SKIP = new Set(["defs", "clipPath", "marker", "title", "desc"]);
@@ -151,7 +213,14 @@
     }
     if (name === "text") {
       const size = fontSizeOf(element);
-      const width = element.textContent.length * size * MONO_ADVANCE;
+      const width =
+        typeof window.diagramTextWidth === "function"
+          ? window.diagramTextWidth(
+              element.textContent,
+              size,
+              fontWeightOf(element),
+            )
+          : [...element.textContent].length * size * TEXT_BOUND_ADVANCE;
       const x = num("x");
       const y = num("y");
       const anchor = element.getAttribute("text-anchor") || "start";
@@ -160,8 +229,12 @@
       // gitgraph.js text is vertically centered (dominant-baseline: central);
       // overlay text sits on an alphabetic baseline like the site's figures.
       const central = element.getAttribute("dominant-baseline") === "central";
-      const minY = central ? y - size / 2 : y - size * 0.8;
-      const maxY = central ? y + size / 2 : y + size * 0.2;
+      const minY = central
+        ? y - size * TEXT_CENTRAL_HALF
+        : y - size * TEXT_ASCENT;
+      const maxY = central
+        ? y + size * TEXT_CENTRAL_HALF
+        : y + size * TEXT_DESCENT;
       return { minX, minY, maxX: minX + width, maxY };
     }
     if (name === "use") {
@@ -310,8 +383,10 @@
 
   // Recolor one parent edge's arrowhead, for edges the figure calls out.
   function recolorArrow(svg, commitLabel, parentLabel, color) {
-    findArrow(svg, commitLabel, parentLabel)
-      .firstElementChild.setAttribute("fill", color);
+    findArrow(svg, commitLabel, parentLabel).firstElementChild.setAttribute(
+      "fill",
+      color,
+    );
   }
 
   // A free-standing arrowhead with its tip at (x, y), pointing at `deg`
@@ -326,7 +401,7 @@
       `${Math.round((x + px * cos - py * sin) * 100) / 100},` +
       `${Math.round((y + px * sin + py * cos) * 100) / 100}`;
     return el(parent, "path", {
-      d: `M${point(0, 0)} L${point(-7, -4)} L${point(-7, 4)} Z`,
+      d: `M${point(0, 0)} L${point(-9, -4.5)} L${point(-9, 4.5)} Z`,
       fill: color,
     });
   }
@@ -389,16 +464,61 @@
     });
   }
 
+  // Gitgraph's branch rails run through each commit center. Counted fills are
+  // translucent, so place an opaque surface-colored disk behind native dots
+  // to make every rail stop visually at the circle boundary.
+  function backDots(svg, labels, fill = C.bg) {
+    for (const node of svg.querySelectorAll("g > text")) {
+      if (!labels.includes(node.textContent)) continue;
+      const group = node.parentElement;
+      const paintedDot = group.querySelector(":scope > use");
+      if (!paintedDot || group.querySelector(":scope > [data-dot-backing]")) {
+        continue;
+      }
+      const backing = el(group, "circle", {
+        cx: DOT_RADIUS,
+        cy: DOT_RADIUS,
+        r: DOT_RADIUS,
+        fill,
+        stroke: "none",
+        "data-dot-backing": "true",
+      });
+      group.insertBefore(backing, paintedDot);
+    }
+  }
+
+  // Replace gitgraph's clipped chevron with the same compact triangular
+  // marker used by hand-drawn parent edges. Horizontal gitgraphs approach
+  // every parent from the right, including the endpoint of a merge Bézier.
+  function replaceParentArrow(
+    svg,
+    {
+      child,
+      parent,
+      overlay: parentOverlay,
+      markerEnd,
+      color = C.borderStrong,
+      parentRadius = DOT_RADIUS,
+      width = 1.5,
+    },
+  ) {
+    pruneArrow(svg, child, parent);
+    const { x, y } = center(svg, parent);
+    const gap = 3;
+    const endX = x + parentRadius + gap;
+    return arrow(parentOverlay, {
+      x1: endX + 10,
+      y1: y,
+      x2: endX,
+      y2: y,
+      stroke: color,
+      width,
+      end: markerEnd,
+    });
+  }
+
   function text(parent, options) {
-    const {
-      x,
-      y,
-      content,
-      size = 13,
-      fill = C.text,
-      anchor,
-      weight,
-    } = options;
+    const { x, y, content, size = 13, fill = C.text, anchor, weight } = options;
     const node = el(parent, "text", {
       x,
       y,
@@ -558,7 +678,11 @@
       `${box.x - pad} ${box.y - pad} ${width} ${height}`,
     );
     svg.setAttribute("aria-labelledby", `${id}-title ${id}-desc`);
-    svg.setAttribute("style", "font-family:'IBM Plex Mono',monospace");
+    svg.setAttribute(
+      "style",
+      "font-family:'IBM Plex Sans',system-ui,sans-serif;" +
+        "font-weight:450;font-synthesis:none",
+    );
 
     const doc = svg.ownerDocument;
     const descNode = doc.createElementNS(NS, "desc");
@@ -578,6 +702,7 @@
     dot,
     DOT_RADIUS,
     template,
+    incidentGraph,
     center,
     dashDot,
     pruneArrow,
@@ -586,6 +711,8 @@
     overlay,
     marker,
     arrow,
+    backDots,
+    replaceParentArrow,
     text,
     rect,
     pill,

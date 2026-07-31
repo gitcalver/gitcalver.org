@@ -29,6 +29,93 @@ const repo = path.resolve(import.meta.dirname, "..", "..");
 const figuresDir = path.join(import.meta.dirname, "figures");
 const outDir = path.join(repo, "site", "assets", "diagrams");
 
+// Read just enough of a TrueType font to measure deterministic horizontal
+// advances. Browser kerning is usually negative; a small final allowance
+// keeps the analytic SVG bounds conservative without monospace-sized gaps.
+function trueTypeMetrics(buffer) {
+  const table = (wanted) => {
+    const count = buffer.readUInt16BE(4);
+    for (let index = 0; index < count; index += 1) {
+      const record = 12 + index * 16;
+      if (buffer.toString("ascii", record, record + 4) !== wanted) continue;
+      return {
+        offset: buffer.readUInt32BE(record + 8),
+        length: buffer.readUInt32BE(record + 12),
+      };
+    }
+    throw new Error(`TrueType table ${wanted} not found`);
+  };
+
+  const head = table("head");
+  const hhea = table("hhea");
+  const hmtx = table("hmtx");
+  const cmap = table("cmap");
+  const unitsPerEm = buffer.readUInt16BE(head.offset + 18);
+  const metricCount = buffer.readUInt16BE(hhea.offset + 34);
+
+  let format4 = null;
+  const cmapCount = buffer.readUInt16BE(cmap.offset + 2);
+  for (let index = 0; index < cmapCount; index += 1) {
+    const record = cmap.offset + 4 + index * 8;
+    const candidate = cmap.offset + buffer.readUInt32BE(record + 4);
+    if (buffer.readUInt16BE(candidate) !== 4) continue;
+    const platform = buffer.readUInt16BE(record);
+    if (format4 === null || platform === 3) format4 = candidate;
+    if (platform === 3) break;
+  }
+  assert.ok(format4 !== null, "IBM Plex Sans needs a format 4 cmap");
+
+  const segmentCount = buffer.readUInt16BE(format4 + 6) / 2;
+  const endCodes = format4 + 14;
+  const startCodes = endCodes + segmentCount * 2 + 2;
+  const deltas = startCodes + segmentCount * 2;
+  const rangeOffsets = deltas + segmentCount * 2;
+
+  const glyphFor = (codePoint) => {
+    if (codePoint > 0xffff) return 0;
+    for (let index = 0; index < segmentCount; index += 1) {
+      const end = buffer.readUInt16BE(endCodes + index * 2);
+      if (codePoint > end) continue;
+      const start = buffer.readUInt16BE(startCodes + index * 2);
+      if (codePoint < start) return 0;
+      const delta = buffer.readInt16BE(deltas + index * 2);
+      const rangeOffsetPosition = rangeOffsets + index * 2;
+      const rangeOffset = buffer.readUInt16BE(rangeOffsetPosition);
+      if (rangeOffset === 0) return (codePoint + delta) & 0xffff;
+      const glyphPosition =
+        rangeOffsetPosition + rangeOffset + (codePoint - start) * 2;
+      if (glyphPosition + 2 > format4 + buffer.readUInt16BE(format4 + 2)) {
+        return 0;
+      }
+      const glyph = buffer.readUInt16BE(glyphPosition);
+      return glyph === 0 ? 0 : (glyph + delta) & 0xffff;
+    }
+    return 0;
+  };
+
+  const advanceFor = (codePoint) => {
+    const glyph = glyphFor(codePoint);
+    const metric = Math.min(glyph, metricCount - 1);
+    return buffer.readUInt16BE(hmtx.offset + metric * 4);
+  };
+
+  return (text, size) => {
+    let advance = 0;
+    for (const character of text)
+      advance += advanceFor(character.codePointAt(0));
+    return (advance / unitsPerEm) * size * 1.03 + size * 0.1;
+  };
+}
+
+const sansTextWidth = trueTypeMetrics(
+  await fs.readFile(path.join(repo, "fonts", "src", "IBMPlexSans-Text.ttf")),
+);
+const sansSemiboldWidth = trueTypeMetrics(
+  await fs.readFile(
+    path.join(repo, "fonts", "src", "IBMPlexSans-SemiBold.ttf"),
+  ),
+);
+
 const umd = await fs.readFile(
   path.join(repo, "node_modules", "@gitgraph", "js", "lib", "gitgraph.umd.js"),
   "utf8",
@@ -75,6 +162,8 @@ async function renderFigure(id) {
   );
   const { window } = dom;
   try {
+    window.diagramTextWidth = (text, size, weight) =>
+      (Number(weight) >= 550 ? sansSemiboldWidth : sansTextWidth)(text, size);
     window.eval(umd);
     window.eval(helpers);
     window.eval(scene);
@@ -167,23 +256,23 @@ async function previewPage() {
   const font = async (weight, file) => {
     const data = await fs.readFile(path.join(repo, "fonts", "src", file));
     return (
-      `@font-face{font-family:"IBM Plex Mono";font-style:normal;` +
+      `@font-face{font-family:"IBM Plex Sans";font-style:normal;` +
       `font-weight:${weight};src:url("data:font/ttf;base64,` +
       `${data.toString("base64")}")}`
     );
   };
   return (
     `<!doctype html><html><head><meta charset="utf-8"><style>` +
-    (await font("400 450", "IBMPlexMono-Regular.ttf")) +
-    (await font("500", "IBMPlexMono-Medium.ttf")) +
-    (await font("600", "IBMPlexMono-SemiBold.ttf")) +
+    (await font("400 450", "IBMPlexSans-Text.ttf")) +
+    (await font("600", "IBMPlexSans-SemiBold.ttf")) +
     `:root{${roots[0][1]}}` +
     `@media (prefers-color-scheme: dark){:root{${roots[1][1]}}}` +
     // Open preview.html#dark to force dark mode where the browser's
     // prefers-color-scheme can't be toggled.
     `:root.dark{${roots[1][1]}}` +
     `body{background:var(--bg);color:var(--text);` +
-    `font-family:"IBM Plex Mono",monospace;padding:24px}` +
+    `font-family:"IBM Plex Sans",system-ui,sans-serif;` +
+    `font-weight:450;padding:24px}` +
     `</style><script>` +
     `addEventListener("hashchange",sync);function sync(){` +
     `document.documentElement.classList.toggle("dark",location.hash==="#dark")}` +
