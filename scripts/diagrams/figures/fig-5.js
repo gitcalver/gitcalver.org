@@ -1,9 +1,9 @@
 // Copyright © 2026 Michael Shields
 // SPDX-License-Identifier: CC-BY-4.0
 
-// Figure 5: publication continuity on the exact incident topology from
-// Figure 2. The graph identifies the previous tag target and publishing tip;
-// matched cards then expose step 5's two independent predicates.
+// Figure 5: publication continuity on the merge-then-fast-forward topology
+// from Figure 2. The graph identifies the previous tag target and publishing
+// tip; matched cards then expose step 5's two independent predicates.
 
 "use strict";
 
@@ -18,7 +18,7 @@ window.figure = {
     "contrast, M reaches D1 but D1 is later-dated than M, so the date " +
     "condition fails and step 5 blocks publication.",
   draw({ GitgraphJS, container, h }) {
-    h.incidentGraph(GitgraphJS, container, {
+    h.reparentingGraph(GitgraphJS, container, {
       id: "fig-5",
       templateOverrides: {
         branch: { spacing: 62 },

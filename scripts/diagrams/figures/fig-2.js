@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: CC-BY-4.0
 
 // Figure 2: a before panel establishes two branches from one older common
-// ancestor. Two matched after panels then score the merge-then-fast-forward
-// DAG under 0.2's first-parent rule and 0.3's all-parent date-cohort rule.
+// ancestor. Two matched after panels then score the same
+// merge-then-fast-forward DAG by first-parent position and by the all-parent
+// date cohort.
 
 "use strict";
 
@@ -13,15 +14,15 @@ let allParentsDiv;
 
 window.figure = {
   id: "fig-2",
-  title: "Before and after the incident, scored by 0.2 and 0.3",
+  title: "First-parent counting is fragile; all-parent counting is not",
   desc:
-    "Before the incident, an older common ancestor O forks into main commits " +
-    "C1 through C4 and unmerged feature commits F1 and F2; main points to C4 " +
-    "with N equal to 4. After main is merged into feature and main " +
-    "fast-forwards to merge M, M's first parent is F2 and its second parent " +
-    "is C4. Under 0.2, only M, F2, and F1 count, so N decreases from 4 to 3. " +
-    "Under 0.3, all seven same-date commits reachable from M count, so N " +
-    "increases from 4 to 7.",
+    "An older common ancestor O forks into main commits C1 through C4 and " +
+    "unmerged feature commits F1 and F2; main points to C4 with a count of " +
+    "4. After main is merged into feature and main fast-forwards to merge " +
+    "M, M's first parent is F2 and its second parent is C4. A first-parent " +
+    "position count reaches only M, F2, and F1, so it decreases from 4 to " +
+    "3. The all-parent date cohort holds all seven same-date commits " +
+    "reachable from M, so N increases from 4 to 7.",
   draw({ GitgraphJS, container, h }) {
     beforeDiv = container.ownerDocument.createElement("div");
     firstParentDiv = container.ownerDocument.createElement("div");
@@ -32,7 +33,7 @@ window.figure = {
       branch: { spacing: 58 },
       commit: { spacing: 74 },
     };
-    h.incidentGraph(GitgraphJS, beforeDiv, {
+    h.reparentingGraph(GitgraphJS, beforeDiv, {
       id: "fig-2-before",
       templateOverrides: overrides,
       merge: false,
@@ -43,7 +44,7 @@ window.figure = {
             ? h.dot.counted
             : h.dot.neutral,
     });
-    h.incidentGraph(GitgraphJS, firstParentDiv, {
+    h.reparentingGraph(GitgraphJS, firstParentDiv, {
       id: "fig-2-a",
       templateOverrides: overrides,
       styleFor: (label) =>
@@ -55,7 +56,7 @@ window.figure = {
               : h.dot.counted
             : h.dot.pruned,
     });
-    h.incidentGraph(GitgraphJS, allParentsDiv, {
+    h.reparentingGraph(GitgraphJS, allParentsDiv, {
       id: "fig-2-b",
       templateOverrides: overrides,
       styleFor: (label) =>
@@ -213,7 +214,6 @@ window.figure = {
     function addPanel(svgNode, options) {
       const {
         key,
-        version,
         rule,
         counted,
         ignored,
@@ -323,15 +323,15 @@ window.figure = {
       h.pill(o, {
         x: raw.x,
         y: headingY - 15,
-        width: 48,
+        width: 68,
         height: 25,
-        label: version,
-        size: 11,
+        label: "AFTER",
+        size: 10.5,
         fill: h.C.bgSunk,
         stroke: h.C.borderStrong,
       });
       h.text(o, {
-        x: raw.x + 60,
+        x: raw.x + 80,
         y: headingY + 3,
         content: rule,
         size: 12.5,
@@ -431,8 +431,7 @@ window.figure = {
     const beforePanel = addBeforePanel(beforeSvg);
     const first = addPanel(firstSvg, {
       key: "a",
-      version: "0.2",
-      rule: "AFTER · FIRST-PARENT POSITION",
+      rule: "FIRST-PARENT POSITION",
       counted: { label: "COUNTS  F1  F2  M", width: 184 },
       ignored: { label: "IGNORES  C1–C4", width: 170 },
       before: "4",
@@ -443,8 +442,7 @@ window.figure = {
     });
     const second = addPanel(allSvg, {
       key: "b",
-      version: "0.3",
-      rule: "AFTER · ALL-PARENT DATE COHORT",
+      rule: "ALL-PARENT DATE COHORT",
       counted: { label: "COUNTS ALL 7 REACHABLE COMMITS", width: 294 },
       before: "4",
       after: "7",

@@ -13,15 +13,16 @@
   "
 >
   <title id="fig-2-title">
-    Before and after the incident, scored by 0.2 and 0.3
+    First-parent counting is fragile; all-parent counting is not
   </title>
   <desc id="fig-2-desc">
-    Before the incident, an older common ancestor O forks into main commits C1
-    through C4 and unmerged feature commits F1 and F2; main points to C4 with N
-    equal to 4. After main is merged into feature and main fast-forwards to
-    merge M, M's first parent is F2 and its second parent is C4. Under 0.2, only
-    M, F2, and F1 count, so N decreases from 4 to 3. Under 0.3, all seven
-    same-date commits reachable from M count, so N increases from 4 to 7.
+    An older common ancestor O forks into main commits C1 through C4 and
+    unmerged feature commits F1 and F2; main points to C4 with a count of 4.
+    After main is merged into feature and main fast-forwards to merge M, M's
+    first parent is F2 and its second parent is C4. A first-parent position
+    count reaches only M, F2, and F1, so it decreases from 4 to 3. The
+    all-parent date cohort holds all seven same-date commits reachable from M,
+    so N increases from 4 to 7.
   </desc>
   <rect
     x="-74.99010999999999"
@@ -1091,7 +1092,7 @@
       <rect
         x="10"
         y="-53"
-        width="48"
+        width="68"
         height="25"
         rx="12.5"
         fill="var(--bg-sunk)"
@@ -1099,22 +1100,22 @@
         stroke-width="1"
       ></rect>
       <text
-        x="34"
-        y="-36.76"
-        font-size="11"
+        x="44"
+        y="-36.93"
+        font-size="10.5"
         fill="var(--text)"
         text-anchor="middle"
       >
-        0.2
+        AFTER
       </text>
       <text
-        x="70"
+        x="90"
         y="-35"
         font-size="12.5"
         fill="var(--text)"
         font-weight="600"
       >
-        AFTER · FIRST-PARENT POSITION
+        FIRST-PARENT POSITION
       </text>
       <rect
         x="380"
@@ -1733,7 +1734,7 @@
       <rect
         x="10"
         y="-53"
-        width="48"
+        width="68"
         height="25"
         rx="12.5"
         fill="var(--bg-sunk)"
@@ -1741,22 +1742,22 @@
         stroke-width="1"
       ></rect>
       <text
-        x="34"
-        y="-36.76"
-        font-size="11"
+        x="44"
+        y="-36.93"
+        font-size="10.5"
         fill="var(--text)"
         text-anchor="middle"
       >
-        0.3
+        AFTER
       </text>
       <text
-        x="70"
+        x="90"
         y="-35"
         font-size="12.5"
         fill="var(--text)"
         font-weight="600"
       >
-        AFTER · ALL-PARENT DATE COHORT
+        ALL-PARENT DATE COHORT
       </text>
       <rect
         x="380"

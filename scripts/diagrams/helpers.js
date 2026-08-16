@@ -75,7 +75,7 @@
   // it here prevents the two explanations from drifting: M's first parent is
   // F2, its second parent is C4, and the selected branch advances from C4 to
   // M without rewriting any commit.
-  function incidentGraph(
+  function reparentingGraph(
     GitgraphJS,
     container,
     { id, styleFor = () => dot.neutral, templateOverrides = {}, merge = true },
@@ -702,7 +702,7 @@
     dot,
     DOT_RADIUS,
     template,
-    incidentGraph,
+    reparentingGraph,
     center,
     dashDot,
     pruneArrow,

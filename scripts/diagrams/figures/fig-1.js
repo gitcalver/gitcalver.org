@@ -1,343 +1,222 @@
 // Copyright © 2026 Michael Shields
 // SPDX-License-Identifier: CC-BY-4.0
 
-// Figure 1: one selected-chain step from m4 to M. M keeps m4 as its first
-// parent and brings in sixteen same-date feature commits through its second
-// parent, so its date cohort grows from 4 to 21. The middle N values are
-// therefore unassigned.
+// Figure 1: the backward date-cohort walk, centered on target T. Parents are
+// consistently to the left of their children: same-date A1 and A2 are counted
+// and keep the walk going, older B1 stops only its path, and later C1 rejects
+// the entire calculation.
 
 "use strict";
-
-const BATCH = "16 commits";
-
-function batchDot(container, h) {
-  return () => {
-    const R = h.DOT_RADIUS;
-    const g = container.ownerDocument.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "g",
-    );
-    g.setAttribute("data-dot-label", BATCH);
-
-    // Three offset cards make the collapsed batch read as several commits,
-    // not as one unusually wide commit.
-    for (const offset of [8, 4, 0]) {
-      h.rect(g, {
-        x: R - 64 - offset,
-        y: R - 16 - offset / 2,
-        width: 128,
-        height: 32,
-        rx: 8,
-        fill: h.C.bgSunk,
-        stroke: h.C.count,
-        strokeWidth: 1,
-      });
-    }
-    h.rect(g, {
-      x: R - 64,
-      y: R - 16,
-      width: 128,
-      height: 32,
-      rx: 8,
-      fill: h.C.countSoft,
-      stroke: h.C.count,
-      strokeWidth: 1.5,
-    });
-    h.text(g, {
-      x: R,
-      y: R + 4,
-      content: BATCH,
-      size: 11.5,
-      weight: 600,
-      anchor: "middle",
-    });
-    return g;
-  };
-}
-
 window.figure = {
   id: "fig-1",
-  title: "A merge grows the date cohort from 4 to 21",
+  title: "Computing a target’s date cohort: count, prune, or reject",
   desc:
-    "All commits shown share one UTC date. The selected chain advances from " +
-    "m4, whose date cohort has four commits, to merge M. M keeps m4 as its " +
-    "first parent and reaches sixteen additional feature commits through its " +
-    "second parent. Including M itself gives N of 21. Values 5 through 20 " +
-    "are unassigned, so reverse lookup for them returns not found.",
+    "The walk starts by counting target T, then follows child-to-parent " +
+    "arrows from right to left. Same-date A1 and A2 are counted and " +
+    "continued through. Older B1 is not counted and prunes only its path. " +
+    "Later C1 rejects the entire calculation.",
   draw({ GitgraphJS, container, h }) {
     const gitgraph = GitgraphJS.createGitgraph(container, {
       orientation: GitgraphJS.Orientation.Horizontal,
       reverseArrow: true,
-      template: h.template(GitgraphJS, {
-        branch: { spacing: 72 },
-        commit: { spacing: 110 },
-      }),
+      template: h.template(GitgraphJS, { commit: { spacing: 144 } }),
     });
 
     const main = gitgraph.branch("main");
-    main.commit({
-      hash: "fig-1-m1",
-      subject: "m1",
-      dotText: "m1",
-      style: { dot: h.dot.counted },
-    });
-    const feature = main.branch("feature");
-    for (const name of ["m2", "m3", "m4"]) {
+    for (const name of ["A2", "A1"]) {
       main.commit({
-        hash: `fig-1-${name}`,
+        hash: `fig-1-${name.toLowerCase()}`,
         subject: name,
         dotText: name,
         style: { dot: h.dot.counted },
       });
     }
-    feature.commit({
-      hash: "fig-1-batch",
-      subject: BATCH,
-      renderDot: batchDot(container, h),
-    });
-
-    // M is committed on main: m4 is its first parent and the feature batch
-    // its second. This ordering is what keeps the sixteen feature commits
-    // off the selected chain.
-    main.merge({
-      branch: feature,
-      commitOptions: {
-        hash: "fig-1-M",
-        subject: "M",
-        dotText: "M",
-        style: { dot: h.dot.emphasis },
-      },
+    main.commit({
+      hash: "fig-1-t",
+      subject: "T",
+      dotText: "T",
+      style: { dot: h.dot.emphasis },
     });
   },
   annotate({ svg, h }) {
     const R = h.DOT_RADIUS;
     const at = (name) => h.center(svg, name);
-    const m1 = at("m1");
-    const m4 = at("m4");
-    const batch = at(BATCH);
-    const M = at("M");
+    const A2 = at("A2");
+    const A1 = at("A1");
+    const T = at("T");
+    const B1 = { x: A1.x, y: T.y - 110 };
+    const C1 = { x: A1.x, y: T.y + 110 };
     const o = h.overlay(svg);
 
-    h.backDots(svg, ["m1", "m2", "m3", "m4", "M"]);
-    const parentMarker = h.marker(svg, "fig-1-parent-arrow");
+    const edgePoint = (from, to, distance) => {
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const length = Math.hypot(dx, dy) || 1;
+      return {
+        x: from.x + (dx / length) * distance,
+        y: from.y + (dy / length) * distance,
+      };
+    };
+
+    const parentArrow = (parent, { color, marker }) => {
+      const start = edgePoint(T, parent, R + 2);
+      const end = edgePoint(parent, T, R + 3);
+      h.arrow(o, {
+        x1: start.x,
+        y1: start.y,
+        x2: end.x,
+        y2: end.y,
+        stroke: color,
+        end: marker,
+      });
+    };
+
+    h.backDots(svg, ["A2", "A1", "T"]);
+    const countMarker = h.marker(svg, "fig-1-count-arrow", h.C.count);
     for (const [child, parent] of [
-      ["m2", "m1"],
-      ["m3", "m2"],
-      ["m4", "m3"],
-      [BATCH, "m1"],
-      ["M", "m4"],
+      ["A1", "A2"],
+      ["T", "A1"],
     ]) {
       h.replaceParentArrow(svg, {
         child,
         parent,
         overlay: o,
-        markerEnd: parentMarker,
+        markerEnd: countMarker,
+        color: h.C.count,
       });
     }
-    h.replaceParentArrow(svg, {
-      child: "M",
-      parent: BATCH,
-      overlay: o,
-      markerEnd: parentMarker,
-      parentRadius: 64,
-    });
+    const parentMarker = h.marker(svg, "fig-1-parent-arrow");
+    const errorMarker = h.marker(svg, "fig-1-error-arrow", h.C.error);
+    parentArrow(B1, { color: h.C.borderStrong, marker: parentMarker });
+    parentArrow(C1, { color: h.C.error, marker: errorMarker });
 
-    h.text(o, {
-      x: m1.x - R,
-      y: m1.y - R - 24,
-      content: "ALL COMMITS: SAME UTC DATE",
-      size: 11,
-      fill: h.C.textSoft,
-      weight: 600,
-    });
-    h.text(o, {
-      x: M.x + R + 58,
-      y: m1.y - R - 24,
-      content: "parent links point left",
-      size: 10,
-      fill: h.C.textSoft,
-      anchor: "end",
-    });
-    h.text(o, {
-      x: m1.x - R,
-      y: m1.y - R - 8,
-      content: "SELECTED CHAIN",
-      size: 10,
-      fill: h.C.live,
-      weight: 600,
-    });
-    h.text(o, {
-      x: batch.x,
-      y: batch.y - 28,
-      content: "FEATURE BRANCH",
-      size: 10,
-      fill: h.C.textSoft,
-      weight: 600,
-      anchor: "middle",
-    });
-
-    h.text(o, {
-      x: (m4.x + M.x) / 2,
-      y: m4.y - R - 9,
-      content: "1st parent",
-      size: 10,
-      fill: h.C.live,
-      anchor: "middle",
-    });
-    h.text(o, {
-      x: (batch.x + M.x) / 2 + 18,
-      y: batch.y + 30,
-      content: "2nd parent",
-      size: 10,
-      fill: h.C.textSoft,
-      anchor: "middle",
-    });
-
-    h.pill(o, {
-      x: m4.x - 31,
-      y: m4.y + R + 13,
-      width: 62,
-      label: "N=4",
-      size: 11.5,
-    });
-    h.pill(o, {
-      x: M.x - 35,
-      y: M.y + R + 13,
-      width: 70,
-      label: "N=21",
-      size: 11.5,
-    });
-
-    const left = m1.x - R;
-    const right = M.x + R + 58;
-    const width = right - left;
-    const calcY = Math.max(batch.y + 48, M.y + R + 52);
-
-    h.rect(o, {
-      x: left,
-      y: calcY,
-      width,
-      height: 94,
-      rx: 10,
-      fill: h.C.bgSunk,
-      stroke: h.C.border,
-      strokeWidth: 1,
-    });
-    h.text(o, {
-      x: left + 16,
-      y: calcY + 22,
-      content: "WHY THE NEXT N IS 21",
-      size: 11,
-      fill: h.C.textSoft,
-      weight: 600,
-    });
-
-    const tileY = calcY + 34;
-    const tileH = 46;
-    const tile = (x, tileWidth, number, label, emphasized = false) => {
-      h.rect(o, {
-        x,
-        y: tileY,
-        width: tileWidth,
-        height: tileH,
-        rx: 8,
-        fill: emphasized ? h.C.countSoft : "none",
-        stroke: emphasized ? h.C.count : h.C.border,
-        strokeWidth: emphasized ? 1.5 : 1,
+    const commitCircle = (
+      label,
+      center,
+      { stroke, strokeWidth = 1.5, dash, fill = h.C.bgSunk },
+    ) => {
+      h.el(o, "circle", {
+        id: `fig-1-${label.toLowerCase()}`,
+        cx: center.x,
+        cy: center.y,
+        r: R,
+        fill,
+        stroke,
+        "stroke-width": strokeWidth,
+        "stroke-dasharray": dash,
       });
       h.text(o, {
-        x: x + 12,
-        y: tileY + 22,
-        content: number,
-        size: 19,
-        fill: emphasized ? h.C.count : h.C.text,
-        weight: 600,
-      });
-      h.text(o, {
-        x: x + 12,
-        y: tileY + 38,
+        x: center.x,
+        y: center.y + 4,
         content: label,
-        size: 9.5,
-        fill: h.C.textSoft,
+        size: 13,
+        fill: dash ? h.C.textSoft : h.C.text,
+        anchor: "middle",
       });
     };
 
-    let x = left + 16;
-    tile(x, 116, "4", "already reachable");
-    x += 130;
-    h.text(o, {
-      x: x - 7,
-      y: tileY + 29,
-      content: "+",
-      size: 18,
-      anchor: "middle",
-    });
-    tile(x, 116, "16", "merged commits");
-    x += 130;
-    h.text(o, {
-      x: x - 7,
-      y: tileY + 29,
-      content: "+",
-      size: 18,
-      anchor: "middle",
-    });
-    tile(x, 102, "1", "merge commit");
-    x += 122;
-    h.text(o, {
-      x: x - 10,
-      y: tileY + 29,
-      content: "=",
-      size: 18,
-      anchor: "middle",
-    });
-    tile(x, 100, "21", "N(M)", true);
-
-    const stripY = calcY + 116;
-    h.text(o, {
-      x: left,
-      y: stripY,
-      content: "ASSIGNED N VALUES",
-      size: 11,
-      fill: h.C.textSoft,
-      weight: 600,
-    });
-    const blocksY = stripY + 12;
-    h.pill(o, {
-      x: left,
-      y: blocksY,
-      width: 150,
-      height: 30,
-      label: "1  2  3  4",
-      size: 11.5,
-    });
-    h.pill(o, {
-      x: left + 164,
-      y: blocksY,
-      width: 260,
-      height: 30,
-      label: "5–20  ·  UNASSIGNED",
-      size: 11.5,
-      fill: h.C.bgSunk,
-      stroke: h.C.borderStrong,
+    commitCircle("B1", B1, {
+      stroke: h.C.border,
       dash: "4 3",
-      labelFill: h.C.textSoft,
+    });
+    commitCircle("C1", C1, {
+      stroke: h.C.error,
+      strokeWidth: 2,
+    });
+
+    // Explicit traversal grammar: all arrowheads point from a child toward
+    // its parent, which is always farther left.
+    h.text(o, {
+      x: (A1.x + T.x) / 2,
+      y: B1.y - 70,
+      content: "walk: child -> parent (right to left)",
+      size: 10.5,
+      fill: h.C.textSoft,
+      anchor: "middle",
+      weight: 600,
+    });
+
+    const sameX = (A2.x + A1.x) / 2;
+    h.pill(o, {
+      x: sameX - 44,
+      y: T.y - 58,
+      width: 88,
+      height: 24,
+      label: "same date",
+      size: 10.5,
     });
     h.pill(o, {
-      x: left + 438,
-      y: blocksY,
-      width: 78,
-      height: 30,
-      label: "21",
-      size: 11.5,
+      x: sameX - 66,
+      y: T.y + 26,
+      width: 132,
+      height: 24,
+      label: "count + continue",
+      size: 10.5,
     });
-    h.text(o, {
-      x: left + 294,
-      y: blocksY + 50,
-      content: "reverse lookup in this gap: NOT FOUND",
-      size: 11,
-      fill: h.C.error,
-      weight: 600,
-      anchor: "middle",
+
+    h.pill(o, {
+      x: T.x + R + 12,
+      y: T.y - 30,
+      width: 94,
+      height: 24,
+      label: "target date",
+      size: 10.5,
+    });
+    h.pill(o, {
+      x: T.x + R + 12,
+      y: T.y + 6,
+      width: 76,
+      height: 24,
+      label: "count T",
+      size: 10.5,
+    });
+
+    h.pill(o, {
+      x: B1.x - 45,
+      y: B1.y - 50,
+      width: 90,
+      height: 24,
+      label: "older date",
+      size: 10.5,
+      fill: h.C.bgSunk,
+      stroke: h.C.border,
+      labelFill: h.C.textSoft,
+      dash: "4 3",
+    });
+    h.pill(o, {
+      x: B1.x - 140,
+      y: B1.y - 12,
+      width: 116,
+      height: 24,
+      label: "no count + prune",
+      size: 10.5,
+      fill: h.C.bgSunk,
+      stroke: h.C.border,
+      labelFill: h.C.textSoft,
+      dash: "4 3",
+    });
+
+    h.pill(o, {
+      x: C1.x - 158,
+      y: C1.y - 12,
+      width: 134,
+      height: 24,
+      label: "reject calculation",
+      size: 10.5,
+      fill: h.C.bgSunk,
+      stroke: h.C.error,
+      labelFill: h.C.error,
+    });
+    h.pill(o, {
+      x: C1.x - 45,
+      y: C1.y + 28,
+      width: 90,
+      height: 24,
+      label: "later date",
+      size: 10.5,
+      fill: h.C.bgSunk,
+      stroke: h.C.error,
+      labelFill: h.C.error,
     });
   },
 };
