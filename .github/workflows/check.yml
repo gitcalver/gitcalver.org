@@ -27,7 +27,6 @@ jobs:
       - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           enable-cache: true
-      - run: uv python install
       - run: make check-toolchain
       # Prettier comes from package-lock.json; Ruff and ty come from uv.lock.
       # This is the same `make lint` the pre-commit hook runs locally.
@@ -49,7 +48,6 @@ jobs:
       - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           enable-cache: true
-      - run: uv python install
       # Builds the site (catching template errors), byte-compares a clean
       # regeneration, and proves font and favicon tampering is detected.
       - run: make check-fonts

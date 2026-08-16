@@ -32,7 +32,8 @@ directive in `go.mod` (`go tool hugo`) and the font script's deps via
   scene definitions (see below); commit the result
 - `make check-diagrams` — CI guard; byte-compare the committed figure SVGs with
   a clean regeneration
-- `make check-toolchain` — verify the pinned Node, npm, uv, and Python versions
+- `make check-toolchain` — verify the pinned Node, npm, and Python versions and
+  the uv version floor
 - `make check-fonts` — CI guard; build the site, byte-compare a clean font and
   favicon regeneration, and test tamper detection
 - `make check-html` — CI guard; build and assert the go-import tags, `/go`
@@ -139,34 +140,41 @@ woff2 bytes. See `fonts/README.md`.
 ## Deployment
 
 gitcalver.org is served by a Cloudflare **Worker (Static Assets)**, built and
-deployed by **Workers Builds** from `main` on push — build command `make build`
-(output `site/public`), deploy command `npm run deploy`. `wrangler.jsonc` (repo
-root) is the assets-only Worker config pointing at `site/public`, with
-`html_handling: drop-trailing-slash` so pages serve at canonical no-slash URLs
-(`/spec`, not `/spec/`) and `/spec/` 307-redirects to `/spec`. A custom
-`layouts/sitemap.xml` emits those no-slash URLs (Hugo's `.Permalink` keeps the
-trailing slash); keep hand-written internal links no-slash too.
-`site/static/_headers` sets immutable long-cache on the fingerprinted `/fonts/*`
-(the CSS is inlined into the HTML, so the fonts are the only fingerprinted
-assets left). `make check-worker` exercises those headers and the following
-redirects through local Wrangler. `site/static/_redirects` redirects `/sh` to
-`/gitcalver.sh` — the install script, vendored at `site/static/gitcalver.sh`
-from `gitcalver/sh` (Workers Static Assets reject a 200-proxy to an external
-URL, so it's hosted here) — and `/go/*` to `/go` (a 301 splat; see below). `/go`
-is a standalone static page (`site/static/go.html`) carrying the
-`go-import`/`go-source` meta tags that make `gitcalver.org/go` a vanity import
-path, plus a `<meta refresh>` so browsers land on pkg.go.dev while `go get`
-reads the tags. Served as a top-level file (not `/go/index.html`), `/go` itself
-returns 200 — the path `go get` requests. Subpackage imports
+deployed by **Workers Builds** from `main` on push — build command
+`npm ci && make build` (output `site/public`), deploy command `npm run deploy`.
+`wrangler.jsonc` (repo root) is the assets-only Worker config pointing at
+`site/public`, with `html_handling: drop-trailing-slash` so pages serve at
+canonical no-slash URLs (`/spec`, not `/spec/`) and `/spec/` 307-redirects to
+`/spec`. A custom `layouts/sitemap.xml` emits those no-slash URLs (Hugo's
+`.Permalink` keeps the trailing slash); keep hand-written internal links
+no-slash too. `site/static/_headers` sets immutable long-cache on the
+fingerprinted `/fonts/*` (the CSS is inlined into the HTML, so the fonts are the
+only fingerprinted assets left). `make check-worker` exercises those headers and
+the following redirects through local Wrangler. `site/static/_redirects`
+redirects `/sh` to `/gitcalver.sh` — the install script, vendored at
+`site/static/gitcalver.sh` from `gitcalver/sh` (Workers Static Assets reject a
+200-proxy to an external URL, so it's hosted here) — and `/go/*` to `/go` (a 301
+splat; see below). `/go` is a standalone static page (`site/static/go.html`)
+carrying the `go-import`/`go-source` meta tags that make `gitcalver.org/go` a
+vanity import path, plus a `<meta refresh>` so browsers land on pkg.go.dev while
+`go get` reads the tags. Served as a top-level file (not `/go/index.html`),
+`/go` itself returns 200 — the path `go get` requests. Subpackage imports
 (`go get gitcalver.org/go/<subpkg>`) fetch `/go/<subpkg>`, which has no asset;
 the splat 301-redirects it to `/go`, whose `go-import` prefix matches, and
 `go get` follows the redirect. The redirect is applied before the custom
 `404-page` fallback used for other missing routes.
 
-The build needs only Go — Hugo is pinned via the `go tool` directive in
-`go.mod`, so there is no separate `HUGO_VERSION` to pin; `go tool hugo` resolves
-the version from `go.mod`. Set `GO_VERSION` in the Workers build settings to
-match the `go` directive in `go.mod` (currently `1.26.4`).
+The build itself needs only Go and Node — Hugo is pinned via the `go tool`
+directive in `go.mod`, so there is no separate `HUGO_VERSION` to pin;
+`go tool hugo` resolves the version from `go.mod`. Two Workers build settings
+matter: `GO_VERSION` must match the `go` directive in `go.mod` (currently
+`1.26.4`), and `SKIP_DEPENDENCY_INSTALL=true` must stay set — without it the
+build image autodetects the repo's Python project and runs `uv sync` with its
+own bundled uv, whose version can't be pinned (there is no `UV_VERSION`) and
+which the deploy build doesn't need (the font pipeline runs locally, and its
+output is committed). The skip is all-or-nothing — it also disables the
+automatic `npm clean-install` — which is why the build command starts with
+`npm ci`: `npm run deploy` needs the locked Wrangler.
 
 ## Conventions
 

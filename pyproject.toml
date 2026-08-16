@@ -7,6 +7,8 @@
 [project]
 name = "gitcalver-fonts"
 version = "0"
+# Exact pin — this alone selects the interpreter uv installs (there is no
+# .python-version, so Cloudflare's build image doesn't install Python either).
 requires-python = "==3.14.6"
 dependencies = [
   "fonttools[woff]==4.63.0",
@@ -18,7 +20,10 @@ dev = ["ruff", "ty"]
 
 [tool.uv]
 package = false
-required-version = "==0.11.28"
+# A floor, not an exact pin: Homebrew supplies whatever uv is current, so an
+# exact version is unenforceable locally. Reproducibility comes from uv.lock;
+# this only rejects a uv too old to honor it.
+required-version = ">=0.12.3"
 
 # Mirrors the shared Ruff config in github.com/shields/right-answers: select
 # every rule, then pare back the few that are noise or conflict with house style.

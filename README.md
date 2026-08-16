@@ -17,9 +17,9 @@ The implementations live in separate repositories:
 
 ## Work on the site
 
-The site is built with Hugo. Runtime versions are pinned in `.node-version` and
-`.python-version`; uv enforces its version through `pyproject.toml`, and npm and
-Python dependencies are locked in `package-lock.json` and `uv.lock`.
+The site is built with Hugo. Node is pinned in `.node-version`; `pyproject.toml`
+pins Python exactly and sets a uv version floor, and npm and Python dependencies
+are locked in `package-lock.json` and `uv.lock`.
 
 ```sh
 npm ci           # install the locked Node tooling
@@ -43,8 +43,8 @@ Run `make fonts` and commit the regenerated font files whenever rendered text
 introduces a codepoint that the current subsets do not contain.
 
 The deployed site is served by a Cloudflare Static Assets Worker. Workers Builds
-uses `make build` followed by `npm run deploy`, which invokes the locked
-Wrangler. `make check-worker` exercises the same configuration locally.
+uses `npm ci && make build` followed by `npm run deploy`, which invokes the
+locked Wrangler. `make check-worker` exercises the same configuration locally.
 Canonical pages omit trailing slashes; keep internal links in that form.
 
 See [ROADMAP.md](ROADMAP.md) for release status and planned work.

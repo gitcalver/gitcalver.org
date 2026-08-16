@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # Repo tasks. Hugo is pinned via the `go tool` directive in go.mod, Python and
-# uv via .python-version + pyproject.toml, and Node tools via package-lock.json.
+# uv via pyproject.toml, and Node tools via package-lock.json.
 HUGO   := go tool hugo
 SITE   := site
 PUBLIC := $(SITE)/public
@@ -48,13 +48,15 @@ social-card:
 diagrams:
 	node scripts/diagrams/render.mjs
 
-## check-toolchain: fail unless the exact Node, npm, uv, and Python versions
-## pinned for reproducible site work are active.
+## check-toolchain: fail unless the exact Node, npm, and Python versions
+## pinned for reproducible site work are active and uv meets the floor in
+## pyproject.toml (uv can't be pinned exactly: Homebrew supplies whatever
+## is current).
 check-toolchain:
 	@expected=$$(cat .node-version); test "$$(node --version)" = "v$$expected" || { echo "FAIL: Node $$expected required"; exit 1; }
 	@expected=$$(node -p "require('./package.json').packageManager.slice(4)"); test "$$(npm --version)" = "$$expected" || { echo "FAIL: npm $$expected required"; exit 1; }
-	@expected=$$(sed -n 's/^required-version = "==\(.*\)"$$/\1/p' pyproject.toml); test "$$(uv --version | awk '{print $$2}')" = "$$expected" || { echo "FAIL: uv $$expected required"; exit 1; }
-	@expected=$$(cat .python-version); test "$$(uv run --frozen --quiet python --version)" = "Python $$expected" || { echo "FAIL: Python $$expected required"; exit 1; }
+	@expected=$$(sed -n 's/^required-version = ">=\(.*\)"$$/\1/p' pyproject.toml); test -n "$$expected" || { echo "FAIL: cannot parse required-version in pyproject.toml"; exit 1; }; test "$$(printf '%s\n%s\n' "$$expected" "$$(uv --version | awk '{print $$2}')" | sort -V | head -n1)" = "$$expected" || { echo "FAIL: uv >=$$expected required"; exit 1; }
+	@expected=$$(sed -n 's/^requires-python = "==\(.*\)"$$/\1/p' pyproject.toml); test -n "$$expected" || { echo "FAIL: cannot parse requires-python in pyproject.toml"; exit 1; }; test "$$(uv run --frozen --quiet python --version)" = "Python $$expected" || { echo "FAIL: Python $$expected required"; exit 1; }
 	@echo "toolchain check OK"
 
 ## check-diagrams: byte-compare the committed figure SVGs with a clean
