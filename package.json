@@ -32,7 +32,7 @@
     "@gitgraph/js": "1.4.0",
     "@lhci/cli": "0.15.1",
     "jsdom": "30.0.1",
-    "playwright": "1.61.1",
+    "playwright": "1.62.1",
     "prettier": "3.9.6",
     "wrangler": "4.111.0"
   }
