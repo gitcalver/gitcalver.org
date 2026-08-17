@@ -28,7 +28,7 @@
     "test:worker": "node tests/worker.mjs"
   },
   "devDependencies": {
-    "@axe-core/playwright": "4.12.1",
+    "@axe-core/playwright": "4.13.0",
     "@gitgraph/js": "1.4.0",
     "@lhci/cli": "0.15.1",
     "jsdom": "30.0.1",
