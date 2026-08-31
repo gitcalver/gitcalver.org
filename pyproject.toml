@@ -11,7 +11,7 @@ version = "0"
 # .python-version, so Cloudflare's build image doesn't install Python either).
 requires-python = "==3.14.7"
 dependencies = [
-  "fonttools[woff]==4.63.0",
+  "fonttools[woff]==4.64.0",
   "brotli==1.2.0",
 ]
 
