@@ -32,7 +32,7 @@ const outDir = path.join(repo, "site", "assets", "diagrams");
 // Read just enough of a TrueType font to measure deterministic horizontal
 // advances. Browser kerning is usually negative; a small final allowance
 // keeps the analytic SVG bounds conservative without monospace-sized gaps.
-function trueTypeMetrics(buffer) {
+function trueTypeMetrics(buffer, name) {
   const table = (wanted) => {
     const count = buffer.readUInt16BE(4);
     for (let index = 0; index < count; index += 1) {
@@ -63,7 +63,7 @@ function trueTypeMetrics(buffer) {
     if (format4 === null || platform === 3) format4 = candidate;
     if (platform === 3) break;
   }
-  assert.ok(format4 !== null, "IBM Plex Sans needs a format 4 cmap");
+  assert.ok(format4 !== null, `${name} needs a format 4 cmap`);
 
   const segmentCount = buffer.readUInt16BE(format4 + 6) / 2;
   const endCodes = format4 + 14;
@@ -107,13 +107,14 @@ function trueTypeMetrics(buffer) {
   };
 }
 
-const sansTextWidth = trueTypeMetrics(
-  await fs.readFile(path.join(repo, "fonts", "src", "IBMPlexSans-Text.ttf")),
+const interDir = path.join(repo, "fonts", "src", "inter");
+const sansRegularWidth = trueTypeMetrics(
+  await fs.readFile(path.join(interDir, "Inter-Regular.ttf")),
+  "Inter-Regular.ttf",
 );
 const sansSemiboldWidth = trueTypeMetrics(
-  await fs.readFile(
-    path.join(repo, "fonts", "src", "IBMPlexSans-SemiBold.ttf"),
-  ),
+  await fs.readFile(path.join(interDir, "Inter-SemiBold.ttf")),
+  "Inter-SemiBold.ttf",
 );
 
 const umd = await fs.readFile(
@@ -163,7 +164,7 @@ async function renderFigure(id) {
   const { window } = dom;
   try {
     window.diagramTextWidth = (text, size, weight) =>
-      (Number(weight) >= 550 ? sansSemiboldWidth : sansTextWidth)(text, size);
+      (Number(weight) >= 550 ? sansSemiboldWidth : sansRegularWidth)(text, size);
     window.eval(umd);
     window.eval(helpers);
     window.eval(scene);
@@ -254,25 +255,25 @@ async function previewPage() {
   assert.equal(roots.length, 2, "expected light and dark :root blocks");
   // Embed the fonts so the preview is self-contained wherever it's opened.
   const font = async (weight, file) => {
-    const data = await fs.readFile(path.join(repo, "fonts", "src", file));
+    const data = await fs.readFile(path.join(interDir, file));
     return (
-      `@font-face{font-family:"IBM Plex Sans";font-style:normal;` +
+      `@font-face{font-family:Inter;font-style:normal;` +
       `font-weight:${weight};src:url("data:font/ttf;base64,` +
       `${data.toString("base64")}")}`
     );
   };
   return (
     `<!doctype html><html><head><meta charset="utf-8"><style>` +
-    (await font("400 450", "IBMPlexSans-Text.ttf")) +
-    (await font("600", "IBMPlexSans-SemiBold.ttf")) +
+    (await font("400", "Inter-Regular.ttf")) +
+    (await font("600", "Inter-SemiBold.ttf")) +
     `:root{${roots[0][1]}}` +
     `@media (prefers-color-scheme: dark){:root{${roots[1][1]}}}` +
     // Open preview.html#dark to force dark mode where the browser's
     // prefers-color-scheme can't be toggled.
     `:root.dark{${roots[1][1]}}` +
     `body{background:var(--bg);color:var(--text);` +
-    `font-family:"IBM Plex Sans",system-ui,sans-serif;` +
-    `font-weight:450;padding:24px}` +
+    `font-family:Inter,system-ui,sans-serif;` +
+    `font-weight:400;padding:24px}` +
     `</style><script>` +
     `addEventListener("hashchange",sync);function sync(){` +
     `document.documentElement.classList.toggle("dark",location.hash==="#dark")}` +

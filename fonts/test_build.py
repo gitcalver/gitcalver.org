@@ -1,6 +1,7 @@
 # Copyright © 2026 Michael Shields
 # SPDX-License-Identifier: MIT
-"""Prove the generated-asset comparison catches font and favicon tampering."""
+"""Prove the generated-asset comparison catches font and favicon tampering, and
+that a codepoint no vendored font covers fails the build instead of shipping."""
 
 import pathlib
 import sys
@@ -38,8 +39,30 @@ def require_single_problem(
         )
 
 
+def require_missing_glyph_exit(root: pathlib.Path) -> None:
+    """A rendered page using U+1F600 (in no vendored font) must abort the build."""
+    html_dir = root / "html"
+    html_dir.mkdir(parents=True)
+    (html_dir / "index.html").write_text("<p>\U0001f600</p>", encoding="utf-8")
+    try:
+        build.build_assets(
+            str(html_dir),
+            root / "fonts",
+            root / "favicon.svg",
+            announce=False,
+        )
+    except SystemExit as exit_:
+        if "U+1F600" not in str(exit_.code):
+            sys.exit(f"missing-glyph test failed: unexpected exit {exit_.code!r}")
+    else:
+        sys.exit(
+            "missing-glyph test failed: an uncovered codepoint was subset silently",
+        )
+
+
 def main() -> None:
     with tempfile.TemporaryDirectory(prefix="gitcalver-font-test-") as tmp:
+        require_missing_glyph_exit(pathlib.Path(tmp) / "missing-glyph")
         paths = matching_assets(pathlib.Path(tmp))
         if build.compare_assets(*paths):
             sys.exit("tamper test failed: identical generated assets did not match")
@@ -52,7 +75,7 @@ def main() -> None:
         paths[3].write_bytes(b"<svg>tampered</svg>\n")
         require_single_problem(build.compare_assets(*paths), paths[3].name)
 
-    print("font tamper tests OK")
+    print("font tamper and missing-glyph tests OK")
 
 
 if __name__ == "__main__":

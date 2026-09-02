@@ -32,8 +32,8 @@ build:
 serve:
 	$(HUGO) server -s $(SITE) --cacheDir "$(CACHE)"
 
-## fonts: regenerate subsetted woff2 + outlined favicon from the vendored
-## IBM Plex TTFs, with the glyph set derived from the rendered HTML.
+## fonts: regenerate subsetted woff2 + outlined favicon from the vendored Inter
+## and IBM Plex Mono TTFs, with the glyph set derived from the rendered HTML.
 fonts:
 	$(RENDER)
 	$(PY) build $(PUBLIC)

@@ -4,11 +4,11 @@
   width="438"
   height="365"
   role="img"
-  viewBox="4 -170.7625 438 365"
+  viewBox="4 -170.1745 438 365"
   aria-labelledby="fig-1-title fig-1-desc"
   style="
-    font-family: &quot;IBM Plex Sans&quot;, system-ui, sans-serif;
-    font-weight: 450;
+    font-family: Inter, system-ui, sans-serif;
+    font-weight: 400;
     font-synthesis: none;
   "
 >
@@ -98,7 +98,7 @@
             dominant-baseline="central"
             style="
               font:
-                450 13px &quot;IBM Plex Sans&quot;,
+                400 13px Inter,
                 system-ui,
                 sans-serif;
             "
@@ -143,7 +143,7 @@
             dominant-baseline="central"
             style="
               font:
-                450 13px &quot;IBM Plex Sans&quot;,
+                400 13px Inter,
                 system-ui,
                 sans-serif;
             "
@@ -188,7 +188,7 @@
             dominant-baseline="central"
             style="
               font:
-                450 13px &quot;IBM Plex Sans&quot;,
+                400 13px Inter,
                 system-ui,
                 sans-serif;
             "

@@ -5,15 +5,16 @@
 // template bound to the site's design tokens, an annotation overlay (arrows,
 // pills, checks, crosses), and the finalize pass that turns gitgraph.js output
 // into the site's accessible, theme-aware inline SVG. Also provides the SVG
-// geometry jsdom lacks (getBBox), computed analytically with conservative IBM
-// Plex Sans bounds so rendering stays deterministic and browser-free.
+// geometry jsdom lacks (getBBox), computed analytically with conservative
+// Inter bounds so rendering stays deterministic and browser-free.
 
 "use strict";
 (() => {
   const NS = "http://www.w3.org/2000/svg";
   const TEXT_BOUND_ADVANCE = 1.1;
-  const TEXT_ASCENT = 1.025;
-  const TEXT_DESCENT = 0.275;
+  // Inter's hhea ascender and descender (1984 and 494 on a 2048 em).
+  const TEXT_ASCENT = 0.969;
+  const TEXT_DESCENT = 0.242;
   const TEXT_CENTRAL_HALF = 0.65;
 
   // Design tokens from site/assets/css/main.css. The rendered SVG keeps these
@@ -63,7 +64,7 @@
         message: { display: false, ...(overrides.commit || {}).message },
         dot: {
           size: DOT_RADIUS,
-          font: "450 13px 'IBM Plex Sans', system-ui, sans-serif",
+          font: "400 13px Inter, system-ui, sans-serif",
           ...(overrides.commit || {}).dot,
         },
       },
@@ -155,7 +156,7 @@
     if (attr) return Number(attr);
     const style = element.getAttribute("style") || "";
     const match = style.match(/font:\s*(\d+)/);
-    return match ? Number(match[1]) : 450;
+    return match ? Number(match[1]) : 400;
   }
 
   const SKIP = new Set(["defs", "clipPath", "marker", "title", "desc"]);
@@ -680,8 +681,8 @@
     svg.setAttribute("aria-labelledby", `${id}-title ${id}-desc`);
     svg.setAttribute(
       "style",
-      "font-family:'IBM Plex Sans',system-ui,sans-serif;" +
-        "font-weight:450;font-synthesis:none",
+      "font-family:Inter,system-ui,sans-serif;" +
+        "font-weight:400;font-synthesis:none",
     );
 
     const doc = svg.ownerDocument;

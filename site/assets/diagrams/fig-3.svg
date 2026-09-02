@@ -2,13 +2,13 @@
 <!-- Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0 -->
 <svg
   width="652"
-  height="365"
+  height="364"
   role="img"
-  viewBox="4 -31.275 652 365"
+  viewBox="4 -30.659 652 364"
   aria-labelledby="fig-3-title fig-3-desc"
   style="
-    font-family: &quot;IBM Plex Sans&quot;, system-ui, sans-serif;
-    font-weight: 450;
+    font-family: Inter, system-ui, sans-serif;
+    font-weight: 400;
     font-synthesis: none;
   "
 >
@@ -82,7 +82,7 @@
             dominant-baseline="central"
             style="
               font:
-                450 13px &quot;IBM Plex Sans&quot;,
+                400 13px Inter,
                 system-ui,
                 sans-serif;
             "
@@ -127,7 +127,7 @@
             dominant-baseline="central"
             style="
               font:
-                450 13px &quot;IBM Plex Sans&quot;,
+                400 13px Inter,
                 system-ui,
                 sans-serif;
             "
@@ -172,7 +172,7 @@
             dominant-baseline="central"
             style="
               font:
-                450 13px &quot;IBM Plex Sans&quot;,
+                400 13px Inter,
                 system-ui,
                 sans-serif;
             "
@@ -217,7 +217,7 @@
             dominant-baseline="central"
             style="
               font:
-                450 13px &quot;IBM Plex Sans&quot;,
+                400 13px Inter,
                 system-ui,
                 sans-serif;
             "
@@ -317,7 +317,7 @@
             dominant-baseline="central"
             style="
               font:
-                450 13px &quot;IBM Plex Sans&quot;,
+                400 13px Inter,
                 system-ui,
                 sans-serif;
             "

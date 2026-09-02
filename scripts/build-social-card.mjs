@@ -34,7 +34,7 @@ try {
   assert.equal(
     await page.evaluate(
       () =>
-        document.fonts.size === 4 &&
+        document.fonts.size === 3 &&
         [...document.fonts].every((font) => font.status === "loaded"),
     ),
     true,

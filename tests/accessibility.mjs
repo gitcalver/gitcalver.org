@@ -113,6 +113,14 @@ try {
             gutter: Number.parseFloat(
               getComputedStyle(mainWrap).paddingInlineStart,
             ),
+            italicFaceLoaded: [...document.fonts].some(
+              (face) =>
+                face.family.replaceAll('"', "") === "Inter" &&
+                face.style === "italic" &&
+                face.status === "loaded",
+            ),
+            proseEmphasisCount: document.querySelectorAll("article.prose em")
+              .length,
             navLinks: [...document.querySelectorAll("header .nav-links a")]
               .filter((element) => getComputedStyle(element).display !== "none")
               .map((element) => ({
@@ -161,13 +169,19 @@ try {
         assert.equal(metrics.gutter, viewport.gutter, `${label} main gutter`);
         assert.match(
           metrics.bodyFontFamily,
-          /^"ibm plex sans"/i,
+          /^"?inter"?,/i,
           `${label} body typeface`,
         );
         assert(
           metrics.bodyFontSize >= 16,
           `${label} body text is at least 16px`,
         );
+        if (metrics.proseEmphasisCount > 0) {
+          assert(
+            metrics.italicFaceLoaded,
+            `${label} renders prose emphasis with the Inter italic face`,
+          );
+        }
         assert(
           metrics.bodyLineHeight / metrics.bodyFontSize >= 1.5,
           `${label} body line height is at least 1.5`,

@@ -72,30 +72,35 @@ gitgraph.js scene in `scripts/diagrams/figures/<id>.js`, rendered by
 `scripts/diagrams/render.mjs` into a committed SVG in `site/assets/diagrams/`
 that the `{{</* diagram "<id>" */>}}` shortcode inlines (the `<figure>` wrapper
 and `<figcaption>` stay in the Markdown). Rendering is **offline and
-deterministic** — the scenes run against jsdom with conservative analytic IBM
-Plex Sans text bounds, so no browser is involved and `make check-diagrams`
-byte-compares in CI. To change a figure, edit its scene, run `make diagrams`,
-and commit both files; never edit the generated SVGs. Scene rules: colors only
-via the site's CSS custom properties (the SVGs follow the page's light/dark
-scheme), every commit gets an explicit `fig-N-`-prefixed hash (the harness
-rejects gitgraph's random ones), and all visible strings stay within the glyph
-set the site already uses or `make check-fonts` will demand a font regeneration.
-For visual review, `render.mjs` takes `--preview FILE` (self-contained HTML,
-`#dark` forces dark mode) and `--screenshot DIR` (light/dark PNGs via the
-package-lock-pinned Playwright browser; the only diagram task that needs one).
+deterministic** — the scenes run against jsdom with conservative analytic Inter
+text bounds, so no browser is involved and `make check-diagrams` byte-compares
+in CI. To change a figure, edit its scene, run `make diagrams`, and commit both
+files; never edit the generated SVGs. Scene rules: colors only via the site's
+CSS custom properties (the SVGs follow the page's light/dark scheme), every
+commit gets an explicit `fig-N-`-prefixed hash (the harness rejects gitgraph's
+random ones), and all visible strings stay within the glyph set the site already
+uses or `make check-fonts` will demand a font regeneration. For visual review,
+`render.mjs` takes `--preview FILE` (self-contained HTML, `#dark` forces dark
+mode) and `--screenshot DIR` (light/dark PNGs via the package-lock-pinned
+Playwright browser; the only diagram task that needs one).
 
 ## Font pipeline (the non-obvious part)
 
-The woff2 in `site/assets/fonts/` are **subsets** of the vendored IBM Plex
-TrueType files in `fonts/src/` — only the glyphs the rendered HTML actually uses
-(~90 KB total). `fonts/build.py` builds the site, scans every codepoint in the
-output HTML, and subsets each weight to that set; it also outlines the `gcv`
-favicon from Mono SemiBold so the favicon carries no font dependency.
+The woff2 in `site/assets/fonts/` are **subsets** of the vendored Inter (text)
+and IBM Plex Mono (code) TrueType files in `fonts/src/` — only the glyphs the
+rendered HTML actually uses, with only the OpenType features browsers apply by
+default (~105 KB total; keeping Inter's stylistic sets would push that to ~185
+KB). `fonts/build.py` builds the site, scans every codepoint in the output HTML,
+and subsets each weight to that set; it also outlines the `gcv` favicon from
+Inter SemiBold so the favicon carries no font dependency.
 
 The sources are the **TrueType (`glyf`) builds**, not the CFF `.otf` builds, on
 purpose: iOS Lockdown Mode (Safari 26+) runs web fonts through a memory-safe
 parser that rejects CFF's charstring interpreter, so CFF subsets silently fall
 back to the system serif. `glyf` outlines pass it. Don't switch back to `.otf`.
+Inter ships as **static weights**, not its variable build, for the same reason
+and because the figure renderer measures text from static advances; see
+`fonts/README.md`.
 
 **If you add a character the site doesn't already use** (a new symbol, accented
 letter, arrow, etc.), `make check-fonts` will detect that a clean regeneration

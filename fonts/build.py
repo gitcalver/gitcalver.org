@@ -2,8 +2,9 @@
 # Copyright © 2026 Michael Shields
 # SPDX-License-Identifier: MIT
 """Regenerate the site's subsetted web fonts and outlined favicon from the
-vendored IBM Plex TrueType files (fonts/src/), deriving the glyph set from the
-actually rendered HTML so any character used on the site is covered.
+vendored Inter and IBM Plex Mono TrueType files (fonts/src/), deriving the
+glyph set from the actually rendered HTML so any character used on the site is
+covered.
 
 TrueType (glyf) outlines, not the CFF .otf build: iOS Lockdown Mode (Safari 26+)
 runs web fonts through a memory-safe parser that rejects CFF's charstring VM, so
@@ -30,21 +31,49 @@ from fontTools.ttLib import TTFont
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 SRC = REPO / "fonts" / "src"
+INTER = SRC / "inter"
+PLEX = SRC / "ibm-plex"
 OUT_FONTS = REPO / "site" / "assets" / "fonts"
 FAVICON = REPO / "site" / "static" / "favicon.svg"
 
 # Source TTF -> published woff2. The @font-face weights in main.css match these.
 WEIGHTS = [
-    ("IBMPlexSans-Text.ttf", "ibm-plex-sans-450.woff2"),
-    ("IBMPlexSans-Medium.ttf", "ibm-plex-sans-500.woff2"),
-    ("IBMPlexSans-SemiBold.ttf", "ibm-plex-sans-600.woff2"),
-    ("IBMPlexSans-Bold.ttf", "ibm-plex-sans-700.woff2"),
-    ("IBMPlexMono-Regular.ttf", "ibm-plex-mono-400.woff2"),
-    ("IBMPlexMono-Medium.ttf", "ibm-plex-mono-500.woff2"),
-    ("IBMPlexMono-SemiBold.ttf", "ibm-plex-mono-600.woff2"),
+    (INTER / "Inter-Regular.ttf", "inter-400.woff2"),
+    (INTER / "Inter-Medium.ttf", "inter-500.woff2"),
+    (INTER / "Inter-SemiBold.ttf", "inter-600.woff2"),
+    (INTER / "Inter-Bold.ttf", "inter-700.woff2"),
+    (INTER / "Inter-Italic.ttf", "inter-400-italic.woff2"),
+    (PLEX / "IBMPlexMono-Regular.ttf", "ibm-plex-mono-400.woff2"),
+    (PLEX / "IBMPlexMono-Medium.ttf", "ibm-plex-mono-500.woff2"),
+    (PLEX / "IBMPlexMono-SemiBold.ttf", "ibm-plex-mono-600.woff2"),
 ]
-FAVICON_SRC = "IBMPlexMono-SemiBold.ttf"
-GENERATED_FONT_FILES = [out for _, out in WEIGHTS] + ["OFL.txt"]
+# Each family's OFL text ships next to its subsets, as the license requires.
+LICENSES = [
+    (INTER / "LICENSE.txt", "OFL-Inter.txt"),
+    (PLEX / "OFL.txt", "OFL-IBM-Plex.txt"),
+]
+FAVICON_SRC = INTER / "Inter-SemiBold.ttf"
+GENERATED_FONT_FILES = [out for _, out in WEIGHTS] + [out for _, out in LICENSES]
+
+# The OpenType features browsers apply without being asked; the subsets keep
+# only these. Both families also carry optional features (Inter's ss01-ss08,
+# cv01-cv14, tnum, case, ...; Plex Mono's ss01-ss09, zero, onum, ...) whose
+# alternate glyphs are dropped, since no CSS enables them; closing over them
+# would double Inter's subsets. So before enabling one in CSS through
+# font-feature-settings, add its tag HERE, or the subset silently lacks the
+# glyphs and the setting does nothing.
+LAYOUT_FEATURES = [
+    "ccmp",
+    "locl",
+    "mark",
+    "mkmk",
+    "kern",
+    "liga",
+    "clig",
+    "calt",
+    "rlig",
+    "rclt",
+]
 
 # Always keep printable ASCII + NBSP, independent of the current content.
 MIN_CODEPOINT = 0x20  # drop C0 control characters
@@ -85,7 +114,7 @@ def _cmap(font: TTFont) -> dict[int, str]:
 def _subsetter() -> Subsetter:
     opt = Options()
     opt.flavor = "woff2"
-    opt.layout_features = ["*"]  # keep kerning et al.
+    opt.layout_features = LAYOUT_FEATURES
     # Keep the full name table for license identification. fontTools accepts the
     # "*" wildcard at runtime, though its stub types name_IDs as list[int].
     opt.name_IDs = ["*"]  # ty: ignore[invalid-assignment]
@@ -106,10 +135,25 @@ def build_assets(
     if announce:
         print(f"building fonts for {len(cps)} codepoints derived from {html_dir}")
     out_fonts.mkdir(parents=True, exist_ok=True)
+    # Load and validate every font before saving any of them, so a glyph
+    # missing from one weight aborts the build without leaving the others
+    # already overwritten (a partially regenerated site/assets/fonts/).
+    fonts: list[tuple[TTFont, str]] = []
     for ttf, out in WEIGHTS:
         # recalcTimestamp=False keeps the source's head.modified instead of
         # stamping "now", so the output woff2 are byte-reproducible.
-        font = TTFont(SRC / ttf, recalcTimestamp=False)
+        font = TTFont(ttf, recalcTimestamp=False)
+        # The subsetter drops unmapped codepoints silently, which would ship
+        # as a silent fallback to the system font for that character. Every
+        # family is held to the whole set — a deliberate over-approximation,
+        # since the HTML scan cannot tell prose from code, so a glyph only one
+        # family has (box drawing in a code sample, say) fails here too.
+        missing = cps - _cmap(font).keys()
+        if missing:
+            names = ", ".join(f"U+{c:04X}" for c in sorted(missing))
+            sys.exit(f"{ttf.name}: no glyph for {names}, which the site uses")
+        fonts.append((font, out))
+    for font, out in fonts:
         ss = _subsetter()
         ss.populate(unicodes=cps)
         ss.subset(font)
@@ -117,7 +161,8 @@ def build_assets(
         font.save(out_fonts / out)
         if announce:
             print(f"  {out:28} {(out_fonts / out).stat().st_size:>7} bytes")
-    (out_fonts / "OFL.txt").write_bytes((SRC / "OFL.txt").read_bytes())
+    for src, out in LICENSES:
+        (out_fonts / out).write_bytes(src.read_bytes())
     _favicon(favicon)
     if announce:
         print("  favicon.svg (outlined paths)")
@@ -129,8 +174,8 @@ def build(html_dir: str) -> None:
 
 
 def _favicon(path: pathlib.Path) -> None:
-    """Outline 'gcv' (Mono SemiBold) to SVG paths — no font dependency."""
-    font = TTFont(SRC / FAVICON_SRC)
+    """Outline 'gcv' (Inter SemiBold) to SVG paths — no font dependency."""
+    font = TTFont(FAVICON_SRC)
     scale = 21.0 / font["head"].unitsPerEm  # ty: ignore[unresolved-attribute]
     cmap, gs, hmtx = _cmap(font), font.getGlyphSet(), font["hmtx"]
     names = [cmap[ord(c)] for c in "gcv"]
