@@ -107,6 +107,14 @@ letter, arrow, etc.), `make check-fonts` will detect that a clean regeneration
 differs. Fix it with `make fonts` and commit the regenerated woff2 +
 `favicon.svg`.
 
+**If you enable an OpenType feature** in CSS (`font-feature-settings` or a
+`font-variant-*` keyword) that `LAYOUT_FEATURES` in `fonts/build.py` doesn't
+keep, `make fonts` and `make check-fonts` fail naming the tag: the subsets would
+lack its glyphs and the CSS would silently do nothing. Add the tag to the list
+first, then `make fonts`. Adding a whole face is self-bootstrapping:
+`make fonts` seeds an empty placeholder for any missing woff2 before the render
+that fingerprints it.
+
 Output is **byte-reproducible**: `fonttools`/`brotli` are version-pinned in
 `pyproject.toml` (and locked in `uv.lock`) and source timestamps are preserved
 (`recalcTimestamp=False`). Don't bump those versions casually — it changes the
@@ -127,7 +135,9 @@ woff2 bytes. See `fonts/README.md`.
 - `site/assets/css/main.css` is run through `resources.ExecuteAsTemplate` — it
   contains Hugo template syntax (`{{ ... }}` for fingerprinted font URLs), then
   is minified and inlined into every page's `<style>`. It is a template, not
-  plain CSS, so every byte ships on each load.
+  plain CSS, so every byte ships on each load. Typefaces come from its
+  `--font-sans` / `--font-mono` custom properties; only the `@font-face`
+  descriptors, which can't reference them, name the families literally.
 - The `.chroma` syntax-highlight rules at the end of `main.css` are a **pruned**
   Modus theme: only the Chroma tokens the rendered code samples actually emit
   are styled (Chroma tags far more than the samples use). If you add or edit a

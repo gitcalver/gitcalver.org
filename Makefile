@@ -34,7 +34,12 @@ serve:
 
 ## fonts: regenerate subsetted woff2 + outlined favicon from the vendored Inter
 ## and IBM Plex Mono TTFs, with the glyph set derived from the rendered HTML.
+## A face new to the checkout gets an empty placeholder first, so the render
+## that derives the glyph set can fingerprint it before the build replaces it.
+## Only here: a placeholder in a deploy build or a check would be a silently
+## empty font, where the render's hard failure is the right outcome.
 fonts:
+	$(PY) seed
 	$(RENDER)
 	$(PY) build $(PUBLIC)
 
@@ -65,7 +70,8 @@ check-diagrams:
 	node scripts/diagrams/render.mjs --check
 
 ## check-fonts: byte-compare the committed fonts and favicon with a clean,
-## pinned regeneration; then prove the comparison catches tampering.
+## pinned regeneration; then prove that comparison and the build's guards
+## (uncovered glyphs, unkept OpenType features, placeholder seeding) hold.
 check-fonts:
 	$(RENDER)
 	$(PY) check $(PUBLIC)

@@ -119,8 +119,22 @@ try {
                 face.style === "italic" &&
                 face.status === "loaded",
             ),
-            proseEmphasisCount: document.querySelectorAll("article.prose em")
-              .length,
+            proseEmphasisCount:
+              document.querySelectorAll("article.prose em").length,
+            // Table headers are weight 600, so code inside them needs the
+            // IBM Plex Mono SemiBold face — no CSS selector names it, which
+            // is how a "dead weight" cleanup would drop it.
+            // The CSS minifier unquotes and lowercases this family name.
+            monoSemiBoldFaceLoaded: [...document.fonts].some(
+              (face) =>
+                face.family.replaceAll('"', "").toLowerCase() ===
+                  "ibm plex mono" &&
+                face.weight === "600" &&
+                face.status === "loaded",
+            ),
+            tableHeaderCodeCount: document.querySelectorAll(
+              "article.prose thead th code",
+            ).length,
             navLinks: [...document.querySelectorAll("header .nav-links a")]
               .filter((element) => getComputedStyle(element).display !== "none")
               .map((element) => ({
@@ -180,6 +194,12 @@ try {
           assert(
             metrics.italicFaceLoaded,
             `${label} renders prose emphasis with the Inter italic face`,
+          );
+        }
+        if (metrics.tableHeaderCodeCount > 0) {
+          assert(
+            metrics.monoSemiBoldFaceLoaded,
+            `${label} renders table-header code with the IBM Plex Mono SemiBold face`,
           );
         }
         assert(
