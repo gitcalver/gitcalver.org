@@ -31,7 +31,7 @@
     "@axe-core/playwright": "4.13.0",
     "@gitgraph/js": "1.4.0",
     "@lhci/cli": "0.15.1",
-    "jsdom": "30.0.1",
+    "jsdom": "30.1.0",
     "playwright": "1.63.0",
     "prettier": "3.9.7",
     "wrangler": "4.133.0"
