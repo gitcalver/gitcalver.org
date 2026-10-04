@@ -77,8 +77,7 @@ conversions without disruption.
 
 Shell and Python require Git with support for the repository’s matching object
 format. Rust includes both formats in one build. Go rejects SHA-256 repositories
-with exit code 1 and an unsupported-format error, because it uses `go-git`,
-which does not yet support SHA-256.
+with exit code 1, because it uses `go-git`, which does not yet support SHA-256.
 
 Full reverse lookups return the complete object ID: 40 characters for SHA-1 or
 64 for SHA-256. Short lookups and dirty suffixes use the first seven characters

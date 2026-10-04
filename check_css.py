@@ -9,7 +9,8 @@ samples exercise fewer still). This is the syntax-highlighting analog of
 `make check-fonts`: it builds nothing itself but, given the rendered HTML, fails
 if a content edit introduces a Modus-colored token that main.css doesn't
 style — which would silently fall back to the default text color — and prints
-the rule to add.
+the rule to add. It also fails if a sample enables line numbers or line
+highlights, since main.css carries no .chroma layout rules for them.
 
   python check_css.py <rendered-html-dir>
 

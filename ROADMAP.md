@@ -23,9 +23,9 @@ conformance suite maintained in `gitcalver/sh`. The Python release still
 implements 0.2; its 0.3 port is merged but unreleased. Each implementation keeps
 its own release cycle.
 
-The Rust port is exploratory and is not a 0.2 release gate. Rust projects can
-use the shell reference implementation during publication without adding version
-state to the source manifest.
+The Rust port is exploratory. Rust projects can use the shell reference
+implementation during publication without adding version state to the source
+manifest.
 
 ## Version 0.2
 

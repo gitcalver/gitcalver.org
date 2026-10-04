@@ -475,26 +475,20 @@ footer.site-footer{border-top:1px solid var(--border);padding:48px 0 60px;margin
    the syntax-highlighting analog of `make check-fonts`. */
 .chroma{color:var(--text);background-color:var(--bg-sunk)}
 .chroma .line{display:flex}
-.chroma .k,.chroma .kd,.chroma .kn{color:#5317ac}
-.chroma .kc{color:#0000c0}
-.chroma .nb{color:#8f0075}
+.chroma .k{color:#5317ac}
 .chroma .nv{color:#00538b}
-.chroma .nf{color:#721045}
 .chroma .l{color:#0000c0}
-.chroma .s,.chroma .s2,.chroma .sd{color:#2544bb}
+.chroma .s2,.chroma .sd{color:#2544bb}
 .chroma .m{color:#0000c0}
 .chroma .o{color:#00538b}
 .chroma .c,.chroma .c1{color:#505050}
 
 /* syntax highlighting — modus-vivendi (dark) */
 @media (prefers-color-scheme: dark){
-  .chroma .k,.chroma .kd,.chroma .kn{color:#b6a0ff}
-  .chroma .kc{color:#00bcff}
-  .chroma .nb{color:#f78fe7}
+  .chroma .k{color:#b6a0ff}
   .chroma .nv{color:#00d3d0}
-  .chroma .nf{color:#feacd0}
   .chroma .l{color:#00bcff}
-  .chroma .s,.chroma .s2,.chroma .sd{color:#79a8ff}
+  .chroma .s2,.chroma .sd{color:#79a8ff}
   .chroma .m{color:#00bcff}
   .chroma .o{color:#00d3d0}
   .chroma .c,.chroma .c1{color:#a8a8a8}

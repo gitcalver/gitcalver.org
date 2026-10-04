@@ -52,8 +52,6 @@ jobs:
       # regeneration, and proves font and favicon tampering is detected.
       - run: make check-fonts
       - run: make check-html
-      # Fails if the rendered code samples emit a Modus-colored Chroma token
-      # the trimmed syntax theme in main.css doesn't style.
       - run: make check-css
 
   worker:
@@ -71,9 +69,6 @@ jobs:
           node-version-file: .node-version
           cache: npm
       - run: npm ci
-      # Exercises the rendered site through the package-lock-pinned Wrangler
-      # runtime, including canonical routes, redirects, response headers,
-      # metadata, the social card, the custom 404, and the absence of RSS.
       - run: make check-worker check-metadata
 
   accessibility:

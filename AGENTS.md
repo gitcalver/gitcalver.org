@@ -15,7 +15,7 @@ Every task is a `Makefile` target; the `##` comment above each says what it
 does. Toolchains are pinned: Hugo by `go.mod` (`go tool hugo`), Python by
 `pyproject.toml` + `uv.lock`, Node and npm by `.node-version` and
 `package.json`, and Node tools by `package-lock.json` (run `npm ci` first);
-`make check-toolchain` verifies the Node, npm, and Python versions.
+`make check-toolchain` verifies Node, npm, and Python versions and the uv floor.
 `check-accessibility`, `check-interactions`, and `social-card` need the locked
 Playwright browser (`node_modules/.bin/playwright install chromium`, rerun after
 each Playwright bump); `lighthouse` needs Chrome. CI runs the `check-*` guards,
@@ -57,6 +57,10 @@ Never hand-edit these; change the source and regenerate.
 - Its `.chroma` rules are a pruned Modus theme covering the tokens the code
   samples emit. A new color token fails `make check-css`, which prints the exact
   rule to paste back; restore only that rule, not the whole theme.
+- `baseof.html` preloads the font faces each page uses, adding Inter italic and
+  Mono 600 only where the content needs them (emphasis; code in a heading, table
+  header, or bold text). A face used without a preload fails `make lighthouse`
+  on the `network-dependency-tree-insight` audit.
 - Markdown allows raw HTML (`markup.goldmark.renderer.unsafe = true`); only
   `site/content/spec/0.3.md` needs it, for the `<figure>` and `<figcaption>`
   wrappers around its diagram shortcodes.
@@ -89,9 +93,10 @@ by `make check-worker`):
   external URL.
 - `/go` is a static page (`site/static/go.html`) carrying the vanity-import meta
   tags for `gitcalver.org/go`. Keep it a top-level file: it serves at `/go`
-  under any `html_handling`, whereas `go/index.html` would loop against the
-  `/go/*` splat redirect (307 to `/go/`, 301 back) under `auto-trailing-slash`.
-  That redirect sends subpackage imports to `/go`.
+  under `drop-trailing-slash` and the default `auto-trailing-slash`, whereas
+  `go/index.html` would loop against the `/go/*` splat redirect (307 to `/go/`,
+  301 back) under `auto-trailing-slash`. That redirect sends subpackage imports
+  to `/go`.
 
 ## Conventions
 

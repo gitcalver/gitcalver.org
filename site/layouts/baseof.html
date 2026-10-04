@@ -38,16 +38,33 @@
   {{- end }}
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 
-  {{- /* Inter 400 is the body font (critical on every page). On the home hero the
-         58px H1 is Inter 600 and the big version number is Mono 500 — both above
-         the fold, so preload those two there as well. */ -}}
-  {{- $sans := resources.Get "fonts/inter-400.woff2" | fingerprint -}}
-  <link rel="preload" as="font" type="font/woff2" href="{{ $sans.RelPermalink }}" crossorigin>
-  {{- if .IsHome }}
-  {{- $sansBold := resources.Get "fonts/inter-600.woff2" | fingerprint -}}
-  <link rel="preload" as="font" type="font/woff2" href="{{ $sansBold.RelPermalink }}" crossorigin>
-  {{- $mono := resources.Get "fonts/ibm-plex-mono-500.woff2" | fingerprint -}}
-  <link rel="preload" as="font" type="font/woff2" href="{{ $mono.RelPermalink }}" crossorigin>
+  {{- /* The inlined stylesheet names the font faces, so a face a page uses
+         without a preload loads one hop behind the document and fails the
+         Lighthouse network-dependency-tree-insight audit. Every page needs the
+         faces its header and footer use; the home page and the 404 page add the
+         faces their own markup uses. Inter italic (emphasis) and Mono 600 (code
+         in a heading, table header or bold text) are preloaded only where the
+         content has them, because an unused preload logs a console warning. */ -}}
+  {{- $faces := slice "inter-400" -}}
+  {{- if .IsHome -}}
+    {{- $faces = $faces | append "inter-600" "ibm-plex-mono-500" "inter-500" "inter-700" "ibm-plex-mono-400" -}}
+  {{- else -}}
+    {{- $faces = $faces | append "inter-500" "inter-600" "ibm-plex-mono-400" "ibm-plex-mono-500" -}}
+    {{- if $isNotFound -}}
+      {{- $faces = $faces | append "ibm-plex-mono-600" -}}
+    {{- else -}}
+      {{- if findRE `<(?:em|i|cite)[\s>]` .Content 1 -}}
+        {{- $faces = $faces | append "inter-400-italic" -}}
+      {{- end -}}
+      {{- $semibold := findRE `(?s)<th[\s>].*?</th>|<h[1-4][\s>].*?</h[1-4]>|<strong[\s>].*?</strong>` .Content -}}
+      {{- if strings.Contains (delimit $semibold "\n") "<code" -}}
+        {{- $faces = $faces | append "ibm-plex-mono-600" -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end }}
+  {{- range $faces }}
+  {{- $font := resources.Get (printf "fonts/%s.woff2" .) | fingerprint }}
+  <link rel="preload" as="font" type="font/woff2" href="{{ $font.RelPermalink }}" crossorigin>
   {{- end }}
 
   {{- /* The whole sheet is ~5 kB brotli, so a separate render-blocking request

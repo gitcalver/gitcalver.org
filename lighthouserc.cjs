@@ -20,7 +20,9 @@ module.exports = {
         "http://localhost/spec/0.2/index.html",
         "http://localhost/spec/0.3/index.html",
       ],
-      // Median of several runs steadies the variable performance metrics.
+      // lhci's default "optimistic" aggregation asserts on the best of these
+      // runs, so a gate fails only if every run misses it: one noisy run can't
+      // fail CI, and a regression must show in every run.
       numberOfRuns: 3,
       settings: {
         // GitHub runners launch Chrome with no usable sandbox.
@@ -39,12 +41,6 @@ module.exports = {
         // invalid, so this audit can never pass here. check-html already guards
         // robots.txt's contents.
         "robots-txt": "off",
-        // Experimental "insights" audit that scores 0 when any web font loads
-        // without <link rel=preload>: the inlined stylesheet names the faces,
-        // so un-preloaded ones load one hop behind the document. Keep it
-        // visible but non-blocking: an experimental scorer shouldn't fail the
-        // build.
-        "network-dependency-tree-insight": ["warn", { minScore: 0.9 }],
       },
     },
   },
