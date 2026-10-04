@@ -8,8 +8,8 @@ SITE   := site
 PUBLIC := $(SITE)/public
 CACHE  := $(or $(TMPDIR),/tmp)/gcv-hugo-cache
 NODE_BIN := node_modules/.bin
-SHELL_RELEASE := v20260719.1
-SHELL_SHA256 := e49209093bdbf584e901efacae465ba59cb03b70a69af3b5f47c015e8255cbc4
+SHELL_RELEASE := v20261004.2
+SHELL_SHA256 := 1a9505326650bf69cb5b5ff98abf856e9b18d6529c3e7cebc9e0ba07ca735601
 # The full site render every build-dependent target starts from.
 RENDER := $(HUGO) -s $(SITE) --cacheDir "$(CACHE)" --cleanDestinationDir
 # Font deps (incl. the version-pinned woff2 toolchain) come from pyproject.toml;

@@ -12,14 +12,15 @@ defect 0.3 fixes.
 | Repository                | Role                                              | Current release                |
 | ------------------------- | ------------------------------------------------- | ------------------------------ |
 | `gitcalver/gitcalver.org` | Specification and Cloudflare Worker website       | [Specification 0.3][spec-03]   |
-| `gitcalver/sh`            | Reference implementation, conformance, and Action | [`v20260719.1`][shell-release] |
-| `gitcalver/python`        | Python API, CLI, and Hatch plugin                 | [`20260719.2`][python-release] |
-| `gitcalver/go`            | Standalone CLI                                    | [`v0.20260719.3`][go-release]  |
+| `gitcalver/sh`            | Reference implementation, conformance, and Action | [`v20261004.2`][shell-release] |
+| `gitcalver/python`        | Python API, CLI, and Hatch plugin                 | [`20261004.4`][python-release] |
+| `gitcalver/go`            | Standalone CLI                                    | [`v0.20260825.2`][go-release]  |
 | `gitcalver/rust`          | Experimental Rust library and CLI                 | Unreleased; use `gitcalver.sh` |
 | `gitcalver/azure-devops`  | Azure DevOps prototype                            | Future work                    |
 
-The shell, Python, and Go releases implement the 0.2 contract and pass the
-shared conformance suite maintained in `gitcalver/sh`. Each implementation keeps
+The shell and Go releases implement the 0.3 contract and pass the shared
+conformance suite maintained in `gitcalver/sh`. The Python release still
+implements 0.2; its 0.3 port is merged but unreleased. Each implementation keeps
 its own release cycle.
 
 The Rust port is exploratory and is not a 0.2 release gate. Rust projects can
@@ -73,7 +74,7 @@ are unchanged from 0.2.
 
 ## Future work
 
-- Update `sh`, `python`, and `go` to the 0.3 date-cohort counting rule
+- Release the Python port of the 0.3 date-cohort counting rule
 - Mature and release the native Rust implementation
 - Azure DevOps task
 - Go SHA-256 repository support after `go-git` adds it; the shell, Python, and
@@ -84,6 +85,6 @@ are unchanged from 0.2.
 - Additional platform-specific version-field recipes
 
 [spec-03]: https://gitcalver.org/spec/0.3
-[shell-release]: https://github.com/gitcalver/sh/releases/tag/v20260719.1
-[python-release]: https://pypi.org/project/gitcalver/20260719.2/
-[go-release]: https://github.com/gitcalver/go/tree/v0.20260719.3
+[shell-release]: https://github.com/gitcalver/sh/releases/tag/v20261004.2
+[python-release]: https://pypi.org/project/gitcalver/20261004.4/
+[go-release]: https://github.com/gitcalver/go/tree/v0.20260825.2

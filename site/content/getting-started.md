@@ -90,11 +90,11 @@ become version state.
 ## GitHub Actions
 
 ```yaml
-- uses: actions/checkout@v6
+- uses: actions/checkout@v7
   with:
     fetch-depth: 0 # Full history, so the count is always provable
 
-- uses: gitcalver/sh@v20260719.1
+- uses: gitcalver/sh@v20261004.2
   id: version
   with:
     prefix: "0." # optional, for SemVer ecosystems
