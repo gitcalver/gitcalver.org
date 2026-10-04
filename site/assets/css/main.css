@@ -1,10 +1,10 @@
 /* Copyright © 2026 Michael Shields. SPDX-License-Identifier: CC-BY-4.0 */
 
 /* ---------- self-hosted fonts: Inter + IBM Plex Mono (both OFL-1.1), subset + fingerprinted ---------- */
-/* Static Inter instances rather than its variable build: iOS Lockdown Mode is
-   reported to pin a variable font's axes to their defaults (so every weight
-   would render as Regular), and the figure renderer measures text from static
-   advance widths. See fonts/README.md. */
+/* Static Inter instances, not a variable font: iOS Lockdown Mode is reported
+   to pin variable axes to their defaults (so every weight would render as
+   Regular), and the figure renderer measures text from static advance widths.
+   See fonts/README.md. */
 @font-face{font-family:Inter;font-style:normal;font-weight:400;font-display:swap;
   src:url("{{ (resources.Get "fonts/inter-400.woff2" | fingerprint).RelPermalink }}") format("woff2")}
 @font-face{font-family:Inter;font-style:normal;font-weight:500;font-display:swap;
@@ -24,8 +24,8 @@
   src:url("{{ (resources.Get "fonts/ibm-plex-mono-600.woff2" | fingerprint).RelPermalink }}") format("woff2")}
 
 :root{
-  /* Typefaces. The @font-face descriptors above can't reference these, so they
-     are the one place the family names still appear literally. */
+  /* Typefaces. The @font-face descriptors above can't reference these, so the
+     family names appear literally only there and here. */
   --font-sans: Inter,system-ui,sans-serif;
   --font-mono: "IBM Plex Mono",ui-monospace,monospace;
   --bg:        oklch(99.2% 0 0);
@@ -469,10 +469,10 @@ footer.site-footer{border-top:1px solid var(--border);padding:48px 0 60px;margin
 }
 
 /* ---------- syntax highlighting — modus-operandi (light) ----------
-   Trimmed to the Chroma tokens the rendered code samples actually emit (Modus
-   colors only a subset of what Chroma can tag). `make check-css` fails if a
-   content edit introduces a Modus-colored token this drops, printing the rule
-   to restore — the syntax-highlighting analog of `make check-fonts`. */
+   Styles the Chroma tokens the rendered code samples emit (Modus colors a
+   subset of what Chroma can tag). `make check-css` fails if a content edit
+   introduces a Modus-colored token missing here, printing the rule to add —
+   the syntax-highlighting analog of `make check-fonts`. */
 .chroma{color:var(--text);background-color:var(--bg-sunk)}
 .chroma .line{display:flex}
 .chroma .k,.chroma .kd,.chroma .kn{color:#5317ac}

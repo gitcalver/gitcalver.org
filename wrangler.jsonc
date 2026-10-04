@@ -1,17 +1,19 @@
 // Copyright © 2026 Michael Shields. SPDX-License-Identifier: MIT
 // Assets-only Worker: serves the Hugo build output as a static site.
-// Workers Builds runs `make build` (-> site/public), then `npm run deploy`
-// uploads ./site/public. No server code; _headers and _redirects are honored.
+// Workers Builds runs `npm ci && make build` (-> site/public), then
+// `npm run deploy` uploads ./site/public. No server code; _headers and
+// _redirects are honored.
 {
   "name": "gitcalver-org-site",
   "compatibility_date": "2026-06-08",
   "assets": {
     "directory": "./site/public",
-    // Canonical page URLs carry no trailing slash: /spec serves spec/index.html
-    // (200) and /spec/ -> 307 -> /spec. This only affects directory-index pages;
-    // top-level files (go.html served at /go) behave identically under
-    // drop- and the default auto-trailing-slash. Redirect rules are applied
-    // before the custom 404 fallback, so /go/<subpkg> still reaches /go.
+    // Canonical page URLs carry no trailing slash: /compatibility serves
+    // compatibility/index.html (200) and /compatibility/ -> 307 ->
+    // /compatibility. This only affects directory-index pages; top-level files
+    // (go.html served at /go) behave identically under drop-trailing-slash and
+    // the default auto-trailing-slash. Redirect rules are applied before the
+    // custom 404 fallback, so /go/<subpkg> reaches /go.
     "html_handling": "drop-trailing-slash",
     "not_found_handling": "404-page"
   }

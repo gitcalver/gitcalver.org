@@ -76,8 +76,8 @@ are unchanged from 0.2.
 - Update `sh`, `python`, and `go` to the 0.3 date-cohort counting rule
 - Mature and release the native Rust implementation
 - Azure DevOps task
-- Go SHA-256 repository support after `go-git` adds support; shell, Python,
-  and Rust versions already both SHA-1 and SHA-256
+- Go SHA-256 repository support after `go-git` adds it; the shell, Python, and
+  Rust implementations already support both SHA-1 and SHA-256
 - Native package-manager integrations where a thin CLI invocation is
   insufficient
 - Shell completions

@@ -1,210 +1,110 @@
 # AGENTS.md
 
-This file provides guidance to AI agents when working with code in this
-repository.
+`gitcalver.org` is the specification and docs site for **GitCalVer**, which
+derives strictly increasing calendar versions (`YYYYMMDD.N`) from git history.
+This repo holds only the spec and the Hugo site; the implementations live in
+sibling repos under `github.com/gitcalver`. See `ROADMAP.md`.
 
-## What this is
-
-`gitcalver.org` — the specification and marketing/docs website for
-**GitCalVer**, a scheme that derives strictly-increasing calendar version
-numbers (`YYYYMMDD.N`) from git history. This repo holds only the spec and the
-Hugo site; the implementations live in sibling repos under
-`github.com/gitcalver` (`sh`, `go`, `python`, `rust`). See `ROADMAP.md` for the
-org layout.
-
-The site itself is a build-time function of the date: `layouts/home.html`
-renders _today's_ example version (`now.UTC`) into the hero, and client JS rolls
-it over at UTC midnight, so live visitors always see the current date even
-between deploys (the server-rendered hero shows the date of the last build).
+The hero's example version is the current UTC date: `layouts/home.html` renders
+the build date, and client JS replaces it with the visitor's current UTC date on
+load and again at each UTC midnight.
 
 ## Commands
 
-Everything runs through the `Makefile`. Hugo is pinned via the `go tool`
-directive in `go.mod` (`go tool hugo`) and the font script's deps via
-`pyproject.toml` + `uv.lock`, while Node tools are locked in
-`package-lock.json`. Run `npm ci` before Node-backed tasks.
+Every task is a `Makefile` target; the `##` comment above each says what it
+does. Toolchains are pinned: Hugo by `go.mod` (`go tool hugo`), Python by
+`pyproject.toml` + `uv.lock`, Node and npm by `.node-version` and
+`package.json`, and Node tools by `package-lock.json` (run `npm ci` first);
+`make check-toolchain` verifies the Node, npm, and Python versions.
+`check-accessibility`, `check-interactions`, and `social-card` need the locked
+Playwright browser (`node_modules/.bin/playwright install chromium`, rerun after
+each Playwright bump); `lighthouse` needs Chrome. CI runs the `check-*` guards,
+`lint`, and `lighthouse`. A Lefthook hook runs `make lint` on commit
+(`lefthook install`).
 
-- `make serve` — live-reloading dev server
-- `make build` — render to `site/public`
-- `make fonts` — regenerate subsetted woff2 + favicon (see below); commit the
-  result
-- `make diagrams` — regenerate the spec's figure SVGs from their gitgraph.js
-  scene definitions (see below); commit the result
-- `make check-diagrams` — CI guard; byte-compare the committed figure SVGs with
-  a clean regeneration
-- `make check-toolchain` — verify the pinned Node, npm, and Python versions and
-  the uv version floor
-- `make check-fonts` — CI guard; build the site, byte-compare a clean font and
-  favicon regeneration, and test tamper detection
-- `make check-html` — CI guard; build and assert the go-import tags, `/go`
-  redirect, and `robots.txt` survive
-- `make check-links` — CI guard; build and verify rendered internal links and
-  fragments
-- `make check-css` — CI guard; build and fail if a rendered code sample emits a
-  syntax-highlight (Chroma) token the trimmed Modus theme in `main.css` dropped
-  (see below)
-- `make check-worker` — CI guard; serve the build through locked local Wrangler
-  and assert routes, redirects, headers, and content types
-- `make check-metadata` — CI guard; assert canonical and social metadata, the
-  shared social card, the custom noindex 404, and RSS removal
-- `make check-accessibility` — CI guard; run Axe and responsive browser checks
-  at 320 px and desktop widths in light and dark modes (install the browser once
-  with `node_modules/.bin/playwright install chromium` for local use)
-- `make lighthouse` — build and audit every rendered content page with the
-  locked Lighthouse CI
-- `make social-card` — regenerate the shared 1200×630 social image from its SVG
-  source with the locked Playwright browser
-- `make lint` — Prettier `--check` on Markdown, Ruff + ty on the repo's Python
-  (`fonts/build.py`, `check_css.py`; the gitignored `.venv` is skipped)
-- `make fmt` — auto-format Markdown and apply Ruff fixes + formatting
-- `make deploy` — deploy the rendered site with the locked Wrangler
-- `make clean` — remove `site/public` and `site/resources`
+## Generated files
 
-CI (`.github/workflows/check.yml`) installs from both lockfiles, verifies the
-toolchain, and runs lint, font, HTML, CSS, Worker, metadata, accessibility, and
-Lighthouse gates on every push/PR. A Lefthook `pre-commit` hook runs the same
-`make lint` locally — `lefthook install` enables it.
+Never hand-edit these; change the source and regenerate.
 
-## Figure pipeline
-
-The 0.3 specification's commit-graph figures are not hand-drawn: each is a
-gitgraph.js scene in `scripts/diagrams/figures/<id>.js`, rendered by
-`scripts/diagrams/render.mjs` into a committed SVG in `site/assets/diagrams/`
-that the `{{</* diagram "<id>" */>}}` shortcode inlines (the `<figure>` wrapper
-and `<figcaption>` stay in the Markdown). Rendering is **offline and
-deterministic** — the scenes run against jsdom with conservative analytic Inter
-text bounds, so no browser is involved and `make check-diagrams` byte-compares
-in CI. To change a figure, edit its scene, run `make diagrams`, and commit both
-files; never edit the generated SVGs. Scene rules: colors only via the site's
-CSS custom properties (the SVGs follow the page's light/dark scheme), every
-commit gets an explicit `fig-N-`-prefixed hash (the harness rejects gitgraph's
-random ones), and all visible strings stay within the glyph set the site already
-uses or `make check-fonts` will demand a font regeneration. For visual review,
-`render.mjs` takes `--preview FILE` (self-contained HTML, `#dark` forces dark
-mode) and `--screenshot DIR` (light/dark PNGs via the package-lock-pinned
-Playwright browser; the only diagram task that needs one).
-
-## Font pipeline (the non-obvious part)
-
-The woff2 in `site/assets/fonts/` are **subsets** of the vendored Inter (text)
-and IBM Plex Mono (code) TrueType files in `fonts/src/` — only the glyphs the
-rendered HTML actually uses, with only the OpenType features browsers apply by
-default (~105 KB total; keeping Inter's stylistic sets would push that to ~185
-KB). `fonts/build.py` builds the site, scans every codepoint in the output HTML,
-and subsets each weight to that set; it also outlines the `gcv` favicon from
-Inter SemiBold so the favicon carries no font dependency.
-
-The sources are the **TrueType (`glyf`) builds**, not the CFF `.otf` builds, on
-purpose: iOS Lockdown Mode (Safari 26+) runs web fonts through a memory-safe
-parser that rejects CFF's charstring interpreter, so CFF subsets silently fall
-back to the system serif. `glyf` outlines pass it. Don't switch back to `.otf`.
-Inter ships as **static weights**, not its variable build, for the same reason
-and because the figure renderer measures text from static advances; see
-`fonts/README.md`.
-
-**If you add a character the site doesn't already use** (a new symbol, accented
-letter, arrow, etc.), `make check-fonts` will detect that a clean regeneration
-differs. Fix it with `make fonts` and commit the regenerated woff2 +
-`favicon.svg`.
-
-**If you enable an OpenType feature** in CSS (`font-feature-settings` or a
-`font-variant-*` keyword) that `LAYOUT_FEATURES` in `fonts/build.py` doesn't
-keep, `make fonts` and `make check-fonts` fail naming the tag: the subsets would
-lack its glyphs and the CSS would silently do nothing. Add the tag to the list
-first, then `make fonts`. Adding a whole face is self-bootstrapping:
-`make fonts` seeds an empty placeholder for any missing woff2 before the render
-that fingerprints it.
-
-Output is **byte-reproducible**: `fonttools`/`brotli` are version-pinned in
-`pyproject.toml` (and locked in `uv.lock`) and source timestamps are preserved
-(`recalcTimestamp=False`). Don't bump those versions casually — it changes the
-woff2 bytes. See `fonts/README.md`.
+- **Figures** (`site/assets/diagrams/*.svg`): from the gitgraph.js scenes in
+  `scripts/diagrams/figures/` via `make diagrams`. Scenes use only the site's
+  CSS custom properties for color, give every commit an explicit
+  `fig-N-`-prefixed hash, and use only glyphs the site already has.
+- **Fonts** (`site/assets/fonts/*.woff2`, `site/static/favicon.svg`): glyph
+  subsets built by `make fonts`. Adding a character the site doesn't use, or
+  enabling an OpenType feature (`font-feature-settings`, `font-variant-*`) that
+  `LAYOUT_FEATURES` in `fonts/build.py` doesn't keep, fails `make check-fonts`.
+  Add the tag to `LAYOUT_FEATURES` first if needed, then run `make fonts` and
+  commit the result. The sources are TrueType (`glyf`), not CFF `.otf`, because
+  iOS Lockdown Mode rejects CFF; don't switch back. Don't bump the pinned
+  `fonttools`/`brotli` casually, since output is byte-reproducible. See
+  `fonts/README.md`.
+- **Social card** (`site/static/social-card.png`): rendered from
+  `site/assets/images/social-card.svg` by `make social-card`. No check compares
+  the two, so rerun it after editing the SVG or the `fonts/src` TTFs it loads.
 
 ## Hugo specifics
 
-- **Flat layout structure** (Hugo ≥0.146): `layouts/baseof.html`, `home.html`,
+- Layouts are flat (Hugo ≥0.146): `layouts/baseof.html`, `home.html`, and
   `page.html` live directly in `layouts/`, not under `_default/`.
-- **No comment before `{{ define }}`** in a layout — put the copyright inside
-  the template comment (`{{- /* ... */ -}}`), as the existing layouts do, or the
-  define won't register (Hugo then skips `baseof.html` and the page renders
-  blank). Keep that comment on a single line: an auto-formatter that reflows it
-  across lines splits `*/` from `-}}` and re-triggers this.
-  `site/layouts/.dir-locals.el` sets `apheleia-inhibit` to keep Prettier (via
-  Emacs apheleia) off these files for exactly this reason — the layouts are
-  hand-formatted on purpose.
-- `site/assets/css/main.css` is run through `resources.ExecuteAsTemplate` — it
-  contains Hugo template syntax (`{{ ... }}` for fingerprinted font URLs), then
-  is minified and inlined into every page's `<style>`. It is a template, not
-  plain CSS, so every byte ships on each load. Typefaces come from its
-  `--font-sans` / `--font-mono` custom properties; only the `@font-face`
-  descriptors, which can't reference them, name the families literally.
-- The `.chroma` syntax-highlight rules at the end of `main.css` are a **pruned**
-  Modus theme: only the Chroma tokens the rendered code samples actually emit
-  are styled (Chroma tags far more than the samples use). If you add or edit a
-  code block that introduces a new token, `make check-css` fails and prints the
-  exact rule to paste back in (light + dark); `check_css.py` holds the full
-  Modus palette as the reference. Don't restore the whole theme — just the rules
-  it names.
-- Markdown allows raw HTML (`markup.goldmark.renderer.unsafe = true`); the spec
-  and getting-started pages rely on this.
-- **Analytics** is Cloudflare Web Analytics in _automatic_ mode — the beacon is
-  injected at the edge, so the site ships no analytics `<script>` and needs no
-  `CF_ANALYTICS_TOKEN`. Don't re-add a manual beacon, or page views
-  double-count.
+- **No HTML comment before `{{ define }}`** in a layout. Put the copyright in a
+  single-line template comment (`{{- /* ... */ -}}`), as the existing layouts
+  do, or the define won't register and the page renders blank. An auto-formatter
+  that reflows that comment does the same, so the layouts are hand-formatted and
+  `site/layouts/.dir-locals.el` keeps Emacs apheleia (Prettier) off them.
+- `site/assets/css/main.css` is a template (`{{ ... }}` fingerprints the font
+  URLs), minified and inlined into every page, so every byte ships on each load.
+- Its `.chroma` rules are a pruned Modus theme covering the tokens the code
+  samples emit. A new color token fails `make check-css`, which prints the exact
+  rule to paste back; restore only that rule, not the whole theme.
+- Markdown allows raw HTML (`markup.goldmark.renderer.unsafe = true`); only
+  `site/content/spec/0.3.md` needs it, for the `<figure>` and `<figcaption>`
+  wrappers around its diagram shortcodes.
+- Analytics is Cloudflare Web Analytics in automatic mode: the edge injects the
+  beacon. Don't add a manual analytics `<script>`, or page views double-count.
 
 ## Deployment
 
-gitcalver.org is served by a Cloudflare **Worker (Static Assets)**, built and
-deployed by **Workers Builds** from `main` on push — build command
-`npm ci && make build` (output `site/public`), deploy command `npm run deploy`.
-`wrangler.jsonc` (repo root) is the assets-only Worker config pointing at
-`site/public`, with `html_handling: drop-trailing-slash` so pages serve at
-canonical no-slash URLs (`/spec`, not `/spec/`) and `/spec/` 307-redirects to
-`/spec`. A custom `layouts/sitemap.xml` emits those no-slash URLs (Hugo's
-`.Permalink` keeps the trailing slash); keep hand-written internal links
-no-slash too. `site/static/_headers` sets immutable long-cache on the
-fingerprinted `/fonts/*` (the CSS is inlined into the HTML, so the fonts are the
-only fingerprinted assets left). `make check-worker` exercises those headers and
-the following redirects through local Wrangler. `site/static/_redirects`
-redirects `/sh` to `/gitcalver.sh` — the install script, vendored at
-`site/static/gitcalver.sh` from `gitcalver/sh` (Workers Static Assets reject a
-200-proxy to an external URL, so it's hosted here) — and `/go/*` to `/go` (a 301
-splat; see below). `/go` is a standalone static page (`site/static/go.html`)
-carrying the `go-import`/`go-source` meta tags that make `gitcalver.org/go` a
-vanity import path, plus a `<meta refresh>` so browsers land on pkg.go.dev while
-`go get` reads the tags. Served as a top-level file (not `/go/index.html`),
-`/go` itself returns 200 — the path `go get` requests. Subpackage imports
-(`go get gitcalver.org/go/<subpkg>`) fetch `/go/<subpkg>`, which has no asset;
-the splat 301-redirects it to `/go`, whose `go-import` prefix matches, and
-`go get` follows the redirect. The redirect is applied before the custom
-`404-page` fallback used for other missing routes.
+A Cloudflare **Worker (Static Assets)** serves the site; **Workers Builds**
+builds and deploys it from `main` (build `npm ci && make build`, output
+`site/public`; deploy `npm run deploy`). Settings that live only in the
+dashboard:
 
-The build itself needs only Go and Node — Hugo is pinned via the `go tool`
-directive in `go.mod`, so there is no separate `HUGO_VERSION` to pin;
-`go tool hugo` resolves the version from `go.mod`. Two Workers build settings
-matter: `GO_VERSION` must match the `go` directive in `go.mod` (currently
-`1.26.4`), and `SKIP_DEPENDENCY_INSTALL=true` must stay set — without it the
-build image autodetects the repo's Python project and runs `uv sync` with its
-own bundled uv, whose version can't be pinned (there is no `UV_VERSION`) and
-which the deploy build doesn't need (the font pipeline runs locally, and its
-output is committed). The skip is all-or-nothing — it also disables the
-automatic `npm clean-install` — which is why the build command starts with
-`npm ci`: `npm run deploy` needs the locked Wrangler.
+- `GO_VERSION` must match the `go` directive in `go.mod`. There is no
+  `HUGO_VERSION`; Hugo comes from `go.mod`.
+- `SKIP_DEPENDENCY_INSTALL=true` must stay set, or the build image runs
+  `uv sync` with its own unpinnable uv, which the build doesn't need (fonts are
+  committed). It also disables the automatic `npm clean-install`, hence `npm ci`
+  in the build command.
+
+Routing (`wrangler.jsonc`, `site/static/_redirects`, `_headers`; all exercised
+by `make check-worker`):
+
+- Canonical URLs have no trailing slash (`/getting-started`); the slash form
+  307-redirects. Keep hand-written internal links no-slash.
+  `layouts/sitemap.xml` is custom for the same reason.
+- `/spec` is not a page; it 302-redirects to the current spec version.
+- `/sh` redirects to `/gitcalver.sh`, the install script vendored from
+  `gitcalver/sh`, because Workers Static Assets reject a 200-proxy to an
+  external URL.
+- `/go` is a static page (`site/static/go.html`) carrying the vanity-import meta
+  tags for `gitcalver.org/go`. Keep it a top-level file: it serves at `/go`
+  under any `html_handling`, whereas `go/index.html` would loop against the
+  `/go/*` splat redirect (307 to `/go/`, 301 back) under `auto-trailing-slash`.
+  That redirect sends subpackage imports to `/go`.
 
 ## Conventions
 
-These follow the shared standards in
-[`shields/right-answers`](https://github.com/shields/right-answers) — the
-canonical source for the Makefile, lint/CI, Renovate, and typography conventions
-referenced here.
+These follow
+[`shields/right-answers`](https://github.com/shields/right-answers).
 
 - **Brand casing**: "GitCalVer" in prose; lowercase `gitcalver` for the logo,
   command, package names, URLs, and the site `title`.
-- **Typography** (rendered, human-facing HTML — including Markdown content):
-  curly quotes, en dashes for ranges, and em dashes _without_ surrounding
-  spaces. The Markdown pages get curly quotes from Hugo's typographer, but the
-  hand-written layouts (`baseof.html`, `home.html`) don't, and nothing fixes em
-  dash spacing automatically — apply both by hand there.
-- Source files carry an SPDX header: site content/layouts/CSS are `CC-BY-4.0`;
-  build tooling (`Makefile`, `fonts/build.py`, `check_css.py`, `pyproject.toml`,
+- **Typography** in rendered HTML, including Markdown content: curly quotes, en
+  dashes for ranges, and em dashes without surrounding spaces. Hugo's
+  typographer curls quotes in Markdown pages but never fixes em dash spacing, so
+  type em dashes unspaced everywhere. The hand-written layouts and raw HTML
+  blocks get no typographer, so curl quotes there by hand.
+- **SPDX headers**: site content, layouts, and CSS are `CC-BY-4.0`; build
+  tooling (`Makefile`, `fonts/build.py`, `check_css.py`, `pyproject.toml`,
   `lefthook.yml`, workflows, Renovate config) is `MIT`.

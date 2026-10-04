@@ -45,7 +45,7 @@
       today.innerHTML =
         '<span class="pulse"></span>Today is <span class="mono">' +
         parts.ymd +
-        '</span> in UTC. The first commit pushed today would be <span class="mono">' +
+        '</span> in UTC. The first commit today would be <span class="mono">' +
         parts.ymd +
         ".1</span>.";
     }

@@ -3,8 +3,8 @@
 # gitcalver.org
 
 The specification and documentation site for [GitCalVer](https://gitcalver.org),
-a versioning scheme that derives `YYYYMMDD.N` versions from a git branch’s
-first-parent history.
+a versioning scheme that derives unique, increasing `YYYYMMDD.N` versions from a
+default branch’s git history.
 
 The implementations live in separate repositories:
 
@@ -22,29 +22,24 @@ pins Python exactly and sets a uv version floor, and npm and Python dependencies
 are locked in `package-lock.json` and `uv.lock`.
 
 ```sh
-npm ci           # install the locked Node tooling
-make build        # render to site/public
-make serve        # run the local development server
-make check-toolchain # verify Node, npm, uv, and Python versions
-make lint         # check Markdown and Python tooling
-make check-fonts  # reproduce and byte-compare fonts and favicon
-make check-html   # verify routes and HTML
-make check-links  # verify rendered internal links and fragments
-make check-css    # verify syntax-highlight styles
-make check-worker # verify local Worker routes, redirects, and headers
-make check-metadata # verify metadata, social card, 404, and RSS removal
-node_modules/.bin/playwright install chromium # install the locked test browser
-make check-accessibility # run Axe and responsive browser checks
-make check-interactions # test copy, TOC, scrollspy, and overflow interactions
-make social-card  # regenerate the shared 1200×630 social image
+npm ci       # install the locked Node tooling
+make build   # render to site/public
+make serve   # run the local development server
+make lint    # check Markdown and Python tooling
 ```
 
+Each `Makefile` target has a `##` description, and CI runs the `check-*` guards.
+`make check-accessibility`, `make check-interactions`, and `make social-card`
+need the locked browser, installed with
+`node_modules/.bin/playwright install chromium` and reinstalled after any
+Playwright version change.
+
 Run `make fonts` and commit the regenerated font files whenever rendered text
-introduces a codepoint that the current subsets do not contain.
+introduces a codepoint that the current subsets lack.
 
 The deployed site is served by a Cloudflare Static Assets Worker. Workers Builds
-uses `npm ci && make build` followed by `npm run deploy`, which invokes the
-locked Wrangler. `make check-worker` exercises the same configuration locally.
+runs `npm ci && make build`, then `npm run deploy`, which invokes the locked
+Wrangler. `make check-worker` exercises the same configuration locally.
 Canonical pages omit trailing slashes; keep internal links in that form.
 
 See [ROADMAP.md](ROADMAP.md) for release status and planned work.

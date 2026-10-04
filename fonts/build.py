@@ -3,8 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Regenerate the site's subsetted web fonts and outlined favicon from the
 vendored Inter and IBM Plex Mono TrueType files (fonts/src/), deriving the
-glyph set from the actually rendered HTML so any character used on the site is
-covered.
+glyph set from the rendered HTML so any character used on the site is covered.
 
 TrueType (glyf) outlines, not the CFF .otf build: iOS Lockdown Mode (Safari 26+)
 runs web fonts through a memory-safe parser that rejects CFF's charstring VM, so
@@ -123,7 +122,7 @@ VARIANT_FEATURES: dict[str, tuple[str, ...]] = {
     "historical-forms": ("hist",),
 }
 # The other font-variant-alternates values name @font-feature-values entries,
-# whose tags only that at-rule knows; they are refused rather than mapped.
+# whose tags only that at-rule knows, so the build refuses them.
 ALTERNATE_FUNCTIONS = frozenset(
     {"stylistic", "styleset", "character-variant", "swash", "ornaments", "annotation"},
 )
@@ -307,11 +306,11 @@ def build(html_dir: str) -> None:
 def seed_placeholders(out_fonts: pathlib.Path) -> list[pathlib.Path]:
     """Create an empty file for each published woff2 the checkout lacks.
 
-    The site render `make fonts` starts from fingerprints every woff2 the
-    templates reference, so a face added to WEIGHTS and main.css together
-    would fail that render before the build could produce it. The build then
-    overwrites every placeholder; should it abort first, they linger as empty
-    files that `make check-fonts` reports until `make fonts` succeeds."""
+    The site render in `make fonts` fingerprints every woff2 the templates
+    reference, so a face added to WEIGHTS and main.css together would fail that
+    render before the build could produce it. The build then overwrites every
+    placeholder; should it abort first, they linger as empty files that
+    `make check-fonts` reports until `make fonts` succeeds."""
     out_fonts.mkdir(parents=True, exist_ok=True)
     seeded = []
     for _, out in WEIGHTS:
@@ -346,7 +345,7 @@ def _favicon(path: pathlib.Path) -> None:
     if bounds.bounds is None:
         sys.exit("favicon: glyphs produced empty bounds")
     x0, y0, x1, y1 = bounds.bounds
-    tx, ty = 32.0 - (x0 + x1) / 2.0, 34.0 - (y0 + y1) / 2.0  # centre at (32,34)
+    tx, ty = 32.0 - (x0 + x1) / 2.0, 34.0 - (y0 + y1) / 2.0  # center at (32,34)
     pen = SVGPathPen(gs, ntos=lambda v: format(round(v, 2) + 0, "g"))
     for n, px in zip(names, penx, strict=True):
         gs[n].draw(TransformPen(pen, Transform(scale, 0, 0, -scale, px + tx, ty)))

@@ -3,13 +3,13 @@
 # SPDX-License-Identifier: MIT
 """Guard the trimmed Chroma syntax theme in site/assets/css/main.css.
 
-main.css ships Modus color rules only for the Chroma tokens the rendered code
+main.css ships Modus color rules for the Chroma tokens the rendered code
 samples actually emit (Chroma can tag far more than Modus colors, and the
 samples exercise fewer still). This is the syntax-highlighting analog of
 `make check-fonts`: it builds nothing itself but, given the rendered HTML, fails
-if a content edit introduces a Modus-colored token that main.css no longer
-styles — which would silently fall back to the default text color — and prints
-the rule to restore.
+if a content edit introduces a Modus-colored token that main.css doesn't
+style — which would silently fall back to the default text color — and prints
+the rule to add.
 
   python check_css.py <rendered-html-dir>
 
@@ -26,7 +26,7 @@ CSS = pathlib.Path(__file__).resolve().parent / "site/assets/css/main.css"
 # (light, dark) color it shares. A token absent here is left at the default
 # text color on purpose (punctuation, whitespace, names Modus doesn't tint), so
 # emitting it unstyled is fine. main.css carries rules for the subset of these
-# that the samples currently emit; anything else here is a rule to re-add if a
+# that the samples currently emit; anything else here is a rule to add if a
 # code edit starts emitting it.
 _MODUS_GROUPS: dict[tuple[str, str], tuple[str, ...]] = {
     ("#5317ac", "#b6a0ff"): ("k", "kd", "kn", "kp", "kr"),
@@ -47,13 +47,13 @@ MODUS: dict[str, tuple[str, str]] = {
 
 # A styled token appears once in the light scope and once in the dark
 # prefers-color-scheme block, so a fully-present rule shows up exactly twice;
-# fewer means one mode lost its color.
+# fewer means one mode has no color.
 RULES_PER_TOKEN = 2
 
 # Chroma emits these span classes only when line numbers or hl_lines are
-# enabled. Their layout rules (not Modus colors) were pruned from main.css with
-# the rest of the theme, so any of them appearing means restoring the whole
-# .chroma .hl/.lnt/.ln block from main.css's git history, not a color rule.
+# enabled. Their styling is layout, not Modus colors, and main.css has none of
+# it, so any of them appearing means adding the whole .chroma .hl/.lnt/.ln
+# layout block, not a color rule.
 SCAFFOLDING = ("hl", "lnt", "ln")
 
 
@@ -96,14 +96,14 @@ def check(html_dir: pathlib.Path) -> None:
     unstyled = sorted(t for t in emitted if t in SCAFFOLDING and not rule_count(css, t))
     if missing:
         print("CSS CHECK FAILED — the rendered code samples emit Modus-colored")
-        print("Chroma tokens that site/assets/css/main.css no longer styles.")
+        print("Chroma tokens that site/assets/css/main.css doesn't style.")
         print("Add these (the dark color goes in the prefers-color-scheme block):")
         for tok in missing:
             light, dark = MODUS[tok]
             print(f"  .chroma .{tok}{{color:{light}}}   /* dark: {dark} */")
     if unstyled:
         print("CSS CHECK FAILED — line numbers or line highlights are enabled, but")
-        print("their .chroma layout rules were pruned from site/assets/css/main.css;")
+        print("their .chroma layout rules are missing from site/assets/css/main.css;")
         print("restore the .hl/.lnt/.ln (and lntable) rules from its git history.")
     if missing or unstyled:
         sys.exit(1)

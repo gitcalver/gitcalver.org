@@ -50,9 +50,9 @@
   <link rel="preload" as="font" type="font/woff2" href="{{ $mono.RelPermalink }}" crossorigin>
   {{- end }}
 
-  {{- /* Inlined, not linked: the whole sheet is ~5 KB brotli, so a separate
-         render-blocking request costs more than keeping it cacheable saves.
-         Keep ExecuteAsTemplate so the @font-face URLs still fingerprint. */ -}}
+  {{- /* The whole sheet is ~5 kB brotli, so a separate render-blocking request
+         costs more than caching it saves; it is inlined. Keep ExecuteAsTemplate
+         so the @font-face URLs fingerprint. */ -}}
   {{- $css := resources.Get "css/main.css" | resources.ExecuteAsTemplate "css/main.css" . | minify -}}
   <style>{{ $css.Content | safeCSS }}</style>
 </head>
@@ -118,9 +118,8 @@
     </div>
   </footer>
 
-  {{- /* The shared interaction layer is small enough to inline. Keeping it in
-         the asset pipeline gives every page the same minified, dependency-free
-         copy, overflow, TOC, and UTC-rollover behavior. */ -}}
+  {{- /* The interaction script (copy buttons and the UTC rollover) is small
+         enough to inline; the asset pipeline minifies it. */ -}}
   {{- $js := resources.Get "js/main.js" | minify -}}
   <script>{{ $js.Content | safeJS }}</script>
 </body>

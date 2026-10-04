@@ -30,7 +30,7 @@ Options:
 
 ```sh
 ./gitcalver.sh --prefix "0." --dirty "-dirty"  # SemVer ecosystems, allow dirty
-./gitcalver.sh --branch "release"              # mint versions on a specific branch
+./gitcalver.sh --branch "release"              # select release, skip auto-detection
 ```
 
 ## Python (Hatch)
@@ -51,11 +51,11 @@ source = "gitcalver"
 dirty = "+dirty"
 ```
 
-Build and the version is derived automatically:
+Build as usual. The build installs the plugin from `build-system.requires`, and
+the version comes from git history:
 
 ```sh
-pip install gitcalver
-hatch build  # version comes from git history
+uv build
 ```
 
 ## Go
@@ -92,26 +92,26 @@ become version state.
 ```yaml
 - uses: actions/checkout@v6
   with:
-    fetch-depth: 0 # Make the complete first-parent history available
+    fetch-depth: 0 # Full history, so the count is always provable
 
 - uses: gitcalver/sh@v20260719.1
   id: version
   with:
-    prefix: "0." # optional, for semver ecosystems
+    prefix: "0." # optional, for SemVer ecosystems
 
 - run: echo "Building version ${{ steps.version.outputs.version }}"
 ```
 
-The action outputs:
+The action’s outputs:
 
-| Output    | Example         |
-| --------- | --------------- |
-| `version` | `0.20260411.3`  |
-| `date`    | `20260411`      |
-| `count`   | `3`             |
-| `dirty`   | `false`         |
-| `hash`    | `a1b2c3d`       |
-| `tag`     | `v0.20260411.3` |
+| Output    | Example        |
+| --------- | -------------- |
+| `version` | `0.20260411.3` |
+| `date`    | `20260411`     |
+| `count`   | `3`            |
+| `dirty`   | `false`        |
+| `hash`    | `a1b2c3d`      |
+| `tag`     | `0.20260411.3` |
 
 In a release workflow, `tag-prefix: "v"` and `tag: "true"` make the action claim
 the publication tag without force after preceding checks succeed.

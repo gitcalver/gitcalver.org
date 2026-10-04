@@ -8,10 +8,10 @@ module.exports = {
   ci: {
     collect: {
       staticDistDir: "./site/public",
-      // Audit our own pages explicitly rather than letting staticDistDir
-      // auto-discover every *.html: go.html is a <meta refresh> stub that
-      // bounces to pkg.go.dev, so auto-discovery would audit pkg.go.dev's page
-      // (its CSS, JS, caching) instead of ours. lhci rewrites the host:port.
+      // List our own pages explicitly: staticDistDir auto-discovers every
+      // *.html, and go.html is a <meta refresh> stub that bounces to
+      // pkg.go.dev, so auto-discovery would audit pkg.go.dev's page (its CSS,
+      // JS, caching) instead of ours. lhci rewrites the host:port.
       url: [
         "http://localhost/index.html",
         "http://localhost/compatibility/index.html",
@@ -39,11 +39,11 @@ module.exports = {
         // invalid, so this audit can never pass here. check-html already guards
         // robots.txt's contents.
         "robots-txt": "off",
-        // Experimental "insights" audit whose critical-path scoring flags the
-        // single render-blocking stylesheet — the same signal as
-        // render-blocking-resources, which the preset itself only warns on. Keep
-        // it visible but non-blocking rather than hard-failing on an
-        // experimental scorer.
+        // Experimental "insights" audit that scores 0 when any web font loads
+        // without <link rel=preload>: the inlined stylesheet names the faces,
+        // so un-preloaded ones load one hop behind the document. Keep it
+        // visible but non-blocking: an experimental scorer shouldn't fail the
+        // build.
         "network-dependency-tree-insight": ["warn", { minScore: 0.9 }],
       },
     },

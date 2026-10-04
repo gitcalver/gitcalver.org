@@ -55,15 +55,15 @@ make fonts        # rebuild the subsets + favicon from src/, then commit them
 make check-fonts  # byte-compare a clean rebuild and test its guards
 ```
 
-`build.py` renders the site, collects every codepoint in the output HTML (plus
-ASCII), and subsets each TTF to those. The subsets keep only the OpenType
-features browsers apply by default (kerning, contextual alternates, glyph
-composition, marks, language forms); Inter's optional stylistic sets and
+`make fonts` renders the site; `build.py` then collects every codepoint in the
+output HTML (plus ASCII) and subsets each TTF to those. The subsets keep only
+the OpenType features browsers apply by default (kerning, contextual alternates,
+glyph composition, marks, language forms); Inter's optional stylistic sets and
 character variants are dropped, since no CSS enables them, which halves its
 subsets. `build.py` refuses a rendered site whose CSS switches on a feature
 outside that list, through `font-feature-settings` or a `font-variant-*`
-keyword, naming the tag: enabling one means adding it to `LAYOUT_FEATURES`
-first, then `make fonts`. `build.py` also outlines the `gcv` favicon
+keyword, and names the tag. To enable one, add it to `LAYOUT_FEATURES` first,
+then run `make fonts`. `build.py` also outlines the `gcv` favicon
 (`../site/static/favicon.svg`) from Inter SemiBold, so the favicon carries no
 font dependency. `check-fonts` runs in CI (`.github/workflows/check.yml`) and
 fails unless every committed font and the favicon exactly match a clean
@@ -74,9 +74,9 @@ A face new to the checkout bootstraps itself. `make fonts` starts from a site
 render, and that render fingerprints every woff2 the templates reference, so a
 face that does not exist yet would fail it. `make fonts` therefore first seeds
 an empty placeholder for any published woff2 that is missing (`build.py seed`),
-lets the render fingerprint it, and then overwrites it with the real subset.
-Should the build abort before that, the empty file lingers, and
-`make check-fonts` reports it, until `make fonts` succeeds.
+lets the render fingerprint it, and then overwrites it with the real subset. If
+the build aborts before the overwrite, the empty file lingers and
+`make check-fonts` reports it until `make fonts` succeeds.
 
 Output is **byte-reproducible**: `fonttools`/`brotli` are version-pinned in the
 Python project and `uv.lock`, and the source `head.modified` timestamp is

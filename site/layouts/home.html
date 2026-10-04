@@ -42,7 +42,7 @@
           ><span class="mk"></span> UTC date
           <span class="val" id="gcv-date-val">{{ $today }}</span></span
         >
-        <span class="v">The UTC day the commit landed.</span>
+        <span class="v">The commit’s committer date, in UTC.</span>
       </div>
       <div class="col col-count">
         <span class="k"
@@ -72,7 +72,7 @@
     </div>
 
     <p class="today" id="gcv-today">
-      <span class="pulse"></span>The first commit pushed on
+      <span class="pulse"></span>The first commit on
       <span class="mono">{{ $today }}</span> (UTC) is
       <span class="mono">{{ $today }}.1</span>.
     </p>
@@ -138,10 +138,11 @@
     <div class="card">
       <h3>Strictly increasing</h3>
       <p>
-        Later commits always sort after earlier ones.
-        <code>20260607.1</code>&nbsp;&lt; <code>20260607.2</code>&nbsp;&lt;
-        <code>20260608.1</code>—by plain numeric order, as long as committer
-        dates never go backwards.
+        Later commits always sort after earlier ones—compare the date, then
+        <code>N</code> as an integer:
+        <code>20260607.2</code>&nbsp;&lt; <code>20260607.10</code>&nbsp;&lt;
+        <code>20260608.1</code>. This holds as long as committer dates never go
+        backwards.
       </p>
     </div>
     <div class="card">
@@ -197,7 +198,7 @@
     <div class="row">
       <div class="key">ordering</div>
       <div class="val">
-        Compare as date, then as integer <code>N</code>. Strictly monotonic so
+        Compare as date, then as integer <code>N</code>. Strictly increasing as
         long as committer dates never decrease.
       </div>
     </div>
@@ -213,7 +214,7 @@
       <div class="val">
         With optional <code>--dirty</code>, an uncommitted tree emits a marked,
         non-reversible version like <code>20260607.1-dirty.abc1234</code>.
-        The safe default behavior rejects this.
+        By default, an uncommitted tree is rejected.
       </div>
     </div>
   </div>
@@ -291,7 +292,9 @@ chmod +x gitcalver.sh</pre>
             >Portable POSIX shell implementation · ships a GitHub Action with
             <span class="mono">prefix</span>, <span class="mono">dirty</span>,
             <span class="mono">dirty-hash</span>,
-            <span class="mono">branch</span> &amp;
+            <span class="mono">branch</span>,
+            <span class="mono">remote</span>,
+            <span class="mono">tag-prefix</span> &amp;
             <span class="mono">tag</span> inputs</span
           >
         </span>
@@ -318,7 +321,7 @@ chmod +x gitcalver.sh</pre>
           >
           <span class="d"
             ><span class="mono">uses: gitcalver/sh</span>—outputs
-            <span class="mono">version, date, count, dirty, hash</span></span
+            <span class="mono">version, date, count, dirty, hash, tag</span></span
           >
         </span>
       </span>

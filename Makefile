@@ -36,8 +36,8 @@ serve:
 ## and IBM Plex Mono TTFs, with the glyph set derived from the rendered HTML.
 ## A face new to the checkout gets an empty placeholder first, so the render
 ## that derives the glyph set can fingerprint it before the build replaces it.
-## Only here: a placeholder in a deploy build or a check would be a silently
-## empty font, where the render's hard failure is the right outcome.
+## Only this target seeds: a placeholder in a deploy build or a check would be a
+## silently empty font, where the render's hard failure is the right outcome.
 fonts:
 	$(PY) seed
 	$(RENDER)
@@ -120,7 +120,7 @@ check-links:
 	$(LINKS) $(PUBLIC)
 
 ## check-css: fail if the rendered code samples emit a Modus-colored Chroma
-## token the trimmed syntax theme in main.css no longer styles (see check_css.py).
+## token the trimmed syntax theme in main.css doesn't style (see check_css.py).
 check-css:
 	$(RENDER)
 	uv run --frozen --quiet --no-dev python check_css.py $(PUBLIC)
@@ -139,7 +139,8 @@ check-metadata:
 
 ## check-accessibility: run Axe and responsive browser assertions at 320px and
 ## desktop widths in both light and dark modes. Install the pinned browser with
-## `node_modules/.bin/playwright install chromium` once before running locally.
+## `node_modules/.bin/playwright install chromium` before running locally, and
+## again after any Playwright version change.
 check-accessibility:
 	$(RENDER)
 	npm run test:accessibility

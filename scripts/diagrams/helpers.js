@@ -196,7 +196,7 @@
       };
     }
     if (name === "path") {
-      // Absolute M/L/Q/C only (all gitgraph.js and the overlay emit). Control
+      // Absolute M/L/Q/C/Z only (all gitgraph.js and the overlay emit). Control
       // points are included, a conservative superset of the true bounds.
       const d = element.getAttribute("d") || "";
       const numberToken = /-?[\d.]+(?:e[+-]?\d+)?/g;

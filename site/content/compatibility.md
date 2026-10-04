@@ -20,7 +20,7 @@ ordering semantics.
 | Ecosystem or field                                                                         | Prefix   | Clean example   | Local dirty flags                   | Notes                                                             |
 | ------------------------------------------------------------------------------------------ | -------- | --------------- | ----------------------------------- | ----------------------------------------------------------------- |
 | Scripts, OCI tags, Homebrew                                                                | _(none)_ | `20260412.3`    | `--dirty -dirty`                    | Uses the base form directly                                       |
-| Python / PyPI                                                                              | _(none)_ | `20260412.3`    | `--dirty +dirty`                    | `+dirty.HASH` is a local version; do not upload it to PyPI        |
+| Python / PyPI                                                                              | _(none)_ | `20260412.3`    | `--dirty +dirty`                    | PyPI rejects local versions; use `+dirty.HASH` only locally       |
 | npm, Cargo, NuGet, Swift packages, CocoaPods, pub.dev, Helm, Composer, Hex, Julia, VS Code | `0.`     | `0.20260412.3`  | `--dirty -dirty`                    | Three-part SemVer-compatible form for an initial or unstable line |
 | Go modules                                                                                 | `v0.`    | `v0.20260412.3` | `--dirty -dirty`                    | The module tag includes Go’s required leading `v`                 |
 | Terraform providers                                                                        | `v0.`    | `v0.20260412.3` | `--dirty -dirty`                    | Provider release tags require `v` before the SemVer               |
@@ -77,8 +77,8 @@ conversions without disruption.
 
 Shell and Python require Git with support for the repository’s matching object
 format. Rust includes both formats in one build. Go rejects SHA-256 repositories
-with exit code 1 and an unsupported-format error, because it uses `go-git` which
-does not yet support SHA-256 repositories.
+with exit code 1 and an unsupported-format error, because it uses `go-git`,
+which does not yet support SHA-256.
 
 Full reverse lookups return the complete object ID: 40 characters for SHA-1 or
 64 for SHA-256. Short lookups and dirty suffixes use the first seven characters
