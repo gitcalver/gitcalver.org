@@ -63,6 +63,27 @@ eight-digit date, such as a Chrome extension’s `version`. Keep the GitCalVer
 string as the release/display version and derive the constrained build value
 with a separately documented, collision-free rule.
 
+## SHA-256 support
+
+GitCalVer supports both SHA-1 and SHA-256 repositories, and allows repository
+conversions without disruption.
+
+| Implementation                                               | SHA-1 | SHA-256 |
+| ------------------------------------------------------------ | ----- | ------- |
+| [Shell implementation](https://github.com/gitcalver/sh)      | Yes   | Yes     |
+| [Python implementation](https://github.com/gitcalver/python) | Yes   | Yes     |
+| [Rust implementation](https://github.com/gitcalver/rust)     | Yes   | Yes     |
+| [Go implementation](https://github.com/gitcalver/go)         | Yes   | No      |
+
+Shell and Python require Git with support for the repository’s matching object
+format. Rust includes both formats in one build. Go rejects SHA-256 repositories
+with exit code 1 and an unsupported-format error, because it uses `go-git` which
+does not yet support SHA-256 repositories.
+
+Full reverse lookups return the complete object ID: 40 characters for SHA-1 or
+64 for SHA-256. Short lookups and dirty suffixes use the first seven characters
+in either format. The calendar versioning rules are the same.
+
 ## References
 
 - [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
