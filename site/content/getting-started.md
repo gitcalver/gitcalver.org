@@ -114,7 +114,9 @@ The action’s outputs:
 | `tag`     | `0.20260411.3` |
 
 In a release workflow, `tag-prefix: "v"` and `tag: "true"` make the action claim
-the publication tag without force after preceding checks succeed.
+the publication tag without force after preceding checks succeed. Give the job
+`permissions: contents: write`, and put publishing runs in one `concurrency`
+group so only one claims a tag at a time.
 
 ## npm
 

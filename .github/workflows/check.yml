@@ -28,6 +28,7 @@ jobs:
         with:
           enable-cache: true
       - run: make check-toolchain
+      - run: make check-pins
       # Prettier comes from package-lock.json; Ruff and ty come from uv.lock.
       # This is the same `make lint` the pre-commit hook runs locally.
       - run: make lint

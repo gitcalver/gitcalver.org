@@ -10,6 +10,7 @@ CACHE  := $(or $(TMPDIR),/tmp)/gcv-hugo-cache
 NODE_BIN := node_modules/.bin
 SHELL_RELEASE := v20261004.2
 SHELL_SHA256 := 1a9505326650bf69cb5b5ff98abf856e9b18d6529c3e7cebc9e0ba07ca735601
+SHELL_PIN_FILES := ROADMAP.md $(SITE)/content/getting-started.md $(SITE)/layouts/home.html tests/interactions.mjs
 # The full site render every build-dependent target starts from.
 RENDER := $(HUGO) -s $(SITE) --cacheDir "$(CACHE)" --cleanDestinationDir
 # Font deps (incl. the version-pinned woff2 toolchain) come from pyproject.toml;
@@ -22,7 +23,7 @@ TY       := uv run --frozen ty
 LINKS    := uv run --frozen --quiet --no-dev python check_links.py
 LHCI     := $(NODE_BIN)/lhci
 
-.PHONY: build serve fonts diagrams social-card check-toolchain check-diagrams check-fonts check-html check-links check-css check-worker check-metadata check-accessibility check-interactions lighthouse lint fmt deploy clean
+.PHONY: build serve fonts diagrams social-card check-toolchain check-diagrams check-fonts check-html check-links check-pins check-css check-worker check-metadata check-accessibility check-interactions lighthouse lint fmt deploy clean
 
 ## build: render the site to site/public
 build:
@@ -92,6 +93,7 @@ check-html:
 	@grep -qF '<strong>Version</strong>: 0.3' $(PUBLIC)/spec/0.3/index.html || { echo "FAIL: /spec/0.3 version marker missing"; exit 1; }
 	@test "$$(grep -oF 'role="img"' $(PUBLIC)/spec/0.3/index.html | wc -l | tr -d ' ')" = 5 || { echo "FAIL: /spec/0.3 must render exactly 5 figures"; exit 1; }
 	@grep -qF '/spec /spec/0.3 302' $(PUBLIC)/_redirects || { echo "FAIL: /spec -> /spec/0.3 redirect missing from _redirects"; exit 1; }
+	@grep -qF '/spec/ /spec/0.3 302' $(PUBLIC)/_redirects || { echo "FAIL: /spec/ -> /spec/0.3 redirect missing from _redirects"; exit 1; }
 	@grep -qF '<loc>https://gitcalver.org/spec/0.1</loc>' $(PUBLIC)/sitemap.xml || { echo "FAIL: /spec/0.1 missing from sitemap"; exit 1; }
 	@grep -qF '<loc>https://gitcalver.org/spec/0.2</loc>' $(PUBLIC)/sitemap.xml || { echo "FAIL: /spec/0.2 missing from sitemap"; exit 1; }
 	@grep -qF '<loc>https://gitcalver.org/spec/0.3</loc>' $(PUBLIC)/sitemap.xml || { echo "FAIL: /spec/0.3 missing from sitemap"; exit 1; }
@@ -118,6 +120,13 @@ check-html:
 check-links:
 	$(RENDER)
 	$(LINKS) $(PUBLIC)
+
+## check-pins: fail unless every gitcalver/sh release named in the files of
+## $(SHELL_PIN_FILES) is $(SHELL_RELEASE) and each of them still names it.
+check-pins:
+	@stale=$$(LC_ALL=C grep -HanoE 'v[0-9]{8}\.[0-9]+' $(SHELL_PIN_FILES) | awk -F: -v rel='$(SHELL_RELEASE)' '$$3 != rel'); test -z "$$stale" || { echo "FAIL: gitcalver/sh pins other than $(SHELL_RELEASE):"; echo "$$stale"; exit 1; }
+	@for f in $(SHELL_PIN_FILES); do grep -qF '$(SHELL_RELEASE)' $$f || { echo "FAIL: $$f does not name $(SHELL_RELEASE)"; exit 1; }; done
+	@echo "pin check OK"
 
 ## check-css: fail if the rendered code samples emit a Modus-colored Chroma
 ## token the trimmed syntax theme in main.css doesn't style (see check_css.py).

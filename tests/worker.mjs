@@ -54,9 +54,14 @@ try {
     status: 307,
     location: "/getting-started",
   });
+  const currentSpec = "/spec/0.3";
   await expectResponse("/spec", {
     status: 302,
-    location: "/spec/0.3",
+    location: currentSpec,
+  });
+  await expectResponse("/spec/", {
+    status: 302,
+    location: currentSpec,
   });
   await expectResponse("/spec/0.1", {
     status: 200,

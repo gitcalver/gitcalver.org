@@ -69,8 +69,9 @@ have blocked all further publication even after the counting fix. The
 greater-than check is unchanged and still prevents overwriting an
 already-published 0.2-era tag.
 
-Off-chain and dirty-version handling, branch selection, prefixes, and exit codes
-are unchanged from 0.2.
+Off-chain and dirty-version handling, branch selection, prefixes, and the exit
+code assignments are unchanged from 0.2; code 4 now also covers a date cohort
+that local history cannot prove.
 
 ## Future work
 

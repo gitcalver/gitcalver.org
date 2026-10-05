@@ -63,7 +63,8 @@ Never hand-edit these; change the source and regenerate.
   on the `network-dependency-tree-insight` audit.
 - Markdown allows raw HTML (`markup.goldmark.renderer.unsafe = true`); only
   `site/content/spec/0.3.md` needs it, for the `<figure>` and `<figcaption>`
-  wrappers around its diagram shortcodes.
+  wrappers around its diagram shortcodes and the `<br>` that keeps its exit-code
+  table inside the prose column.
 - Analytics is Cloudflare Web Analytics in automatic mode: the edge injects the
   beacon. Don't add a manual analytics `<script>`, or page views double-count.
 
@@ -87,10 +88,14 @@ by `make check-worker`):
 - Canonical URLs have no trailing slash (`/getting-started`); the slash form
   307-redirects. Keep hand-written internal links no-slash.
   `layouts/sitemap.xml` is custom for the same reason.
-- `/spec` is not a page; it 302-redirects to the current spec version.
+- `/spec` and `/spec/` are not pages; `_redirects` 302s both to the current spec
+  version.
 - `/sh` redirects to `/gitcalver.sh`, the install script vendored from
   `gitcalver/sh`, because Workers Static Assets reject a 200-proxy to an
-  external URL.
+  external URL. To bump the release, replace `site/static/gitcalver.sh` with the
+  release asset, set `SHELL_RELEASE` and `SHELL_SHA256` in the `Makefile`
+  (`make check-html` verifies both against the script), and update every pin
+  `make check-pins` reports.
 - `/go` is a static page (`site/static/go.html`) carrying the vanity-import meta
   tags for `gitcalver.org/go`. Keep it a top-level file: it serves at `/go`
   under `drop-trailing-slash` and the default `auto-trailing-slash`, whereas
