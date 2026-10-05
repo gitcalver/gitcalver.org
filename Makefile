@@ -10,7 +10,9 @@ CACHE  := $(or $(TMPDIR),/tmp)/gcv-hugo-cache
 NODE_BIN := node_modules/.bin
 SHELL_RELEASE := v20261004.2
 SHELL_SHA256 := 1a9505326650bf69cb5b5ff98abf856e9b18d6529c3e7cebc9e0ba07ca735601
-SHELL_PIN_FILES := ROADMAP.md $(SITE)/content/getting-started.md $(SITE)/layouts/home.html tests/interactions.mjs
+SHELL_PIN_FILES := ROADMAP.md $(SITE)/content/getting-started.md $(SITE)/layouts/home.html
+SHELL_URL := https://github.com/gitcalver/sh/releases/download/$(SHELL_RELEASE)/gitcalver.sh
+SHELL_API := https://api.github.com/repos/gitcalver/sh/releases/tags/$(SHELL_RELEASE)
 # The full site render every build-dependent target starts from.
 RENDER := $(HUGO) -s $(SITE) --cacheDir "$(CACHE)" --cleanDestinationDir
 # Font deps (incl. the version-pinned woff2 toolchain) come from pyproject.toml;
@@ -23,7 +25,7 @@ TY       := uv run --frozen ty
 LINKS    := uv run --frozen --quiet --no-dev python check_links.py
 LHCI     := $(NODE_BIN)/lhci
 
-.PHONY: build serve fonts diagrams social-card check-toolchain check-diagrams check-fonts check-html check-links check-pins check-css check-worker check-metadata check-accessibility check-interactions lighthouse lint fmt deploy clean
+.PHONY: build serve fonts diagrams social-card vendor-sh check-toolchain check-diagrams check-fonts check-html check-links check-pins check-css check-worker check-metadata check-accessibility check-interactions lighthouse lint fmt deploy clean
 
 ## build: render the site to site/public
 build:
@@ -53,6 +55,28 @@ social-card:
 ## gitgraph.js scene definitions (offline, deterministic; no browser).
 diagrams:
 	node scripts/diagrams/render.mjs
+
+# GitHub's release API reports each asset's SHA-256 as assets[].digest (for
+# example "digest": "sha256:1a95..."); the download is checked against it.
+## vendor-sh: after changing SHELL_RELEASE (Renovate does), vendor that release's
+## install script, set SHELL_SHA256 to its digest, point every pin at it, and
+## re-pad the Markdown tables they sit in. Fails unless the download matches the
+## digest GitHub reports for the release. Verify with check-html in a separate
+## make invocation: this one has already read the old SHELL_SHA256.
+vendor-sh:
+	@set -e; test -x $(NODE_BIN)/prettier || { echo "FAIL: $(NODE_BIN)/prettier not found; run npm ci"; exit 1; }; \
+	script=$$(mktemp); trap 'rm -f "$$script"' EXIT; trap 'exit 1' HUP INT TERM; \
+	curl -fsSL -o "$$script" '$(SHELL_URL)'; \
+	sha=$$(shasum -a 256 "$$script"); sha=$${sha%% *}; \
+	api=$$(curl -fsSL '$(SHELL_API)' | grep -oE '"digest": *"sha256:[0-9a-f]{64}"' | head -n 1 | grep -oE '[0-9a-f]{64}' || true); \
+	test -n "$$sha" && test "$$sha" = "$$api" || { echo "FAIL: downloaded sha256 $$sha != GitHub's digest for $(SHELL_RELEASE): $${api:-none}"; exit 1; }; \
+	perl -pi -e 's/^SHELL_RELEASE := .*/SHELL_RELEASE := $(SHELL_RELEASE)/; s/^SHELL_SHA256 := .*/SHELL_SHA256 := '"$$sha"'/' Makefile; \
+	grep -qxF 'SHELL_RELEASE := $(SHELL_RELEASE)' Makefile && grep -qxF "SHELL_SHA256 := $$sha" Makefile || { echo "FAIL: cannot set SHELL_RELEASE and SHELL_SHA256 in Makefile"; exit 1; }; \
+	cp "$$script" $(SITE)/static/gitcalver.sh; \
+	perl -pi -e 's/v[0-9]{8}\.[0-9]+/$(SHELL_RELEASE)/g' $(SHELL_PIN_FILES); \
+	$(NODE_BIN)/prettier --log-level warn --write $(filter %.md,$(SHELL_PIN_FILES)); \
+	echo "vendored $(SHELL_RELEASE) ($$sha)"
+	@$(MAKE) --no-print-directory check-pins
 
 ## check-toolchain: fail unless the exact Node, npm, and Python versions
 ## pinned for reproducible site work are active and uv meets the floor in
@@ -108,8 +132,8 @@ check-html:
 	@grep -q '^Allow: /' $(PUBLIC)/robots.txt || { echo "FAIL: Allow missing from robots.txt"; exit 1; }
 	@grep -qF 'Sitemap: https://gitcalver.org/sitemap.xml' $(PUBLIC)/robots.txt || { echo "FAIL: Sitemap missing from robots.txt"; exit 1; }
 	@grep -q '^#!/bin/sh' $(PUBLIC)/gitcalver.sh || { echo "FAIL: /gitcalver.sh install script missing"; exit 1; }
-	@grep -qF 'VERSION="$(patsubst v%,%,$(SHELL_RELEASE))"' $(PUBLIC)/gitcalver.sh || { echo "FAIL: /gitcalver.sh is not $(SHELL_RELEASE)"; exit 1; }
-	@actual=$$(shasum -a 256 $(PUBLIC)/gitcalver.sh | awk '{print $$1}'); test "$$actual" = "$(SHELL_SHA256)" || { echo "FAIL: /gitcalver.sh sha256 $$actual != $(SHELL_SHA256)"; exit 1; }
+	@grep -qF 'VERSION="$(patsubst v%,%,$(SHELL_RELEASE))"' $(PUBLIC)/gitcalver.sh || { echo "FAIL: /gitcalver.sh is not $(SHELL_RELEASE); run make vendor-sh"; exit 1; }
+	@actual=$$(shasum -a 256 $(PUBLIC)/gitcalver.sh | awk '{print $$1}'); test "$$actual" = "$(SHELL_SHA256)" || { echo "FAIL: /gitcalver.sh sha256 $$actual != $(SHELL_SHA256); run make vendor-sh"; exit 1; }
 	@test -f $(PUBLIC)/404.html || { echo "FAIL: custom 404 page missing"; exit 1; }
 	@test -f $(PUBLIC)/social-card.png || { echo "FAIL: social card missing"; exit 1; }
 	@test ! -f $(PUBLIC)/index.xml || { echo "FAIL: RSS output must remain disabled"; exit 1; }
@@ -122,7 +146,9 @@ check-links:
 	$(LINKS) $(PUBLIC)
 
 ## check-pins: fail unless every gitcalver/sh release named in the files of
-## $(SHELL_PIN_FILES) is $(SHELL_RELEASE) and each of them still names it.
+## $(SHELL_PIN_FILES) is $(SHELL_RELEASE) and each of them still names it. Any
+## other vYYYYMMDD.N in those files counts as a pin (vendor-sh rewrites it and
+## Renovate bumps it), so write other versions without the leading v.
 check-pins:
 	@stale=$$(LC_ALL=C grep -HanoE 'v[0-9]{8}\.[0-9]+' $(SHELL_PIN_FILES) | awk -F: -v rel='$(SHELL_RELEASE)' '$$3 != rel'); test -z "$$stale" || { echo "FAIL: gitcalver/sh pins other than $(SHELL_RELEASE):"; echo "$$stale"; exit 1; }
 	@for f in $(SHELL_PIN_FILES); do grep -qF '$(SHELL_RELEASE)' $$f || { echo "FAIL: $$f does not name $(SHELL_RELEASE)"; exit 1; }; done

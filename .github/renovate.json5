@@ -7,6 +7,28 @@
   // Run `go mod tidy` after Go updates so go.sum keeps h1: hashes for new
   // transitive deps. Casing matters: `goModTidy` is silently ignored.
   postUpdateOptions: ["gomodTidy"],
+  customManagers: [
+    {
+      // The recommended gitcalver/sh release. Keep the file list in step with
+      // SHELL_PIN_FILES in the Makefile, plus the Makefile itself. This manager
+      // bumps only the release strings, not SHELL_SHA256 or the vendored script:
+      // run `make vendor-sh` on the PR.
+      customType: "regex",
+      // managerFilePatterns is the documented option for a custom manager's
+      // files (docs.renovatebot.com/configuration-options/#managerfilepatterns).
+      // Entries wrapped in slashes are regexes; others are globs.
+      managerFilePatterns: [
+        "/^Makefile$/",
+        "/^ROADMAP\\.md$/",
+        "/^site/content/getting-started\\.md$/",
+        "/^site/layouts/home\\.html$/",
+      ],
+      matchStrings: ["(?<currentValue>v\\d{8}\\.\\d+)"],
+      depNameTemplate: "gitcalver/sh",
+      datasourceTemplate: "github-releases",
+      versioningTemplate: "regex:^v(?<major>\\d{8})\\.(?<minor>\\d+)$",
+    },
+  ],
   packageRules: [
     {
       description: "Automerge non-major updates",
@@ -17,6 +39,24 @@
       description: "Automerge dev dependencies",
       matchDepTypes: ["devDependencies"],
       automerge: true,
+    },
+    {
+      // Users run the vendored script with `curl | sh`, so a human reads its
+      // diff before it merges. Keep this rule last: it overrides the automerge
+      // rules above.
+      description: "Review gitcalver/sh releases by hand",
+      matchDepNames: ["gitcalver/sh"],
+      automerge: false,
+      // The release date is the major version, so the default maxMajorIncrement
+      // (500) would hide every release from a later year. Zero removes the
+      // limit (docs.renovatebot.com/configuration-options/#maxmajorincrement).
+      maxMajorIncrement: 0,
+      // A next-day release is a major update, whose default title drops the
+      // counter.
+      commitMessageExtra: "to {{{newValue}}}",
+      prBodyNotes: [
+        "Run `make vendor-sh` on this branch to re-vendor the install script and update SHELL_SHA256.",
+      ],
     },
   ],
 }

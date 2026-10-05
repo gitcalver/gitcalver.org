@@ -58,9 +58,12 @@ Never hand-edit these; change the source and regenerate.
   samples emit. A new color token fails `make check-css`, which prints the exact
   rule to paste back; restore only that rule, not the whole theme.
 - `baseof.html` preloads the font faces each page uses, adding Inter italic and
-  Mono 600 only where the content needs them (emphasis; code in a heading, table
-  header, or bold text). A face used without a preload fails `make lighthouse`
-  on the `network-dependency-tree-insight` audit.
+  Mono 600 only where the content needs them (`<em>`, `<i>`, `<cite>`; code in
+  an `h1` to `h4` heading, table header, or `<strong>`). A face used without a
+  preload fails `make lighthouse` on the `network-dependency-tree-insight`
+  audit, which doesn't name the face. `h5`, `h6`, `<b>`, `<var>`, `<dfn>`, and
+  `<th>` outside `<thead>` use faces the detection misses, so extend it before
+  using them.
 - Markdown allows raw HTML (`markup.goldmark.renderer.unsafe = true`); only
   `site/content/spec/0.3.md` needs it, for the `<figure>` and `<figcaption>`
   wrappers around its diagram shortcodes and the `<br>` that keeps its exit-code
@@ -92,10 +95,14 @@ by `make check-worker`):
   version.
 - `/sh` redirects to `/gitcalver.sh`, the install script vendored from
   `gitcalver/sh`, because Workers Static Assets reject a 200-proxy to an
-  external URL. To bump the release, replace `site/static/gitcalver.sh` with the
-  release asset, set `SHELL_RELEASE` and `SHELL_SHA256` in the `Makefile`
-  (`make check-html` verifies both against the script), and update every pin
-  `make check-pins` reports.
+  external URL. To bump the release, set `SHELL_RELEASE` in the `Makefile`
+  (Renovate does, along with the doc pins) and run `make vendor-sh`; on a
+  Renovate PR, run it on the branch, since `make check-html` fails until then.
+  It re-vendors `site/static/gitcalver.sh` after checking it against GitHub's
+  digest, sets `SHELL_SHA256`, rewrites any stale pin, and re-pads the
+  `ROADMAP.md` table. Then verify with `make check-html` and `make check-pins`
+  in a separate invocation. Read the script's diff before merging; Renovate
+  doesn't automerge this dependency.
 - `/go` is a static page (`site/static/go.html`) carrying the vanity-import meta
   tags for `gitcalver.org/go`. Keep it a top-level file: it serves at `/go`
   under `drop-trailing-slash` and the default `auto-trailing-slash`, whereas

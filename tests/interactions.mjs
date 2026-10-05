@@ -2,11 +2,20 @@
 // SPDX-License-Identifier: MIT
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import process from "node:process";
 
 import { chromium } from "playwright";
 
 import { startWorker } from "./worker-server.mjs";
+
+// Renovate ignores tests/ (:ignoreModulesAndTests), so the release is read
+// from the Makefile, which it does bump.
+const shellRelease = readFileSync(
+  new URL("../Makefile", import.meta.url),
+  "utf8",
+).match(/^SHELL_RELEASE := (v\d{8}\.\d+)$/m)?.[1];
+assert.ok(shellRelease, "Makefile defines SHELL_RELEASE");
 
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
 const worker = await startWorker();
@@ -48,7 +57,7 @@ try {
   await waitForCopyState(successPage, ".copy", "success");
   assert.equal(
     await successPage.evaluate(() => window.__copiedText),
-    "curl -fsSLO https://github.com/gitcalver/sh/releases/download/v20261004.2/gitcalver.sh\nchmod +x gitcalver.sh",
+    `curl -fsSLO https://github.com/gitcalver/sh/releases/download/${shellRelease}/gitcalver.sh\nchmod +x gitcalver.sh`,
     "keyboard activation writes the exact install command",
   );
   assert.equal(
