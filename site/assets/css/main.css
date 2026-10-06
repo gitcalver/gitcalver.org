@@ -217,6 +217,7 @@ header.site-header{
   position:relative;margin-top:34px;text-align:center;font-size:14px;color:var(--text-soft);
 }
 .today .mono{color:var(--text);font-weight:500}
+.today strong{white-space:nowrap}
 .today .pulse{
   display:inline-block;width:7px;height:7px;border-radius:100px;background:var(--count);
   margin-right:7px;vertical-align:middle;

@@ -5,9 +5,9 @@ derives strictly increasing calendar versions (`YYYYMMDD.N`) from git history.
 This repo holds only the spec and the Hugo site; the implementations live in
 sibling repos under `github.com/gitcalver`. See `ROADMAP.md`.
 
-The hero's example version is the current UTC date: `layouts/home.html` renders
-the build date, and client JS replaces it with the visitor's current UTC date on
-load and again at each UTC midnight.
+The example version in the hero and in the "run it" sample is the current UTC
+date: `layouts/home.html` renders the build date, and client JS replaces it with
+the visitor's current UTC date on load and again at each UTC midnight.
 
 ## Commands
 

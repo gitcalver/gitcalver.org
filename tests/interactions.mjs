@@ -345,14 +345,27 @@ try {
     viewport: { width: 1280, height: 900 },
   });
   const rolloverPage = await rolloverContext.newPage();
+  // The clock runs in real time until paused; starting a minute early keeps a
+  // slow page load from reaching midnight before the pause.
   await rolloverPage.clock.install({
-    time: new Date("2026-12-31T23:59:59.500Z"),
+    time: new Date("2026-12-31T23:59:00.000Z"),
   });
   await rolloverPage.goto(`${worker.base}/`);
+  await rolloverPage.clock.pauseAt(new Date("2026-12-31T23:59:59.500Z"));
   assert.equal(
     await rolloverPage.locator("#gcv-date").textContent(),
     "20261231",
     "the client renders the current UTC date",
+  );
+  assert.equal(
+    await rolloverPage.locator("#gcv-run-out").textContent(),
+    "20261231.1",
+    "the run-it output renders the current UTC date",
+  );
+  assert.equal(
+    await rolloverPage.locator("#gcv-run-arg").textContent(),
+    "20261231.1",
+    "the run-it reverse argument renders the current UTC date",
   );
   await rolloverPage.clock.fastForward(1600);
   assert.equal(
@@ -365,6 +378,13 @@ try {
     "20270101",
     "the legend rolls over with the example",
   );
+  assert.deepEqual(
+    await rolloverPage
+      .locator("#gcv-year, #gcv-month, #gcv-day")
+      .allTextContents(),
+    ["2027", "01", "01"],
+    "the year, month, and day cells roll over",
+  );
   assert.equal(
     await rolloverPage.locator("#gcv-version").getAttribute("aria-label"),
     "Example version 20270101.1",
@@ -372,13 +392,77 @@ try {
   );
   assert.match(
     await rolloverPage.locator("#gcv-today").textContent(),
-    /Today is 20270101 in UTC.*20270101\.1/s,
+    /Today is 2027-01-01 in UTC.*20270101\.1/s,
     "the explanatory sentence rolls over",
+  );
+  assert.deepEqual(
+    await rolloverPage.locator("#gcv-today .mono").allTextContents(),
+    ["20270101.1"],
+    "only the version is monospace in the explanatory sentence",
+  );
+  assert.deepEqual(
+    await rolloverPage.locator("#gcv-today strong").allTextContents(),
+    ["2027-01-01", "first"],
+    "the explanatory sentence bolds the date and “first”",
+  );
+  assert.equal(
+    await rolloverPage.locator("#gcv-run-out").textContent(),
+    "20270101.1",
+    "the run-it output rolls over",
+  );
+  assert.equal(
+    await rolloverPage.locator("#gcv-run-arg").textContent(),
+    "20270101.1",
+    "the run-it reverse argument rolls over",
+  );
+  assert.equal(
+    await rolloverPage.locator("#gcv-today").evaluate((paragraph) => {
+      const date = paragraph.querySelector("strong");
+      // The reduced-motion stylesheet gives every element a 0.01ms transition,
+      // which would defer these width changes past this synchronous loop.
+      paragraph.style.setProperty("transition", "none", "important");
+      let splits = 0;
+      for (let width = 90; width <= 330; width += 2) {
+        paragraph.style.width = `${width}px`;
+        if (date.getClientRects().length > 1) splits += 1;
+      }
+      return splits;
+    }),
+    0,
+    "the date never breaks across lines",
   );
   await rolloverContext.close();
 
+  const staticContext = await browser.newContext({
+    javaScriptEnabled: false,
+    viewport: { width: 1280, height: 900 },
+  });
+  const staticPage = await staticContext.newPage();
+  await staticPage.goto(`${worker.base}/`);
+  const buildDate = await staticPage.locator("#gcv-date").textContent();
+  assert.match(buildDate, /^\d{8}$/, "the static page renders a build date");
+  assert.deepEqual(
+    await staticPage.locator("#gcv-today .mono").allTextContents(),
+    [`${buildDate}.1`],
+    "only the version is monospace in the static sentence",
+  );
+  assert.deepEqual(
+    await staticPage.locator("#gcv-today strong").allTextContents(),
+    [
+      "first",
+      `${buildDate.slice(0, 4)}-${buildDate.slice(4, 6)}-${buildDate.slice(6)}`,
+    ],
+    "the static sentence bolds “first” and the date",
+  );
+  assert.deepEqual(
+    await staticPage.locator("#gcv-run-out, #gcv-run-arg").allTextContents(),
+    [`${buildDate}.1`, `${buildDate}.1`],
+    "the static run-it sample shows the build date",
+  );
+  await staticContext.close();
+
   console.log(
-    "interaction tests OK (copy success/fallback/failure, TOCs, CSS scrollspy contract, rendered overflow, UTC rollover)",
+    "interaction tests OK (copy success/fallback/failure, TOCs, CSS scrollspy contract, rendered overflow, UTC rollover, static date fallback)",
   );
 } finally {
   if (browser) await browser.close();

@@ -72,8 +72,8 @@
     </div>
 
     <p class="today" id="gcv-today">
-      <span class="pulse"></span>The first commit on
-      <span class="mono">{{ $today }}</span> (UTC) is
+      <span class="pulse"></span>The <strong>first</strong> commit on
+      <strong>{{ $Y }}-{{ $M }}-{{ $D }}</strong> (UTC) is
       <span class="mono">{{ $today }}.1</span>.
     </p>
   </div>
@@ -272,10 +272,10 @@ chmod +x gitcalver.sh</pre>
       </div>
       <pre tabindex="0" aria-label="Code example: run it" aria-describedby="horizontal-scroll-instructions" data-horizontal-scroll="true"><span class="cm"># version for HEAD</span>
 <span class="pr">$</span> ./gitcalver.sh
-<span class="out">20260607.1</span>
+<span class="out" id="gcv-run-out">{{ $today }}.1</span>
 
 <span class="cm"># reverse: clean version → commit</span>
-<span class="pr">$</span> ./gitcalver.sh 20260607.1
+<span class="pr">$</span> ./gitcalver.sh <span id="gcv-run-arg">{{ $today }}.1</span>
 <span class="out">a1b2c3d4e5f6…</span></pre>
     </div>
   </div>

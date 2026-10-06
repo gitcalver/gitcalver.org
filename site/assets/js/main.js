@@ -10,15 +10,15 @@
 
   function utcParts() {
     var date = new Date();
+    var year = "" + date.getUTCFullYear();
+    var month = pad(date.getUTCMonth() + 1);
+    var day = pad(date.getUTCDate());
     return {
-      ymd:
-        "" +
-        date.getUTCFullYear() +
-        pad(date.getUTCMonth() + 1) +
-        pad(date.getUTCDate()),
-      year: "" + date.getUTCFullYear(),
-      month: pad(date.getUTCMonth() + 1),
-      day: pad(date.getUTCDate()),
+      ymd: year + month + day,
+      iso: year + "-" + month + "-" + day,
+      year: year,
+      month: month,
+      day: day,
     };
   }
 
@@ -29,25 +29,28 @@
 
   function renderUtcDate() {
     var parts = utcParts();
+    var firstVersion = parts.ymd + ".1";
     setText("gcv-date", parts.ymd);
     setText("gcv-date-val", parts.ymd);
     setText("gcv-year", parts.year);
     setText("gcv-month", parts.month);
     setText("gcv-day", parts.day);
+    setText("gcv-run-out", firstVersion);
+    setText("gcv-run-arg", firstVersion);
 
     var version = document.getElementById("gcv-version");
     if (version) {
-      version.setAttribute("aria-label", "Example version " + parts.ymd + ".1");
+      version.setAttribute("aria-label", "Example version " + firstVersion);
     }
 
     var today = document.getElementById("gcv-today");
     if (today) {
       today.innerHTML =
-        '<span class="pulse"></span>Today is <span class="mono">' +
-        parts.ymd +
-        '</span> in UTC. The first commit today would be <span class="mono">' +
-        parts.ymd +
-        ".1</span>.";
+        '<span class="pulse"></span>Today is <strong>' +
+        parts.iso +
+        '</strong> in UTC. The <strong>first</strong> commit today would be <span class="mono">' +
+        firstVersion +
+        "</span>.";
     }
   }
 
