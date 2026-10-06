@@ -94,7 +94,7 @@ become version state.
   with:
     fetch-depth: 0 # Full history, so the count is always provable
 
-- uses: gitcalver/sh@v20261004.2
+- uses: gitcalver/sh@v20261006.1
   id: version
   with:
     prefix: "0." # optional, for SemVer ecosystems
