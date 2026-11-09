@@ -12,7 +12,7 @@ defect 0.3 fixes.
 | Repository                | Role                                              | Current release                |
 | ------------------------- | ------------------------------------------------- | ------------------------------ |
 | `gitcalver/gitcalver.org` | Specification and Cloudflare Worker website       | [Specification 0.3][spec-03]   |
-| `gitcalver/sh`            | Reference implementation, conformance, and Action | [`v20261004.2`][shell-release] |
+| `gitcalver/sh`            | Reference implementation, conformance, and Action | [`v20261007.1`][shell-release] |
 | `gitcalver/python`        | Python API, CLI, and Hatch plugin                 | [`20261004.4`][python-release] |
 | `gitcalver/go`            | Standalone CLI                                    | [`v0.20260825.2`][go-release]  |
 | `gitcalver/rust`          | Experimental Rust library and CLI                 | Unreleased; use `gitcalver.sh` |
@@ -86,6 +86,6 @@ that local history cannot prove.
 - Additional platform-specific version-field recipes
 
 [spec-03]: https://gitcalver.org/spec/0.3
-[shell-release]: https://github.com/gitcalver/sh/releases/tag/v20261004.2
+[shell-release]: https://github.com/gitcalver/sh/releases/tag/v20261007.1
 [python-release]: https://pypi.org/project/gitcalver/20261004.4/
 [go-release]: https://github.com/gitcalver/go/tree/v0.20260825.2
