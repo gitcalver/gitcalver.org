@@ -34,6 +34,6 @@
     "jsdom": "31.0.0",
     "playwright": "1.65.0",
     "prettier": "3.9.10",
-    "wrangler": "4.158.0"
+    "wrangler": "4.159.0"
   }
 }
