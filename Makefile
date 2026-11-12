@@ -196,7 +196,7 @@ lighthouse:
 ## lint: check Markdown formatting and lint/typecheck the Python tooling;
 ## Ruff/ty walk the repo and skip the gitignored .venv, so any new script is
 ## covered without listing it here.
-lint:
+lint: actions-lock-verify-local
 	$(PRETTIER) --check
 	$(RUFF) format --check .
 	$(RUFF) check .
@@ -215,3 +215,17 @@ deploy:
 ## clean: remove build output
 clean:
 	rm -rf $(SITE)/public $(SITE)/resources
+
+.PHONY: actions-lock-install actions-lock actions-lock-verify-local actions-lock-verify
+
+actions-lock-install:
+	gh extension install github/gh-actions-lock --pin v0.4.1 --force
+
+actions-lock:
+	gh actions-lock --no-interactive
+
+actions-lock-verify-local:
+	gh actions-lock --verify-local
+
+actions-lock-verify:
+	gh actions-lock --verify

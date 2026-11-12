@@ -2,11 +2,10 @@
 // SPDX-License-Identifier: MIT
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
-  extends: ["config:best-practices", ":semanticCommitsDisabled"],
-  platformAutomerge: true,
-  // Run `go mod tidy` after Go updates so go.sum keeps h1: hashes for new
-  // transitive deps. Casing matters: `goModTidy` is silently ignored.
-  postUpdateOptions: ["gomodTidy"],
+  extends: [
+    "github>shields/right-answers//renovate/base.json5",
+    "github>shields/right-answers//renovate/go.json5",
+  ],
   customManagers: [
     {
       // The recommended gitcalver/sh release. Keep the file list in step with
@@ -30,16 +29,6 @@
     },
   ],
   packageRules: [
-    {
-      description: "Automerge non-major updates",
-      matchUpdateTypes: ["minor", "patch", "pin", "digest"],
-      automerge: true,
-    },
-    {
-      description: "Automerge dev dependencies",
-      matchDepTypes: ["devDependencies"],
-      automerge: true,
-    },
     {
       // Users run the vendored script with `curl | sh`, so a human reads its
       // diff before it merges. Keep this rule last: it overrides the automerge
