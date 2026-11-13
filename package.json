@@ -3,10 +3,10 @@
   "name": "gitcalver.org",
   "private": true,
   "license": "MIT",
-  "packageManager": "npm@11.16.0",
+  "packageManager": "npm@11.21.2",
   "engines": {
     "node": "24.22.3",
-    "npm": "11.16.0"
+    "npm": "11.21.2"
   },
   "devEngines": {
     "runtime": {
@@ -16,7 +16,7 @@
     },
     "packageManager": {
       "name": "npm",
-      "version": "11.16.0",
+      "version": "11.21.2",
       "onFail": "error"
     }
   },
