@@ -5,13 +5,13 @@
   "license": "MIT",
   "packageManager": "npm@11.21.2",
   "engines": {
-    "node": "24.22.3",
+    "node": "26.13.1",
     "npm": "11.21.2"
   },
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "24.22.3",
+      "version": "26.13.1",
       "onFail": "error"
     },
     "packageManager": {
