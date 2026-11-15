@@ -30,7 +30,7 @@
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
     "@gitgraph/js": "1.4.0",
-    "@lhci/cli": "0.16.0",
+    "@lhci/cli": "0.16.1",
     "jsdom": "31.0.0",
     "playwright": "1.65.0",
     "prettier": "3.10.0",
