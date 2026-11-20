@@ -24,7 +24,7 @@ jobs:
           node-version-file: .node-version
           cache: npm
       - run: npm ci
-      - uses: astral-sh/setup-uv@v10.3.3
+      - uses: astral-sh/setup-uv@v10.4.0
         with:
           enable-cache: true
       - run: make actions-lock-install
@@ -49,7 +49,7 @@ jobs:
       - uses: actions/setup-go@v7.1.0
         with:
           go-version-file: go.mod
-      - uses: astral-sh/setup-uv@v10.3.3
+      - uses: astral-sh/setup-uv@v10.4.0
         with:
           enable-cache: true
       # Builds the site (catching template errors), byte-compares a clean
